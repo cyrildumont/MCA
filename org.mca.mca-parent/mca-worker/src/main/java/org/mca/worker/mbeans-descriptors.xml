@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE mbeans-descriptors PUBLIC
+   "-//Apache Software Foundation//DTD Model MBeans Configuration File"
+   "http://jakarta.apache.org/commons/dtds/mbeans-descriptors.dtd">
+   
+<mbeans-descriptors>
+
+  <mbean  name="ComputingWorker"
+          description="ComputingWorker"
+          domain="MCA"
+          group="ComputingWorker"
+          type="org.mca.worker.ComputingWorker">
+                      		
+        <attribute	name="state"
+          			description="State of the Worker"
+                 	type="int"
+            		writeable="false"/>
+            		
+        <attribute	name="taskInProgress"
+          			description="Task in progress"
+                 	type="java.lang.Stringg"
+            		writeable="false"/>
+            		
+		<notification 	name="org.mca.worker.taskInProgressChanged"
+						description="run time value changed">
+			<notification-type >javax.management.Notification</notification-type>
+		</notification>
+</mbean>
+  
+</mbeans-descriptors>

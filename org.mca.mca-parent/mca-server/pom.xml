@@ -1,0 +1,47 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+		<artifactId>mca-parent</artifactId>
+		<groupId>org.mca</groupId>
+		<version>1.0.0-RELEASE</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+
+	<artifactId>mca-server</artifactId>
+	<packaging>jar</packaging>
+
+	<name>MCA Project - Server</name>
+
+	<properties>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.mca</groupId>
+			<artifactId>mca-core</artifactId>
+			<version>1.0.0-RELEASE</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.river</groupId>
+			<artifactId>mahalo-dl</artifactId>
+			<version>2.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.river</groupId>
+			<artifactId>reggie-dl</artifactId>
+			<version>2.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.river</groupId>
+			<artifactId>jsk-dl</artifactId>
+			<version>2.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.river</groupId>
+			<artifactId>outrigger-dl</artifactId>
+			<version>2.1.1</version>
+		</dependency>
+	</dependencies>
+</project>

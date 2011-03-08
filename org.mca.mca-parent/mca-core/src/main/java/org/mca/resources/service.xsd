@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" 
+		targetNamespace="http://www.mca.org/service"
+		xmlns:tns="http://www.mca.org/service" 
+		elementFormDefault="qualified" >
+
+	<element name="service-config" type="tns:service" />
+
+	<complexType name="service">
+		<sequence>
+			<element name="codebase" type="tns:codebase" />
+			<element name="policy" type="tns:policy" />
+			<element name="implClass" type="tns:implClass" />
+			<element name="serverConfigArgs" type="string" minOccurs="0"/>
+			<element name="locators" type="tns:locators" />
+			<element name="entries" type="tns:entries" minOccurs="0" />
+		</sequence>
+		<attribute name="name" type="string" use="required"/>
+	</complexType>
+
+	<complexType name="policy">
+		<attribute name="file" type="string" use="required"/>
+	</complexType>
+
+	<complexType name="implClass">
+		<attribute name="class" type="string" use="required" />
+	</complexType>
+
+	<complexType name="locator">
+		<attribute name="host" type="string" use="required" />
+	</complexType>
+
+	<complexType name="locators">
+		<sequence>
+			<element name="locator" type="tns:locator" maxOccurs="unbounded" />
+		</sequence>
+	</complexType>
+
+	<complexType name="jar">
+		<attribute name="path" type="string" use="required" />
+	</complexType>
+
+	<complexType name="codebase">
+		<sequence>
+			<element name="jar" type="tns:jar" maxOccurs="unbounded" />
+		</sequence>
+	</complexType>
+	
+	<complexType name="property">
+		<attribute name="name" type="string" use="required" />
+		<attribute name="value" type="string" use="required"/>
+	</complexType>
+	
+	<complexType name="entry">
+		<sequence>
+			<element name="property" type="tns:property" maxOccurs="unbounded" />
+		</sequence> 
+		<attribute name="class" type="string" use="required"/>
+	</complexType>
+	
+	<complexType name="entries">
+		<sequence>
+			<element name="entry"  type="tns:entry" maxOccurs="unbounded"/>
+		</sequence>
+	</complexType>
+
+
+</schema>

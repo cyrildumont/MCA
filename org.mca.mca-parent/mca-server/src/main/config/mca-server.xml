@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+	<bean id="info" class="org.mca.core.ComponentInfo">
+		<property name="type" value="3" />
+	</bean>
+	
+  	<bean id="component" class="org.mca.server.Server" init-method="start">
+  	</bean>	
+
+</beans>

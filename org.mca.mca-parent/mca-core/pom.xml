@@ -1,0 +1,47 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<artifactId>mca-parent</artifactId>
+		<groupId>org.mca</groupId>
+		<version>1.0.0-RELEASE</version>
+	</parent>
+	<groupId>org.mca</groupId>
+	<artifactId>mca-core</artifactId>
+	<version>1.0.0-RELEASE</version>
+	<packaging>jar</packaging>
+
+	<name>MCA Project - Core</name>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>2.4.1</version>
+				<configuration>
+					<filesets>
+						<fileset>
+							<directory>${mca.home}</directory>
+							<includes>
+								<include>data/*</include>
+								<include>work/*</include>
+								<include>logs/*</include>
+							</includes>
+						</fileset>
+					</filesets>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<modules>
+	</modules>
+</project>
