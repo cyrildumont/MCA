@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/MCATest/src/org/mca/test/ComponentStarter.java"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="1"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.mca.test.ComponentStarter"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="/home/cyril/MCA/conf/mca-worker.xml"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="MCATest"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dmca.home=/home/cyril/MCA/ -Djava.security.policy=/home/cyril/MCA/conf/security/worker.policy -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=9097 &#10;-Djava.util.logging.config.file=logging.properties&#10;-Djavax.net.ssl.trustStore=/home/cyril/MCA/conf/security/keystore.worker&#10;-Djava.security.auth.login.config=/home/cyril/MCA/conf/security/worker.login"/>
+</launchConfiguration>
