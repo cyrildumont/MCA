@@ -7,6 +7,13 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javax.management.ListenerNotFoundException;
+import javax.management.MBeanNotificationInfo;
+import javax.management.Notification;
+import javax.management.NotificationBroadcaster;
+import javax.management.NotificationBroadcasterSupport;
+import javax.management.NotificationFilter;
+import javax.management.NotificationListener;
 import javax.security.auth.login.LoginException;
 
 import net.jini.config.ConfigurationException;
@@ -18,10 +25,6 @@ import net.jini.core.event.RemoteEventListener;
 import net.jini.core.event.UnknownEventException;
 import net.jini.core.transaction.Transaction;
 import net.jini.core.transaction.TransactionException;
-import net.jini.export.Exporter;
-import net.jini.jeri.BasicILFactory;
-import net.jini.jeri.BasicJeriExporter;
-import net.jini.jeri.tcp.TcpServerEndpoint;
 import net.jini.space.AvailabilityEvent;
 import net.jini.space.JavaSpace;
 import net.jini.space.JavaSpace05;
@@ -30,8 +33,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mca.core.ComponentInfo;
 import org.mca.entry.Barrier;
-import org.mca.entry.ComputationCase;
 import org.mca.javaspace.exceptions.NoDuplicatedTaskException;
+import org.mca.listener.CaseActionType;
 import org.mca.listener.TaskListener;
 import org.mca.log.LogUtil;
 import org.mca.scheduler.Task;
@@ -39,26 +42,36 @@ import org.mca.scheduler.TaskState;
 
 import com.sun.jini.start.LifeCycle;
 
-public class MCAOutriggerServerWrapper extends OutriggerServerWrapper {
+public abstract class MCAOutriggerServerWrapper extends OutriggerServerWrapper 
+												implements NotificationBroadcaster,MCAOutriggerServerWrapperMBean {
 
 	/** Log */
 	private final static Log LOG = LogFactory.getLog(MCAOutriggerServerWrapper.class);	
 
 	private ArrayList<String> tasksWaitForANotherTask;
 
-	private HashMap<Transaction, TaskListener> cases;
-	
 	private HashMap<String, Integer> barriers;
 
+	private TaskListener taskListener;
+	
+	protected NotificationBroadcasterSupport nbs;
+	
+	private int numSeq;
+	
 	MCAOutriggerServerWrapper(String[] configArgs, LifeCycle lifeCycle, boolean persistent)
-	throws IOException, ConfigurationException, LoginException {
+		throws IOException, ConfigurationException, LoginException {
 		super(configArgs, lifeCycle, persistent);
 		allowCalls();
 		tasksWaitForANotherTask = new ArrayList<String>();
-		cases = new HashMap<Transaction, TaskListener>(); 
 		barriers = new HashMap<String, Integer>();
+		nbs = new NotificationBroadcasterSupport();
 	}
 
+	@Override
+	public void addLookupAttributes(Entry[] attrSets) throws RemoteException {
+		super.addLookupAttributes(attrSets);
+	}
+	
 	@Override
 	public Object read(EntryRep tmpl, Transaction txn, long timeout,
 			QueryCookie cookie) throws TransactionException, RemoteException,
@@ -88,9 +101,12 @@ public class MCAOutriggerServerWrapper extends OutriggerServerWrapper {
 				if (ew instanceof Task) {
 					LogUtil.debug("TAKE a Task : " + ew, getClass());
 					LogUtil.debug("\t -->Transaction : " + txn, getClass());
+					Notification n = new Notification(CaseActionType.REMOVE_TASK.toString(), ew, ++numSeq);
+					nbs.sendNotification(n);
 				}
 			} catch (UnusableEntryException e) {
 				LOG.error(e);
+				throw new RemoteException();
 			}
 		}
 		return super.take(tmpl, txn, timeout, cookie);
@@ -105,11 +121,8 @@ public class MCAOutriggerServerWrapper extends OutriggerServerWrapper {
 				LogUtil.debug("WRITE a Task : " + ew, getClass());
 				Task task = (Task)ew;
 				checkTask(task, txn);
-			}else if (ew instanceof ComputationCase) {
-				LogUtil.debug("WRITE a Computation Case : " + ew, getClass());
-				ComputationCase computationCase = (ComputationCase)ew;
-				checkCase(computationCase);
-				addCase(computationCase);
+				Notification n = new Notification(CaseActionType.ADD_TASK.toString(), task, ++numSeq);
+				nbs.sendNotification(n);
 			}else if(ew instanceof Barrier){
 				LogUtil.debug("WRITE a Barrier : " + ew, getClass());
 				Barrier barrier = (Barrier)ew;
@@ -135,31 +148,6 @@ public class MCAOutriggerServerWrapper extends OutriggerServerWrapper {
 			throw new RemoteException();
 		}
 		
-	}
-
-	/**
-	 * 
-	 * @param computationCase
-	 * @param txn
-	 * @throws RemoteException 
-	 */
-	private void addCase(ComputationCase computationCase) throws RemoteException {
-		LogUtil.info("A new case on the space [" + computationCase.name + "]", getClass());
-		LogUtil.debug("\t transaction --> " + computationCase.transaction, getClass());
-		TaskListener taskListener = new TaskListener();
-		EntryRep entries[] = new EntryRep[1];
-		Task task = new Task();
-		task.state = TaskState.WAIT_FOR_COMPUTE;
-		entries[0] = new EntryRep(task);
-		Exporter exporter = new BasicJeriExporter(TcpServerEndpoint.getInstance(0),new BasicILFactory());
-		RemoteEventListener proxy;
-		proxy = (RemoteEventListener) exporter.export(taskListener);
-		try {
-			EventRegistration reg = registerForAvailabilityEvent(entries, computationCase.transaction, true, proxy, Long.MAX_VALUE, null);
-		} catch (TransactionException e) {
-			e.printStackTrace();
-		}
-		cases.put(computationCase.transaction, taskListener);
 	}
 
 	@Override
@@ -188,12 +176,7 @@ public class MCAOutriggerServerWrapper extends OutriggerServerWrapper {
 		try {
 			if (handback != null) {
 				ComponentInfo component = (ComponentInfo)handback.get();
-				TaskListener tl = cases.get(txn);
-				if (tl != null) {
-					tl.addListener(component);
-				}else{
-					throw new RemoteException("No case found for this transaction");
-				}
+				taskListener.addListener(component);
 				return null;
 			}
 		}catch (IOException e) {
@@ -250,24 +233,6 @@ public class MCAOutriggerServerWrapper extends OutriggerServerWrapper {
 		}
 	}
 
-	private void checkCase(ComputationCase computationCase) throws RemoteException {
-
-		ComputationCase tmpl = new ComputationCase();
-		tmpl.name = computationCase.name;
-
-		try {
-			Entry ent = space().read(tmpl, null, JavaSpace.NO_WAIT);
-			if (ent != null){
-				throw new NoDuplicatedTaskException();
-			}
-		} catch (TransactionException e) {
-			throw new RemoteException();
-		} catch (InterruptedException e) {
-			throw new RemoteException();
-		} catch (UnusableEntryException e) {
-			throw new RemoteException();
-		}
-	}
 	/**
 	 * 
 	 * @param task
@@ -410,4 +375,22 @@ public class MCAOutriggerServerWrapper extends OutriggerServerWrapper {
 		}
 	}
 
+	@Override
+	public void addNotificationListener(NotificationListener listener,
+			NotificationFilter filter, Object handback)
+			throws IllegalArgumentException {
+		nbs.addNotificationListener(listener, filter, handback);
+	}
+
+	@Override
+	public void removeNotificationListener(NotificationListener listener)
+			throws ListenerNotFoundException {
+		nbs.removeNotificationListener(listener);
+	}
+
+	@Override
+	public MBeanNotificationInfo[] getNotificationInfo() {
+		return nbs.getNotificationInfo();
+	}
+	
 }

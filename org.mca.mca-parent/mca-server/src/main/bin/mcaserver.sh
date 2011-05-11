@@ -6,7 +6,7 @@ PIDFILE=$MCA_HOME/mcacore.pid
 NAME=mcaserver 
 MCA_USER=${jsvc.user}
 
-OPTIONS="-user $MCA_USER -Dmca.home=$MCA_HOME -Djava.security.policy=$MCA_HOME/conf/policy -Dcom.sun.management.jmxremote.port=9099 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -cp ./commons-daemon.jar:./bootstrap.jar:./commons-logging-1.0.4.jar:./log4j-1.2.14.jar:../conf/ -outfile $MCA_HOME/logs/mcaserver.out -errfile $MCA_HOME/logs/mcaserver.err -pidfile $PIDFILE"
+OPTIONS="-user $MCA_USER -Dmca.home=$MCA_HOME -Djava.security.policy=$MCA_HOME/conf/server.policy -Dcom.sun.management.jmxremote.port=9099 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -cp ./commons-daemon.jar:./bootstrap.jar:./commons-logging-1.0.4.jar:./log4j-1.2.14.jar:../conf/ -outfile $MCA_HOME/logs/mcaserver.out -errfile $MCA_HOME/logs/mcaserver.err -pidfile $PIDFILE"
   	
 start(){ 
 	echo -n "Starting MCASercer daemon: " 

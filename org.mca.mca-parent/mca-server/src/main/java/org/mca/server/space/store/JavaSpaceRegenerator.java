@@ -8,7 +8,6 @@ import java.util.StringTokenizer;
 import net.jini.id.Uuid;
 
 import org.apache.commons.io.FilenameUtils;
-import org.mca.service.BuilderException;
 
 import com.sun.jini.outrigger.Recover;
 
@@ -24,15 +23,15 @@ public class JavaSpaceRegenerator {
 	 */
 	public JavaSpaceRegenerator(String path) {
 		this.path = path;
-		File previousLog = getPreviousLog();
-		if (previousLog != null) {
-			JavaSpaceInfoBuilder builder = new JavaSpaceInfoBuilder();
-			try {
-				info = builder.parse(previousLog);
-			} catch (BuilderException e) {
-				e.printStackTrace();
-			}
-		}
+//		File previousLog = getPreviousLog();
+//		if (previousLog != null) {
+//			JavaSpaceInfoBuilder builder = new JavaSpaceInfoBuilder();
+//			try {
+//				info = builder.parse(previousLog);
+//			} catch (BuilderException e) {
+//				e.printStackTrace();
+//			}
+//		}
 
 	}
 

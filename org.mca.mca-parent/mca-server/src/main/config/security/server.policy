@@ -1,0 +1,89 @@
+/* Keystore containing trusted certificates to use for authentication */
+keystore "file:${mca.home}/conf/security/keystore.server";
+
+grant {
+	permission java.net.SocketPermission "*","connect,accept,resolve";
+
+	permission java.lang.RuntimePermission "createSecurityManager" ;
+	permission java.lang.RuntimePermission "modifyThreadGroup" ;
+	permission java.lang.RuntimePermission "getProtectionDomain";
+	permission java.lang.RuntimePermission "getClassLoader";
+	permission java.lang.RuntimePermission "modifyThread";
+	permission java.lang.RuntimePermission "setContextClassLoader";
+	permission java.lang.RuntimePermission "createClassLoader";
+	permission java.lang.RuntimePermission "accessClassInPackage.sun.reflect";
+	permission java.lang.RuntimePermission "accessClassInPackage.sun.security.provider";
+	permission java.lang.RuntimePermission "setSecurityManager";	
+
+	permission com.sun.jini.thread.ThreadPoolPermission "getSystemThreadPool";
+	permission com.sun.jini.thread.ThreadPoolPermission "getUserThreadPool";
+	
+	permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+	
+	permission java.security.SecurityPermission "getDomainCombiner";
+	permission java.security.SecurityPermission "createAccessControlContext";
+	permission java.security.SecurityPermission "getPolicy";
+	permission java.security.SecurityPermission "setPolicy";
+	permission java.security.SecurityPermission "getProperty.*";
+	
+	permission javax.security.auth.AuthPermission "createLoginContext.*";
+	permission javax.security.auth.AuthPermission "doAsPrivileged";
+	permission javax.security.auth.AuthPermission "getSubject";
+	
+	permission javax.security.auth.PrivateCredentialPermission 
+		"javax.security.auth.x500.X500PrivateCredential javax.security.auth.x500.X500Principal \"*\"","read";
+		
+	permission net.jini.security.GrantPermission "java.security.AllPermission \"<all permissions>\", \"<all actions>\"";
+	permission net.jini.security.AuthenticationPermission "javax.security.auth.x500.X500Principal \"*\"","listen";
+	
+	permission net.jini.security.AuthenticationPermission 
+		"javax.security.auth.x500.X500Principal \"*\" javax.security.auth.x500.X500Principal \"*\" ","connect,accept";
+		
+	permission com.sun.jini.discovery.internal.EndpointInternalsPermission "set";
+	
+	permission net.jini.io.context.ContextPermission "net.jini.io.context.ClientSubject.getClientSubject";
+
+	permission java.util.PropertyPermission "mca.home","read";
+	permission java.util.PropertyPermission "org.apache.commons.logging.LogFactory.HashtableImpl","read";
+	permission java.util.PropertyPermission "java.security.policy","read,write";
+	permission java.util.PropertyPermission "jmx.remote.jndi.rebind","read";
+	permission java.util.PropertyPermission "java.naming.factory.initial","read";
+	permission java.util.PropertyPermission "java.naming.*","read";
+	permission java.util.PropertyPermission "java.rmi.server.codebase","write,read";
+
+	permission java.io.FilePermission "${mca.home}/lib","read";
+	permission java.io.FilePermission "${mca.home}/lib/*","read";
+	permission java.io.FilePermission "${mca.home}/conf/*","read";
+	permission java.io.FilePermission "${mca.home}/lib/outrigger.jar;${mca.home}/lib/sun-util.jar;${mca.home}/lib/mca-core.jar;","read";
+	permission java.io.FilePermission "${mca.home}/data/*","read,write";
+
+	permission javax.management.MBeanServerPermission "createMBeanServer";
+	permission javax.management.MBeanPermission "*","registerMBean";
+	permission javax.management.MBeanTrustPermission "register";
+};
+
+grant principal "server"{
+	permission com.sun.jini.reggie.RegistrarPermission "register";
+	permission com.sun.jini.reggie.RegistrarPermission "notify";
+	permission com.sun.jini.reggie.RegistrarPermission "addAttributes";	
+};
+
+grant principal "master"{
+	permission com.sun.jini.reggie.RegistrarPermission "lookup";
+	permission org.mca.security.MCASpacePermission "addCase";
+};
+
+grant principal "worker"{
+	permission com.sun.jini.reggie.RegistrarPermission "lookup";
+};
+
+grant principal "admin"{
+	permission com.sun.jini.reggie.RegistrarPermission "*";
+};
+
+
+
+
+
+
+

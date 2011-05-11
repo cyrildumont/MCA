@@ -1,0 +1,19 @@
+/* Keystore containing trusted certificates to use for Server authentication */
+keystore "file:${mca.home}/conf/security/keystore.server";
+
+grant principal "server"{
+	permission com.sun.jini.outrigger.OutriggerPermission "write";
+	permission com.sun.jini.outrigger.OutriggerPermission "read";
+	permission com.sun.jini.outrigger.OutriggerPermission "take";
+};
+
+grant principal "master"{
+	permission com.sun.jini.outrigger.OutriggerPermission "write";
+	permission com.sun.jini.outrigger.OutriggerPermission "read";
+	permission com.sun.jini.outrigger.OutriggerPermission "take";
+};
+
+
+
+
+

@@ -25,16 +25,13 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import net.jini.core.discovery.LookupLocator;
-import net.jini.core.transaction.server.ServerTransaction;
 import net.jini.id.Uuid;
 import net.jini.id.UuidFactory;
 import net.jini.io.MarshalledInstance;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.mca.entry.ComputationCase;
 import org.mca.entry.Storable;
-import org.mca.log.LogUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -45,15 +42,57 @@ import com.sun.jini.outrigger.StorableResource;
 
 public class MCASpaceOps implements LogOps{
 
+	/**
+	 * 
+	 * @author Cyril Dumont
+	 * @version 1.0
+	 *
+	 */
+	private class TransactionalOp<T>{
+		
+		private T opsElement;		
+		private OpsType opsType;
+		
+		public TransactionalOp(T opsElement, OpsType opsType) {
+			this.opsElement = opsElement;
+			this.opsType = opsType;
+		}
+
+		public T getOpsElement() {
+			return opsElement;
+		}
+
+		public OpsType getOpsType() {
+			return opsType;
+		}
+				
+	}
+	
+	
+	/**
+	 * 
+	 * @author Cyril Dumont
+	 * @version 1.0
+	 *
+	 */
+	private enum OpsType{
+		WRITE,
+		TAKE
+	}
+	
 	private Document doc;
 	private Element javaspace;
-	private Element cases;
 	private File file;
 	private Element entries;
 	private Element listeners;
 	private Map<Uuid, Node> entriesMap;
-	private Map<Long, Map<Uuid, Node>> casesMap;
-
+	
+	
+	private Map<Long, TransactionalOp<?>> transactionMap; 
+	
+	private Node joinStateManager;
+	private String path;
+	
 	/** Log */
 	private final static Log LOG = LogFactory.getLog(MCASpaceOps.class);
 
@@ -62,23 +101,16 @@ public class MCASpaceOps implements LogOps{
 	 * @param path
 	 */
 	public MCASpaceOps(String path) {
-
-		String logFile = "javaspace_" + new Date().getTime() + ".xml";
-		this.file = new File(path, logFile );
-
+		this.path = path;
 		try {
 			DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			doc = builder.newDocument();
 			javaspace = doc.createElement("javaspace");
 			doc.appendChild(javaspace);
-			casesMap = new HashMap<Long, Map<Uuid,Node>>();
 			entriesMap = new HashMap<Uuid, Node>();
+			transactionMap = new HashMap<Long, TransactionalOp<?>>();
 			entries = doc.createElement("entries");
 			javaspace.appendChild(entries);
-			cases = doc.createElement("cases");
-			javaspace.appendChild(cases);
-			save();
-
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
 		}
@@ -89,9 +121,8 @@ public class MCASpaceOps implements LogOps{
 	 * 
 	 */
 	public void abortOp(Long txnId) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("abortOp(" + txnId +")");
-		}
+		System.out.println("abortOp(" + txnId +")");
+		transactionMap.remove(txnId);
 	}
 
 	/**
@@ -103,32 +134,43 @@ public class MCASpaceOps implements LogOps{
 		}
 		javaspace.setAttribute("time", String.valueOf(time));
 		javaspace.setAttribute("sessionId", String.valueOf(sessionId));
-		save();
+
 	}
 
 	/**
 	 * 
 	 */
 	public void cancelOp(Uuid cookie, boolean expired) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("cancelOp(" + cookie + "," + expired + ")");	
-		}
+		System.out.println("cancelOp(" + cookie + "," + expired + ")");	
 	}
 
 	/**
 	 * 
 	 */
 	public void commitOp(Long txnId) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("commitOp(" + txnId + ")");			
+		System.out.println("commitOp(" + txnId + ")");
+		TransactionalOp<?> to = transactionMap.get(txnId);
+		OpsType type =to.getOpsType();
+		switch (type) {
+		case TAKE:	
+			Uuid uuid = (Uuid)to.getOpsElement();
+			takeOp(uuid, null);
+			break;
+		case WRITE:	
+			StorableResource entry = (StorableResource)to.getOpsElement();
+			writeOp(entry, null);
+			break;
 		}
+		transactionMap.remove(txnId);
 	}
 
 	/**
 	 * 
 	 */
 	public void joinStateOp(StorableObject state) {
-		Node joinStateManager = doc.createElement("joinStateManager");
+		if (joinStateManager != null)
+			javaspace.removeChild(joinStateManager);
+		joinStateManager = doc.createElement("joinStateManager");
 		javaspace.appendChild(joinStateManager);
 		try{
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -167,31 +209,30 @@ public class MCASpaceOps implements LogOps{
 	 * 
 	 */
 	public void prepareOp(Long txnId, StorableObject transaction) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("prepareOp(" + txnId + "," + transaction + ")");			
-		}
+		System.out.println("prepareOp(" + txnId + "," + transaction + ")");			
+
 	}
 
 	/**
 	 * 
 	 */
 	public void registerOp(StorableResource registration, String type, StorableObject[] templates) {
-		/*		if (listeners == null) {
+		System.out.println("registerOp()");
+		if (listeners == null) {
 			listeners = doc.createElement("listeners");
 			javaspace.appendChild(listeners);
 		}
 		try{
-			System.out.println(registration);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream(baos);
 			registration.store(oos);
 			ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
 			ObjectInputStream ois = new ObjectInputStream(bais);
 			writeRegistration(ois, type, templates);
-		}catch (IOException e) {s
+		}catch (IOException e) {
 			e.printStackTrace();
 		} 
-		save();*/
+		save();
 
 	}
 
@@ -208,9 +249,7 @@ public class MCASpaceOps implements LogOps{
 	 * 
 	 */
 	public void takeOp(Uuid[] cookies, Long txnId)  {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("takeOp(" + cookies + "," + txnId + ")");			
-		}
+		System.out.println("takeOp(" + cookies + "," + txnId + ")");
 		for (Uuid cookie : cookies) {
 			Node node = entriesMap.get(cookie);
 			if (entries != null) {
@@ -226,8 +265,11 @@ public class MCASpaceOps implements LogOps{
 	 * 
 	 */
 	public void takeOp(Uuid cookie, Long txnId) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("takeOp(" + cookie + "," + txnId + ")");		
+		System.out.println("takeOp(" + cookie + "," + txnId + ")");
+		if (txnId != null){
+			TransactionalOp<Uuid> to = new TransactionalOp<Uuid>(cookie, OpsType.TAKE);
+			transactionMap.put(txnId, to);
+			return;
 		}
 		Node node = entriesMap.get(cookie);
 		if (node != null) {
@@ -237,6 +279,7 @@ public class MCASpaceOps implements LogOps{
 			entriesMap.remove(node);
 			save();
 		}
+		
 	}
 
 	/**
@@ -244,6 +287,8 @@ public class MCASpaceOps implements LogOps{
 	 */
 	public void uuidOp(Uuid uuid) {
 		javaspace.setAttribute("uuid", String.valueOf(uuid));
+		String logFile = "javaspace_" + uuid + "_" + new Date().getTime() + ".xml";
+		this.file = new File(path, logFile );
 		save();
 	}
 
@@ -251,20 +296,12 @@ public class MCASpaceOps implements LogOps{
 	 * 
 	 */
 	public void writeOp(StorableResource entry, Long txnId)  {
-//		if (txnId == null) {
-//			LogUtil.debug("[MCASpace] Writing a ComputationCase entry", getClass());
-//			Long id = getTxnId(entry);
-//			entriesMap = casesMap.get(id);	
-//			if (entriesMap == null) {
-//				Element c  = doc.createElement("case");		
-//				c.setAttribute("txnId", String.valueOf(id));
-//				cases.appendChild(c);
-//				Map<Uuid, Node> entriesMap = new HashMap<Uuid, Node>();
-//				casesMap.put(id, entriesMap);
-//				Element entries = doc.createElement("entries");
-//				c.appendChild(entries);
-//			}
-//		}
+		if (txnId != null){
+			TransactionalOp<StorableResource> to = 
+				new TransactionalOp<StorableResource>(entry, OpsType.WRITE);
+			transactionMap.put(txnId, to);
+			return;
+		}
 		try{
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -273,40 +310,11 @@ public class MCASpaceOps implements LogOps{
 			ObjectInputStream ois = new ObjectInputStream(bais);
 			Element node = createEntryNode(ois, txnId, entriesMap);
 			entries.appendChild(node);
-			
+
 		}catch (IOException e) {
 			e.printStackTrace();
 		} 
 		save();
-	}
-
-	/**
-	 * 
-	 * @param entry
-	 * @return
-	 */
-	private Long getTxnId(StorableResource entry) {
-		try{	
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ObjectOutputStream oos = new ObjectOutputStream(baos);
-			entry.store(oos);
-			ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-			ObjectInputStream ois = new ObjectInputStream(bais);
-			ois.readLong();
-			ois.readLong();
-			ois.readLong();
-			ois.readObject();
-			ois.readObject();
-			ois.readObject();
-			MarshalledInstance[] instances =(MarshalledInstance[])ois.readObject();
-			ComputationCase storable = new ComputationCase();
-			storable.init(instances);
-			ServerTransaction st =  (ServerTransaction)storable.transaction;
-			return st.id;
-		}catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		} 
 	}
 
 	/**
@@ -319,7 +327,7 @@ public class MCASpaceOps implements LogOps{
 		String classname = null;
 		Element entry = doc.createElement("entry");
 		try{
-			
+
 			entry.setAttribute("txnId", txnId != null ? txnId.toString() : "");
 			Long bits0 = ois.readLong();
 			entry.setAttribute("bits0", String.valueOf(bits0));
@@ -381,13 +389,7 @@ public class MCASpaceOps implements LogOps{
 			Boolean visibilityOnly = ois.readBoolean();
 			listener.setAttribute("visibilityOnly", String.valueOf(visibilityOnly));
 			MarshalledObject handback = (MarshalledObject)ois.readObject();	
-			System.out.println(handback);
-			System.out.println(ois.readObject());
 			listeners.appendChild(listener);
-			for (StorableObject template : templates) {
-				System.out.println(template.getClass());
-
-			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
@@ -456,7 +458,9 @@ public class MCASpaceOps implements LogOps{
 	public void setUuid(Uuid uuid) {
 		uuidOp(uuid);
 	}
-	
-	
+
+	public File getFile() {
+		return file;
+	}
 
 }

@@ -1,9 +1,7 @@
 package org.mca.server.space.store;
 
+import java.io.File;
 import java.io.IOException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import net.jini.config.Configuration;
 import net.jini.config.ConfigurationException;
@@ -16,29 +14,23 @@ public class MCAStore implements Store {
 
 	private String logDir;
 	private JavaSpaceRegenerator regenerator;
-	
-	/** Log */
-	private final static Log LOG = LogFactory.getLog(MCAStore.class);
-	
+	private MCASpaceOps MCASpace;
 	public MCAStore(Configuration config) throws ConfigurationException {
 		logDir = System.getProperty("mca.home") + "/data";
 		regenerator = new JavaSpaceRegenerator(logDir);
 	}
 	
 	public void close() throws IOException {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("close");
-		}
+		System.out.println("close");
 	}
 
 	public void destroy() throws IOException {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("close");
-		}
+		File file = MCASpace.getFile();
+		file.delete();
 	}
 
 	public LogOps setupStore(Recover space) {
-		MCASpaceOps MCASpace = new MCASpaceOps(logDir);
+		MCASpace = new MCASpaceOps(logDir);
 		regenerator.regenerate(space, MCASpace);
 		return MCASpace;
 	}

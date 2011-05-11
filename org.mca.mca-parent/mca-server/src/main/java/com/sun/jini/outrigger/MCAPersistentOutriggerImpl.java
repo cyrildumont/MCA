@@ -4,9 +4,9 @@ import java.io.IOException;
 
 import javax.security.auth.login.LoginException;
 
-import com.sun.jini.start.LifeCycle;
-
 import net.jini.config.ConfigurationException;
+
+import com.sun.jini.start.LifeCycle;
 
 public class MCAPersistentOutriggerImpl extends MCAOutriggerServerWrapper{
 
@@ -15,5 +15,5 @@ public class MCAPersistentOutriggerImpl extends MCAOutriggerServerWrapper{
 	{
 		super(configArgs, lifeCycle, true);
 	}
-
+	
 }
