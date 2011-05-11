@@ -1,14 +1,14 @@
 #!/bin/sh
 # Autor: Cyril Dumont
 
-MCA_HOME="@mca.home@"
+MCA_HOME="${mca.home}"
 PIDFILE=$MCA_HOME/mcaworker_`hostname`.pid 
 OUT_FILE=$MCA_HOME/logs/mcaworker_`hostname`.out
 ERR_FILE=$MCA_HOME/logs/mcaworker_`hostname`.err
 NAME=mcaworker 
-MCA_USER=@jsvc.user@
+MCA_USER=${jsvc.user}
 
-OPTIONS="-user $MCA_USER -Dmca.home=$MCA_HOME -Djava.security.policy=$MCA_HOME/conf/policy -Dcom.sun.management.jmxremote.port=9097 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -cp ./commons-daemon.jar:./bootstrap.jar:./commons-logging-1.0.4.jar:./log4j-1.2.14.jar:../conf/ -outfile $OUT_FILE -errfile $ERR_FILE -pidfile $PIDFILE"
+OPTIONS="-user $MCA_USER -Dmca.home=$MCA_HOME -Djava.security.policy=$MCA_HOME/conf/security/worker.policy -Dcom.sun.management.jmxremote.port=9097 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -cp ./commons-daemon.jar:./bootstrap.jar:../conf/ -outfile $OUT_FILE -errfile $ERR_FILE -pidfile $PIDFILE"
   	
 start(){ 
 	echo -n "Starting MCAWorker daemon: " 

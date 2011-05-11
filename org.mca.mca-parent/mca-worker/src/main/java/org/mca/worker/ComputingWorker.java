@@ -4,15 +4,27 @@ import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
-import net.jini.core.entry.UnusableEntryException;
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginContext;
+
+import net.jini.core.discovery.LookupLocator;
+import net.jini.core.event.EventRegistration;
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
 import net.jini.core.event.UnknownEventException;
-import net.jini.space.AvailabilityEvent;
+import net.jini.core.lookup.ServiceRegistrar;
+import net.jini.core.lookup.ServiceTemplate;
+import net.jini.export.Exporter;
+import net.jini.jeri.BasicILFactory;
+import net.jini.jeri.BasicJeriExporter;
+import net.jini.jeri.ssl.SslServerEndpoint;
+import net.jini.security.BasicProxyPreparer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
@@ -21,11 +33,11 @@ import org.mca.agent.ComputeAgentInterface;
 import org.mca.agent.TaskNotifierAgent;
 import org.mca.agent.WaitForAnotherTaskException;
 import org.mca.core.MCAComponent;
-import org.mca.entry.ComputationCase;
-import org.mca.entry.MCAProperty;
+import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.MCASpace;
+import org.mca.javaspace.MCASpaceEvent;
+import org.mca.javaspace.MCASpaceEventListener;
 import org.mca.javaspace.exceptions.CaseNotFoundException;
-import org.mca.javaspace.exceptions.EntryNotFoundException;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.javaspace.exceptions.NoJavaSpaceFoundException;
 import org.mca.listener.TaskNotifierAgentListener;
@@ -44,7 +56,7 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 
 @SuppressWarnings("serial")
 @ManagedResource(objectName = "MCA:type=ComputingWorker")
-public class ComputingWorker  extends MCAComponent implements Observer  {
+public class ComputingWorker  extends MCAComponent implements Observer, MCASpaceEventListener  {
 
 	private static final String TEMP_WORKER_RESULT = "temp.worker.result";
 
@@ -53,11 +65,9 @@ public class ComputingWorker  extends MCAComponent implements Observer  {
 	/** Log */
 	private final static Log LOG = LogFactory.getLog(ComputingWorker.class);
 
-	private static final String FILE_REGGIE = System.getProperty("mca.home") + "/conf/reggie.xml";
+	private static final String FILE_REGGIE = System.getProperty("mca.home") + "/conf/worker-reggie.xml";
 
 	private MCASpace space;
-
-	private MCAPropertiesListener propertiesListener;
 
 	/** state of the ComputeWorker*/
 	private ComputeWorkerState state; 
@@ -71,16 +81,32 @@ public class ComputingWorker  extends MCAComponent implements Observer  {
 
 	private Map<String, String> properties;
 
-	private Lookup lookup;
+	private transient Lookup lookup;
 
 	private int nbTasksComputed;
 
 	private ComputationCase computationCase;
 
-	public ComputingWorker() {
-		init();
-		startLookup();
-		setState(ComputeWorkerState.IDLE);
+	private transient final LoginContext loginContext;
+	
+	public ComputingWorker() throws Exception {
+		loginContext = new LoginContext("org.mca.Worker");
+		loginContext.login();
+		try {
+			Subject.doAsPrivileged(
+					loginContext.getSubject(),
+					new PrivilegedExceptionAction(){
+						public Object run() throws Exception {
+							init();
+							return null;
+						}
+					},
+					null);
+		} catch (PrivilegedActionException e) {
+			e.printStackTrace();
+			throw new Error();
+		}
+			
 	}
 
 	/**
@@ -104,7 +130,9 @@ public class ComputingWorker  extends MCAComponent implements Observer  {
 			}
 			System.setProperty(TEMP_WORKER_DOWNLOAD, dirDownload.getPath());
 			System.setProperty(TEMP_WORKER_RESULT, dirResult.getPath());
-
+			
+			startLookup();
+			setState(ComputeWorkerState.IDLE);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -119,37 +147,87 @@ public class ComputingWorker  extends MCAComponent implements Observer  {
 		setState(ComputeWorkerState.STARTING);
 		try {
 			LogUtil.debug("[" + hostname + "] Connecting on MCASpace [" + hostOfSpace + "]", getClass());
-			space = new MCASpace(hostOfSpace);
+			try {
+				LookupLocator ll = new LookupLocator("jini://" + hostOfSpace);
+				ServiceRegistrar registrar = ll.getRegistrar();
+				Class<?>[] classes = new Class<?>[]{MCASpace.class};
+				ServiceTemplate template = new ServiceTemplate(null, classes,null);
+				space = (MCASpace)registrar.lookup(template);
+				BasicProxyPreparer preparer = new BasicProxyPreparer(false, null);
+				space = (MCASpace)preparer.prepareProxy(space);
+			} catch (Exception e) {
+				e.printStackTrace();
+				setState(ComputeWorkerState.IDLE);
+			}
 			LogUtil.debug("[" + hostname + "] Connexion on MCASpace [" + hostOfSpace + "] : OK", getClass());
 			ComputationCase computationCase = space.getCase(computationCaseName);
 			this.computationCase = computationCase;
-			LogUtil.debug("[" + hostname + "] ComputationCase [" + computationCase.name + "][" + computationCase.description + "]" +
-					"[" + computationCase.state + "] joined", getClass());	
-			computationCase.registerWorker(getComponentInto());
-			LogUtil.debug("[" + hostname + "] [" + computationCase.name + "] Worker registered.", getClass());	
+			LogUtil.debug("[" + hostname + "] ComputationCase [" + computationCase.getName() + "][" + computationCase.getDescription() + "]" +
+					"[" + computationCase.getState() + "] joined", getClass());	
+			computationCase.join(getComponentInto());
+			LogUtil.debug("[" + hostname + "] [" + computationCase.getName() + "] Worker registered.", getClass());	
 			agentListener = new AgentListener();
 			setState(ComputeWorkerState.WAITING);
 			run();	
 		}catch(NoJavaSpaceFoundException e){
 			LOG.error("[" + hostname + "] : MCASpace [" + hostOfSpace + "] not found.");
 			setState(ComputeWorkerState.IDLE);
-		}
-		catch(CaseNotFoundException e){
+		}catch(CaseNotFoundException e){
 			LOG.error("[" + hostname + "] : Case [" + computationCaseName + "]  not found " +
 					"on MCASpace [" + hostOfSpace + "]");
 			setState(ComputeWorkerState.IDLE);
 		}catch (MCASpaceException e) {
 			LOG.error("[" + hostname + "] Error to start the worker");
 			setState(ComputeWorkerState.IDLE);
+		} catch (RemoteException e) {
+			LOG.error("[" + hostname + "] Error to start the worker");
+			setState(ComputeWorkerState.IDLE);
 		}
 	}
 
+	@ManagedOperation(description="connect to a MCASpace")
+	public void connect(String hostOfSpace) throws CaseNotFoundException {
+		System.out.println("connect");
+		LogUtil.info("[" + hostname + "] join a MCASpace [" + hostOfSpace + "]", getClass());
+		setState(ComputeWorkerState.STARTING);
+		try {
+			LogUtil.debug("[" + hostname + "] Connecting on MCASpace [" + hostOfSpace + "]", getClass());
+			try {
+				LookupLocator ll = new LookupLocator("jini://" + hostOfSpace);
+				ServiceRegistrar registrar = ll.getRegistrar();
+				Class<?>[] classes = new Class<?>[]{MCASpace.class};
+				ServiceTemplate template = new ServiceTemplate(null, classes,null);
+				space = (MCASpace)registrar.lookup(template);
+				BasicProxyPreparer preparer = new BasicProxyPreparer(false, null);
+				space = (MCASpace)preparer.prepareProxy(space);
+			} catch (Exception e) {
+				e.printStackTrace();
+				setState(ComputeWorkerState.IDLE);
+			}
+			LogUtil.debug("[" + hostname + "] Connexion on MCASpace [" + hostOfSpace + "] : OK", getClass());
+			Exporter exporter = new BasicJeriExporter(SslServerEndpoint.getInstance(0), new BasicILFactory());
+			MCASpaceEventListener listener = (MCASpaceEventListener)exporter.export(this);
+			EventRegistration event = space.register(listener);
+		}catch(NoJavaSpaceFoundException e){
+			LOG.error("[" + hostname + "] : MCASpace [" + hostOfSpace + "] not found.");
+			setState(ComputeWorkerState.IDLE);
+			e.printStackTrace();
+		}catch (MCASpaceException e) {
+			LOG.error("[" + hostname + "] Error to start the worker");
+			setState(ComputeWorkerState.IDLE);
+			e.printStackTrace();
+		} catch (RemoteException e) {
+			LOG.error("[" + hostname + "] Error to start the worker");
+			setState(ComputeWorkerState.IDLE);
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 * 
 	 * 
 	 */
 	private void startLookup() {
-
 		ApplicationContext context = new FileSystemXmlApplicationContext("file:" + FILE_REGGIE);
 		ServiceConfigurator serviceConfigurator = 
 			context.getBean("reggie", ServiceConfigurator.class);
@@ -187,7 +265,7 @@ public class ComputingWorker  extends MCAComponent implements Observer  {
 	 */
 
 	private Task checkTask() throws MCASpaceException {
-		LogUtil.debug("[" + hostname + "] [" + computationCase.name + "] Check for Task to compute on [" + computationCase.host + "]" , getClass());		
+		LogUtil.debug("[" + hostname + "] [" + computationCase.getName() + "] Check for Task to compute." , getClass());		
 		Task task;
 		try {
 			task = this.computationCase.getTask(TaskState.WAIT_FOR_COMPUTE);
@@ -196,9 +274,9 @@ public class ComputingWorker  extends MCAComponent implements Observer  {
 			taskInProgress.worker = hostname;
 			this.computationCase.addTask(taskInProgress);
 			return task;
-		} catch (EntryNotFoundException e1) {
+		} catch (MCASpaceException e) {
 			this.taskInProgress = null;
-			LogUtil.debug("[" + hostname + "] [" + computationCase.name + "] No Task found on [" + computationCase.host + "]", getClass());
+			LogUtil.debug("[" + hostname + "] [" + computationCase.getName() + "] No Task found.", getClass());
 			return null;
 		}
 
@@ -212,16 +290,17 @@ public class ComputingWorker  extends MCAComponent implements Observer  {
 
 			TaskNotifierAgent agent = null;
 			if (object instanceof TaskNotifierAgent) {
-				LogUtil.debug("[" + hostname + "] [" + computationCase.name + "] New task available.", getClass());
+				LogUtil.debug("[" + hostname + "] [" + computationCase.getName() + "] New task available.", getClass());
 				agent = (TaskNotifierAgent) object;
 				if (isAvailable()) checkTask();
 				else agent.next();
 			}
-		} catch (RemoteException e) {
-			e.printStackTrace();
+
 		} catch (MCASpaceException e) {
 			e.printStackTrace();
-		}
+		}catch (RemoteException e) {
+			e.printStackTrace();
+		} 
 	}
 
 
@@ -236,7 +315,7 @@ public class ComputingWorker  extends MCAComponent implements Observer  {
 			agent = agentListener.getAgent(taskInProgress.computing_agent_name);
 			agent.setCase(computationCase);
 
-			LogUtil.info("[" + hostname + "] [" + computationCase.name + "] [" + taskInProgress.name + "] Computing ...." , getClass());
+			LogUtil.info("[" + hostname + "] [" + computationCase.getName() + "] [" + taskInProgress.name + "] Computing ...." , getClass());
 			try {
 				taskInProgress.result = agent.compute(taskInProgress);
 				LogUtil.info(taskInProgress.name + " computed.", getClass());
@@ -260,9 +339,7 @@ public class ComputingWorker  extends MCAComponent implements Observer  {
 		}
 		try {
 			this.computationCase.updateTask(taskInProgress);
-		} catch (EntryNotFoundException e) {
-			e.printStackTrace();
-		} catch (MCASpaceException e) {
+		}catch (MCASpaceException e) {
 			e.printStackTrace();
 		}
 	}
@@ -290,53 +367,11 @@ public class ComputingWorker  extends MCAComponent implements Observer  {
 
 	/**
 	 * 
-	 * @author Cyril
-	 *
-	 */
-	private class MCAPropertiesListener implements RemoteEventListener{
-
-
-		public MCAPropertiesListener(ComputationCase computationCase) {
-			try {
-				computationCase.registerForMCAProperties(this);
-			} catch (MCASpaceException e) {
-				e.printStackTrace();
-			}
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("MCAPropertiesListener started ...");
-			}
-		}
-
-		/**
-		 * 
-		 */
-		public void notify(RemoteEvent event) throws UnknownEventException, RemoteException {
-			AvailabilityEvent availabilityEvent = (AvailabilityEvent)event;
-			try {
-				MCAProperty property =  (MCAProperty) availabilityEvent.getEntry();
-				if (properties != null ) {
-					addProperty(property.name, property.value);
-				}
-			} catch (UnusableEntryException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	/**
-	 * 
 	 * @param state
 	 */
 	public void setState(ComputeWorkerState state) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("State changed : " + this.state + " --> " + state);
-		}
+		LogUtil.debug("State changed : " + this.state + " --> " + state, getClass());
 		this.state = state;
-	}
-
-	public void addProperty(String name, String value) {
-		properties.put(name, value);
-		LogUtil.debug("properties updated", getClass());
 	}
 
 	public void setSpace(MCASpace space) {
@@ -355,11 +390,17 @@ public class ComputingWorker  extends MCAComponent implements Observer  {
 
 	}
 
-
 	@ManagedAttribute
 	public int getNbTasksComputed() {
 		return nbTasksComputed;
 	}
 
+	public void notify(RemoteEvent event) throws UnknownEventException,
+			RemoteException {
+		if (event instanceof MCASpaceEvent) {
+			MCASpaceEvent mcaEvt = (MCASpaceEvent) event;
+		}
+	}
 
+	
 }
