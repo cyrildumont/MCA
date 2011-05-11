@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.mca.agent.WaitForAnotherTaskException;
-import org.mca.entry.ComputationCase;
-import org.mca.javaspace.JavaSpaceParticipant;
+import org.mca.javaspace.ComputationCase;
 import org.mca.log.LogUtil;
 import org.mca.scheduler.Task;
 
@@ -14,7 +13,7 @@ import org.mca.scheduler.Task;
  * @author cyril
  *
  */
-public class TaskVerifier extends JavaSpaceParticipant {
+public class TaskVerifier {
 
 	private ComputationCase computationCase;
 

@@ -9,6 +9,7 @@ import java.rmi.Remote;
 import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
 import net.jini.core.lookup.ServiceID;
+import net.jini.discovery.DiscoveryGroupManagement;
 import net.jini.discovery.LookupDiscoveryManager;
 import net.jini.lease.LeaseRenewalManager;
 import net.jini.lookup.JoinManager;
@@ -63,7 +64,8 @@ public class ServiceStarter implements ServiceIDListener{
 	}
 
 	private Object startService() {
-
+		
+		//System.setProperty("java.rmi.server.codebase", "https://localhost/mca/codebase/reggie-dl.jar https://localhost/mca/codebase/jsk-dl.jar https://localhost/mca/codebase/mahalo-dl.jar https://localhost/mca/codebase/mca-server.jar");
 		String codebase = config.getCodebaseFormate();
 		String policy = config.getPolicy();
 		String classpath = config.getClasspathFormate();
@@ -76,7 +78,7 @@ public class ServiceStarter implements ServiceIDListener{
 					classpath,
 					implClass,
 					serverConfigArgs);
-
+		
 		// and create the service and its proxy
 		Created created = null;
 		try {
@@ -86,7 +88,6 @@ public class ServiceStarter implements ServiceIDListener{
 			System.exit(1);
 		}
 		impl = created.impl;
-
 		if (needProxy) 
 			proxy = (Remote) created.proxy;
 		return impl;
@@ -103,7 +104,7 @@ public class ServiceStarter implements ServiceIDListener{
 			entries = config.getEntries();
 			groups = new String[]{"coucou"};
 		} catch(Exception e) {
-			System.err.println(e.toString());
+			System.err.println(e.getClass().getName() + " : " + e.getMessage());
 			e.printStackTrace();
 			System.exit(2);
 		}
@@ -124,13 +125,19 @@ public class ServiceStarter implements ServiceIDListener{
 	 * 
 	 */
 	public void serviceIDNotify(ServiceID serviceID) {
-
+		System.out.println(serviceID);
 	}
 
 	public static void main(String[] args) {
 
-		ApplicationContext context = new FileSystemXmlApplicationContext("file:" + args[0]);
-		ServiceConfigurator serviceConfigurator = context.getBean("service",ServiceConfigurator.class);
+		
+		String file = args[0];
+		String service = args[1];
+		
+		System.out.println("Lancement du service [" + service + "] à partir du fichier [" + file + "]");
+		
+		ApplicationContext context = new FileSystemXmlApplicationContext("file:" + file);
+		ServiceConfigurator serviceConfigurator = context.getBean(service,ServiceConfigurator.class);
 
 		RMISecurityManager securityManager = new RMISecurityManager();
 		System.setProperty("java.rmi.server.codebase", serviceConfigurator.getCodebaseFormate());
@@ -139,6 +146,12 @@ public class ServiceStarter implements ServiceIDListener{
 
 		System.setSecurityManager(securityManager);
 		ServiceStarter starter = new ServiceStarter(serviceConfigurator);
-		starter.start();
+		starter.startWithoutAdvertise();
+		while( true ) {
+            try {
+                Thread.sleep( 100000 );
+            } catch( InterruptedException ex ) {
+            }
+        }		
 	}
 }

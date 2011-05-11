@@ -7,6 +7,7 @@ import javax.management.InstanceNotFoundException;
 import javax.management.MBeanException;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
+import javax.management.NotificationListener;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
 import javax.management.remote.JMXConnector;
@@ -18,13 +19,13 @@ import javax.management.remote.JMXServiceURL;
  */
 public class JMXComponent {
 
-	private ObjectName objectname;
+	private ObjectName objectName;
 	
 	private MBeanServerConnection mbsc;
 	
 	public JMXComponent(String objectname, String url, String port){
 		try {
-			this.objectname = new ObjectName(objectname);
+			this.objectName = new ObjectName(objectname);
 			JMXServiceURL jmxurl = new JMXServiceURL(JMXConstantes.JMX_URL_HEADER + url + ":" + port + JMXConstantes.JMX_URL_FOOTER);
 			JMXConnector jmxc = JMXConnectorFactory.connect(jmxurl, null);
 			this.mbsc = jmxc.getMBeanServerConnection();
@@ -48,7 +49,7 @@ public class JMXComponent {
 	 */
 	public Object invoke(String operationName, Object[] params, String[] signature){
 		try {
-			return mbsc.invoke(this.objectname, operationName, params, signature);
+			return mbsc.invoke(this.objectName, operationName, params, signature);
 		} catch (InstanceNotFoundException e) {
 			e.printStackTrace();
 			return null;
@@ -63,4 +64,16 @@ public class JMXComponent {
 			return null;
 		}
 	}
+	
+	public void addListener(NotificationListener listener){
+		try {
+			mbsc.addNotificationListener(objectName, listener, null, null);
+		} catch (InstanceNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
 }

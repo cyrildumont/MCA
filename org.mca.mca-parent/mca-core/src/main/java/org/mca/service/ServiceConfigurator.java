@@ -1,6 +1,7 @@
 package org.mca.service;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 import net.jini.config.AbstractConfiguration;
@@ -13,6 +14,8 @@ import net.jini.core.entry.Entry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mca.entry.DataHandler;
+import org.mca.entry.EntryFactory;
+import org.mca.log.LogUtil;
 
 /**
  * 
@@ -28,30 +31,31 @@ public class ServiceConfigurator extends AbstractConfiguration{
 	private final static Log LOG = LogFactory.getLog(ServiceConfigurator.class);
 
 	private static final String JINI_LOCATOR_PREFIX = "jini://";
-	
+
 	private String name;
-	
+
 	private List<String> codebase;
-	
+
 	private String policy;
-	
+
 	private  List<String> classpath;
-	
+
 	private String implClass;
-	
+
 	private String[] serverConfigArgs;
-	
+
 	private  List<Entry> entries;
-	
+
 	private  List<String> locators;
-	
+
 	private DataHandler byteCodeHandler;
-	
+
 	public ServiceConfigurator() {
 		locators = new ArrayList<String>();
 		locators.add("localhost");
+		entries = new ArrayList<Entry>();
 	}
-	
+
 	/**
 	 * 
 	 * @param jarPath
@@ -59,7 +63,7 @@ public class ServiceConfigurator extends AbstractConfiguration{
 	public void addJarToCodebase(String jarPath){
 		codebase.add(jarPath);
 	}
-	
+
 	/**
 	 * 
 	 * @param jarPath
@@ -132,7 +136,7 @@ public class ServiceConfigurator extends AbstractConfiguration{
 		this.policy = policy;
 	}
 
-	
+
 	public String[] getServerConfigArgs() {
 		return serverConfigArgs;
 	}
@@ -170,7 +174,7 @@ public class ServiceConfigurator extends AbstractConfiguration{
 				e.printStackTrace();
 			}
 		}
-		return locators.toArray(new LookupLocator[locators.size()]);
+		return ll;
 	}
 
 	/**
@@ -179,14 +183,13 @@ public class ServiceConfigurator extends AbstractConfiguration{
 	public void setLocators(List<String> locators) {
 		this.locators = locators;
 	}
-	
+
 	@Override
 	protected Object getEntryInternal(String component, String name, 
 			Class type, Object data) throws ConfigurationException {
-		if(LOG.isDebugEnabled()){
-			LOG.debug("requested entry : [component=" + component + "]" +
-					"[name=" + name + "][type=" + type + "][data=" + data + "]");
-		}
+
+		LogUtil.debug("requested entry : [component=" + component + "]" +
+				"[name=" + name + "][type=" + type + "][data=" + data + "]",getClass());
 		Configuration config = ConfigurationProvider.getInstance(new String[0]);
 		return  config.getEntry(component, name, type);
 	}
@@ -197,6 +200,10 @@ public class ServiceConfigurator extends AbstractConfiguration{
 
 	public void setName(String name) {
 		this.name = name;
+		Hashtable<String, String> propertiesTable = new Hashtable<String, String>();
+		propertiesTable.put("name", name);
+		Entry entry = EntryFactory.createEntry("net.jini.lookup.entry.Name", propertiesTable);
+		entries.add(entry);
 	}
 
 	public DataHandler getByteCodeHandler() {
@@ -206,5 +213,5 @@ public class ServiceConfigurator extends AbstractConfiguration{
 	public void setByteCodeHandler(DataHandler byteCodeHandler) {
 		this.byteCodeHandler = byteCodeHandler;
 	}
-	
+
 }

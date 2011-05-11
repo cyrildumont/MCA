@@ -32,6 +32,7 @@ import org.mca.util.MCAUtils;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
 
+@SuppressWarnings("serial")
 @ManagedResource(objectName = "MCA:type=Lookup")
 public class Lookup implements Serializable{
 
@@ -76,10 +77,7 @@ public class Lookup implements Serializable{
 			e.printStackTrace();
 		}
 		services = new ArrayList<Service>();
-		refresh();
-		LookupListener listener = new LookupListener(this);
-		new Thread(listener).start();
-		
+		refresh();		
 	}
 
 

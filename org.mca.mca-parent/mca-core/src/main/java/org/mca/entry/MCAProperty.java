@@ -75,5 +75,10 @@ public class MCAProperty extends Storable {
 		node.setAttribute("value", this.value);
 		parent.appendChild(node);
 	}
+	
+	@Override
+	public String toString() {
+		return "[MCAProperty] -- [name : " + name + "][value : " + value + "]";
+	}
 
 }

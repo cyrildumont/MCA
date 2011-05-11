@@ -9,8 +9,8 @@ import java.util.Observer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.exceptions.MCASpaceException;
-import org.mca.javaspace.exceptions.NoDuplicatedDataHandlerException;
 
 
 /**
@@ -58,11 +58,7 @@ public class EntryGenerator implements Observer,Runnable {
 			LOG.debug("DataHandler added to Space : [ name = " + entry.name +" ]");
 		} catch (MCASpaceException e) {
 			e.printStackTrace();
-		} catch (NoDuplicatedDataHandlerException e) {
-			LOG.error("DataHandler [ name = " + entry.name +" ] is already on the space");
-			e.printStackTrace();
 		}
-
 	}
 
 

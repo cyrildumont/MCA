@@ -1,5 +1,5 @@
 package org.mca.javaspace.exceptions;
 
-public class CaseNotFoundException extends Exception {
+public class CaseNotFoundException extends MCASpaceException {
 
 }

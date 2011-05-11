@@ -2,7 +2,7 @@ package org.mca.deployer;
 
 import java.util.Map;
 
-import org.mca.entry.ComputationCase;
+import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.math.Data;
 import org.mca.scheduler.Task;

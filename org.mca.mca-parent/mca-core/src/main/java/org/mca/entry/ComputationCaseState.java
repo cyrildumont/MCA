@@ -8,8 +8,7 @@ package org.mca.entry;
  * @author cyril
  *
  */
-public enum ComputationCaseState {
-
+public enum ComputationCaseState {	
 	STARTED,
 	PAUSED,
 	FINISHED;

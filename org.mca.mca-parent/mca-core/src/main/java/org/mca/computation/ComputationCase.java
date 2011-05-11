@@ -2,23 +2,28 @@ package org.mca.computation;
 
 import java.io.File;
 import java.rmi.RMISecurityManager;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import net.jini.core.discovery.LookupLocator;
+import net.jini.core.lookup.ServiceRegistrar;
+import net.jini.core.lookup.ServiceTemplate;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.mca.agent.AgentDeployer;
+import org.mca.agent.ComputeAgentDeployer;
 import org.mca.computation.exception.NoProjectFoundException;
 import org.mca.deployer.TaskDeployer;
 import org.mca.entry.EntryGenerator;
+import org.mca.entry.MCAProperty;
 import org.mca.files.FileGenerator;
 import org.mca.files.FileGeneratorException;
 import org.mca.javaspace.MCASpace;
 import org.mca.javaspace.exceptions.CaseNotFoundException;
 import org.mca.javaspace.exceptions.MCASpaceException;
-import org.mca.javaspace.exceptions.NoJavaSpaceFoundException;
 import org.mca.jmx.JMXComponent;
 import org.mca.jmx.JMXConstantes;
 import org.mca.log.LogUtil;
@@ -55,11 +60,10 @@ public class ComputationCase {
 
 	private String hostOfMaster;
 
-
-
 	private String description;
-
-	private org.mca.entry.ComputationCase computationCase;
+	
+	
+	private org.mca.javaspace.ComputationCase computationCase;
 
 	public void setDescription(String description) {
 		this.description = description;
@@ -71,8 +75,12 @@ public class ComputationCase {
 
 	private void initSpace(String hostOfSpace){
 		try {
-			space = new MCASpace(hostOfSpace);
-		} catch (NoJavaSpaceFoundException e) {
+			LookupLocator ll = new LookupLocator("jini://" + hostOfSpace);
+			ServiceRegistrar registrar = ll.getRegistrar();
+			Class<?>[] classes = new Class<?>[]{MCASpace.class};
+			ServiceTemplate template = new ServiceTemplate(null, classes,null);
+			space = (MCASpace)registrar.lookup(template);
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -82,6 +90,7 @@ public class ComputationCase {
 		String mcaHome = System.getProperty("mca.home");
 		if (mcaHome == "") {
 			LOG.error("you must define a MCA HOME");
+			return;
 		}
 
 		LOG.info(" *************** PREPARE COMPUTATION CASE *********************");
@@ -111,7 +120,7 @@ public class ComputationCase {
 	}
 
 	@ManagedOperation
-	public org.mca.entry.ComputationCase deploy(String hostOfSpace){
+	public org.mca.javaspace.ComputationCase deploy(String hostOfSpace) throws MCASpaceException{
 
 		LOG.info(" *************** DEPLOY COMPUTATION CASE *********************");
 		initSpace(hostOfSpace);
@@ -134,12 +143,12 @@ public class ComputationCase {
 		}
 	}
 
-	private void deployCase() {
-		try {
-			computationCase = space.addCase(projectName,description);
-		} catch (MCASpaceException e) {
-			e.printStackTrace();
-		}
+	private void deployCase() throws MCASpaceException {
+			try {
+				computationCase = space.addCase(projectName,description);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
 	}
 
 	/**
@@ -166,7 +175,6 @@ public class ComputationCase {
 	 * @param configFile
 	 */
 	private void deployAgent(String configFile){
-
 		ApplicationContext context = new FileSystemXmlApplicationContext("file:" + configFile);
 		ServiceConfigurator serviceConfigurator = context.getBean("service",ServiceConfigurator.class);
 		RMISecurityManager securityManager = new RMISecurityManager();
@@ -174,11 +182,9 @@ public class ComputationCase {
 		System.setProperty("java.security.policy", "/home/cyril/MCA/conf/policy");
 		System.setSecurityManager(securityManager);
 		LOG.info("Deploy " + serviceConfigurator.getName() + " Agent.");
-		AgentDeployer deployer = new AgentDeployer();
+		ComputeAgentDeployer deployer = new ComputeAgentDeployer();
 		deployer.deploy(serviceConfigurator);
-
 	}
-
 
 	/**
 	 * 
@@ -220,19 +226,19 @@ public class ComputationCase {
 	private void deployProperties() {
 		LOG.info(" *************** Deploy MCAProperties *********************");
 		try {
-			org.mca.entry.ComputationCase computationCase = space.getCase(projectName);
+			org.mca.javaspace.ComputationCase computationCase = space.getCase(projectName);
 			for (Map.Entry<String, String> property : properties.entrySet()) {
 				String key = property.getKey();
 				String value = property.getValue();
-				computationCase.addProperty(key, value);
-				LogUtil.debug("[" + space.getHost() +"][" + projectName + "]" +
-						" Property [" + key + " = " + value +"] added.", getClass());
+				computationCase.addProperty(new MCAProperty(key, value));
 			}
-		} catch (MCASpaceException e) {
-			LogUtil.error(" Error on Space [" + space.getHost() + "].", getClass());
 		} catch (CaseNotFoundException e) {
-			LogUtil.error("[" + space.getHost() + "] Case [" + projectName + "] not found.", getClass());
-		}
+			LogUtil.error(" Case [" + projectName + "] not found.", getClass());
+		}catch (MCASpaceException e) {
+			e.printStackTrace();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} 
 	}
 
 	public void setEntryGenerator(EntryGenerator entryGenerator) {
@@ -304,7 +310,11 @@ public class ComputationCase {
 
 		if (action.equals("deploy")) {
 			String hostOfSpace = args[2];
-			computationCase.deploy(hostOfSpace);
+			try {
+				computationCase.deploy(hostOfSpace);
+			} catch (MCASpaceException e) {
+				e.printStackTrace();
+			}
 		}else if(action.equals("prepare")){
 			computationCase.prepare();
 		}else{

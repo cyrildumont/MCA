@@ -17,10 +17,8 @@ import org.mca.util.MCAUtils;
  * @author Cyril
  *
  */
+@SuppressWarnings("serial")
 public abstract class MCAComponent extends NotificationBroadcasterSupport implements Serializable{
-
-	/** Log */
-	private final static Log LOG = LogFactory.getLog(MCAComponent.class);
 
 	protected int type;
 	
@@ -53,5 +51,4 @@ public abstract class MCAComponent extends NotificationBroadcasterSupport implem
 		return infos;
 	}
 	
-
 }

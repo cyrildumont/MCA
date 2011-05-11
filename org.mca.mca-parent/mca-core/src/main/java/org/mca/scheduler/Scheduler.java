@@ -3,7 +3,7 @@ package org.mca.scheduler;
 import java.util.Observable;
 import java.util.Observer;
 
-import org.mca.entry.ComputationCase;
+import org.mca.javaspace.ComputationCase;
 
 public abstract class Scheduler extends Observable{
 	

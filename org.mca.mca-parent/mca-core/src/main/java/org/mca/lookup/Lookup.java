@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.rmi.RemoteException;
 
 import net.jini.core.discovery.LookupLocator;
+import net.jini.core.entry.Entry;
 import net.jini.core.lookup.ServiceRegistrar;
 import net.jini.core.lookup.ServiceTemplate;
 import net.jini.discovery.DiscoveryEvent;
@@ -29,16 +30,21 @@ public class Lookup implements DiscoveryListener {
 	 * 
 	 * @param aServiceInterface
 	 */
-	public Lookup(Class aServiceInterface) {
-		Class[] myServiceTypes = new Class[] {aServiceInterface};
+	public Lookup(Class<?> aServiceInterface) {
+		Class<?>[] myServiceTypes = new Class[] {aServiceInterface};
 		theTemplate = new ServiceTemplate(null, myServiceTypes, null);
 	}
 
 
 	public Object getService(String host){
+		return getService(host, null);
+	}
+	
+	public Object getService(String host, Entry[] entries){
 		try{
 			LookupLocator locators = new LookupLocator("jini://" + host);	
-			ServiceRegistrar registrar = locators.getRegistrar();			
+			ServiceRegistrar registrar = locators.getRegistrar();	
+			theTemplate.attributeSetTemplates = entries;
 			return registrar.lookup(theTemplate);
 		}catch (MalformedURLException e) {
 			LOG.error(e.getClass().getName() + " : " + e.getMessage());
@@ -52,6 +58,7 @@ public class Lookup implements DiscoveryListener {
 			return null;
 		}
 	}
+	
 	/**
 	 * 
 	 * @return

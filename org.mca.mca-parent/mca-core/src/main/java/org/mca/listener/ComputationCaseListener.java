@@ -12,10 +12,10 @@ import net.jini.core.event.RemoteEventListener;
 import net.jini.core.event.UnknownEventException;
 import net.jini.space.AvailabilityEvent;
 
-import org.mca.entry.ComputationCase;
 import org.mca.entry.DataHandler;
 import org.mca.entry.MCAProperty;
 import org.mca.javaspace.MCASpace;
+import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.javaspace.exceptions.NoJavaSpaceFoundException;
 import org.mca.log.LogUtil;
@@ -42,7 +42,7 @@ public class ComputationCaseListener implements RemoteEventListener {
 	}
 	
 	public void start() throws MCASpaceException{
-		computationCase.registerForUpdates(this);
+//		computationCase.registerForUpdates(this);
 	}
 	
 	/**

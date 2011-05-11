@@ -7,11 +7,10 @@ import java.rmi.MarshalledObject;
 import net.jini.core.entry.Entry;
 import net.jini.io.MarshalledInstance;
 
-import org.mca.javaspace.JavaSpaceParticipant;
 import org.mca.util.ClassUtil;
 import org.w3c.dom.Node;
 
-public abstract class Storable extends JavaSpaceParticipant implements Entry {
+public abstract class Storable implements Entry {
 
 	/**
 	 * 

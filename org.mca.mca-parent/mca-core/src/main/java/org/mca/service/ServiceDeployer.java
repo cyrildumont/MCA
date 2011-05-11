@@ -1,34 +1,49 @@
-package org.mca.agent;
+package org.mca.service;
 
 import java.io.IOException;
 import java.rmi.RMISecurityManager;
+import java.rmi.Remote;
 
+import net.jini.constraint.BasicMethodConstraints;
+import net.jini.core.constraint.Integrity;
+import net.jini.core.constraint.InvocationConstraint;
+import net.jini.core.constraint.InvocationConstraints;
 import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
 import net.jini.core.lease.Lease;
+import net.jini.core.lookup.ServiceID;
 import net.jini.core.lookup.ServiceItem;
 import net.jini.core.lookup.ServiceMatches;
 import net.jini.core.lookup.ServiceRegistrar;
 import net.jini.core.lookup.ServiceTemplate;
 import net.jini.discovery.DiscoveryManagement;
 import net.jini.discovery.LookupLocatorDiscovery;
+import net.jini.export.Exporter;
+import net.jini.jeri.BasicILFactory;
+import net.jini.jeri.BasicJeriExporter;
+import net.jini.jeri.ssl.SslServerEndpoint;
 import net.jini.lease.LeaseRenewalManager;
 import net.jini.lookup.JoinManager;
+import net.jini.lookup.ServiceIDListener;
 import net.jini.lookup.entry.Name;
+import net.jini.security.AccessPermission;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.mca.agent.ComputeAgent;
 import org.mca.agent.exception.DeployException;
 import org.mca.log.LogUtil;
-import org.mca.service.ServiceConfigurator;
+import org.mca.util.MCAUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
-public class AgentDeployer {
+public class ServiceDeployer implements ServiceIDListener {
 
 	/** Log */
-	private final static Log LOG = LogFactory.getLog(AgentDeployer.class);
+	private final static Log LOG = LogFactory.getLog(ServiceDeployer.class);
 
+	// utile pour garder une reference sur l'object !
+	private static Service agent;
 
 	/**
 	 * 
@@ -37,40 +52,44 @@ public class AgentDeployer {
 	public void deploy(String file) throws DeployException{
 		ApplicationContext context = new FileSystemXmlApplicationContext("file:" + file);
 		ServiceConfigurator serviceConfigurator = context.getBean("service",ServiceConfigurator.class);
-
 		deploy(serviceConfigurator);
-
-
 	}
 
+	public void deploy(ServiceConfigurator config){
+		deploy(config, null);
+	}
 	/**
 	 * 
 	 * @param config
 	 */
-	public void deploy(ServiceConfigurator config){
+	public void deploy(ServiceConfigurator config, Class<? extends AccessPermission> permissionClass){
 		try{
 			LookupLocator[] llc = config.getLookupLocators();
 			Entry[] entries = config.getEntries();
 			DiscoveryManagement dm = new LookupLocatorDiscovery(llc);
 			String sClassAgent = config.getImplClass(); 
 			ClassLoader loader = Thread.currentThread().getContextClassLoader();
-			Class classAgent = loader.loadClass(sClassAgent);
-			ComputeAgent agent = (ComputeAgent)classAgent.newInstance();
-			if (agent instanceof ComputeNativeAgent) {
-				LogUtil.debug("Deploy ComputeNativeAgent ...", AgentDeployer.class);
-				ComputeNativeAgent nativeAgent = (ComputeNativeAgent) agent;
-				nativeAgent.setByteCodeHandler(config.getByteCodeHandler());
-			}
-			JoinManager myManager = new JoinManager(agent,entries,agent,dm,new LeaseRenewalManager());
-
+			Class<?> classAgent = loader.loadClass(sClassAgent);
+			agent = (Service)classAgent.newInstance();
+			Exporter exporter = 
+				new BasicJeriExporter(SslServerEndpoint.getInstance(MCAUtils.getIP(),0), 
+						new BasicILFactory(new BasicMethodConstraints(
+								new InvocationConstraints(
+										new InvocationConstraint[]{Integrity.YES}, null)),permissionClass));
+			Remote proxy = exporter.export(agent);
+			new JoinManager(proxy,entries,this,dm,new LeaseRenewalManager());
 		}catch (ClassNotFoundException e) {
 			LOG.error(e.getClass().getName() +" : " + e.getMessage());
+			e.printStackTrace();
 		} catch (InstantiationException e) {
 			LOG.error(e.getClass().getName() +" : " + e.getMessage());
+			e.printStackTrace();
 		} catch (IllegalAccessException e) {
 			LOG.error(e.getClass().getName() +" : " + e.getMessage());
+			e.printStackTrace();
 		} catch (IOException e) {
 			LOG.error(e.getClass().getName() +" : " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
@@ -113,7 +132,7 @@ public class AgentDeployer {
 			try {
 				ServiceRegistrar registrar = ll.getRegistrar();
 				String sClassAgent = config.getImplClass(); 
-				Class classAgent = Class.forName(sClassAgent);
+				Class<?> classAgent = Class.forName(sClassAgent);
 				ComputeAgent agent = (ComputeAgent)classAgent.newInstance();
 				String name = config.getName();
 				Entry[] entries = new Entry[]{new Name(name)};
@@ -143,16 +162,21 @@ public class AgentDeployer {
 	public static void main(String[] args) {
 
 		ApplicationContext context = new FileSystemXmlApplicationContext("file:" + args[0]);
-		ServiceConfigurator serviceConfigurator = context.getBean("service",ServiceConfigurator.class);
+		ServiceConfigurator serviceConfigurator = context.getBean("agent",ServiceConfigurator.class);
 
 		RMISecurityManager securityManager = new RMISecurityManager();
 		System.setProperty("java.rmi.server.codebase", serviceConfigurator.getCodebaseFormate());
 		System.setProperty("java.security.policy", serviceConfigurator.getPolicy());
 		System.setSecurityManager(securityManager);
 		LOG.info("Deploy " + serviceConfigurator.getName() + " Agent.");
-
-		AgentDeployer deployer = new AgentDeployer();
+		
+		ServiceDeployer deployer = new ServiceDeployer();
 		deployer.deploy(serviceConfigurator);
+	}
+
+	@Override
+	public void serviceIDNotify(ServiceID serviceID) {
+		LogUtil.debug("Agent [" + serviceID + "] deployed", getClass());
 	}
 
 }

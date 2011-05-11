@@ -2,6 +2,7 @@ package org.mca.listener;
 
 import java.util.Observer;
 
+import net.jini.core.lookup.ServiceID;
 import net.jini.core.lookup.ServiceItem;
 
 import org.mca.agent.TaskNotifierAgent;
@@ -23,7 +24,7 @@ public class TaskNotifierAgentListener extends RegistrarEventListener {
 	 * 
 	 */
 	@Override
-	protected Object register(ServiceItem item) {
+	protected Object register(ServiceID uuid, ServiceItem item) {
 		Object service = item.service;
 		if (service instanceof TaskNotifierAgent) {
 			TaskNotifierAgent notifierAgent = (TaskNotifierAgent)service;
@@ -35,12 +36,12 @@ public class TaskNotifierAgentListener extends RegistrarEventListener {
 	}
 
 	@Override
-	protected Object unregister(ServiceItem item) {
+	protected Object unregister(ServiceID uuid) {
 		return null;
 	}
 
 	@Override
-	protected Object update(ServiceItem item) {
+	protected Object update(ServiceID uuid, ServiceItem item) {
 		return null;
 	}
 

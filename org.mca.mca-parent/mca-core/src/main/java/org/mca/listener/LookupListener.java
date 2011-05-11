@@ -1,5 +1,6 @@
 package org.mca.listener;
 
+import net.jini.core.lookup.ServiceID;
 import net.jini.core.lookup.ServiceItem;
 
 import org.mca.model.Lookup;
@@ -11,21 +12,23 @@ public class LookupListener extends RegistrarEventListener {
 	}
 
 	@Override
-	protected Object register(ServiceItem item) {
-		// TODO Auto-generated method stub
+	protected Object register(ServiceID uuid, ServiceItem item) {
+		System.out.println("register");
 		return null;
 	}
 
 	@Override
-	protected Object unregister(ServiceItem item) {
-		// TODO Auto-generated method stub
+	protected Object unregister(ServiceID uuid) {
+		System.out.println("register");
 		return null;
 	}
 
 	@Override
-	protected Object update(ServiceItem item) {
+	protected Object update(ServiceID uuid, ServiceItem item) {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+
 
 }

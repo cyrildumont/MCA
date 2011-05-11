@@ -13,7 +13,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * @author Cyril
+ * @author Cyril Dumont
+ * @version 1.0
  *
  */
 public class Task extends Storable{

@@ -29,9 +29,8 @@ import net.jini.lookup.entry.Name;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.mca.entry.ComputationCase;
 import org.mca.entry.MCAProperty;
-import org.mca.javaspace.exceptions.EntryNotFoundException;
+import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.log.LogUtil;
 import org.mca.result.TaskVerifier;
@@ -90,6 +89,8 @@ public abstract class ComputeAgent extends UnicastRemoteObject implements Comput
 
 	final public void serviceIDNotify(ServiceID serviceID) {
 		LOG.info("Agent [ID=" + serviceID.toString() + "] is deployed");
+
+		System.out.println("Agent [ID=" + serviceID.toString() + "] is deployed");
 		System.exit(1);
 	}
 

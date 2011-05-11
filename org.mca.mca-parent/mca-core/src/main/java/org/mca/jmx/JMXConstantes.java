@@ -12,5 +12,7 @@ public interface JMXConstantes {
 	final public static String JMX_MASTER_NAME = "MCA:type=ComputingMaster";
 	final public static String JMX_WORKER_NAME = "MCA:type=ComputingWorker";
 	
+	final public static String JMX_CASE_NAME_PREFIX = "MCA:type=Case,name=";
+	
 	final public static String JMX_EXECUTION_TIME_NAME = "MCA:service=PerformanceMonitor";
 }

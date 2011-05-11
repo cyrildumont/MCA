@@ -1,13 +1,11 @@
 package org.mca.agent;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.Map;
 
-import org.mca.entry.ComputationCase;
+import org.mca.javaspace.ComputationCase;
 import org.mca.scheduler.Task;
 
-public interface ComputeAgentInterface extends Remote {
+public interface ComputeAgentInterface extends MobileAgent {
 	
 	public Object compute(Task task) throws Exception;
 	

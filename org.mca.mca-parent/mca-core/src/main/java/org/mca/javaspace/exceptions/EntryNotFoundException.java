@@ -2,7 +2,7 @@ package org.mca.javaspace.exceptions;
 
 import net.jini.core.entry.Entry;
 
-public class EntryNotFoundException extends MCASpaceException {
+public class EntryNotFoundException extends Exception {
 
 	private Entry template;
 	

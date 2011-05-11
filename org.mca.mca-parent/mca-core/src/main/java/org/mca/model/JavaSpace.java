@@ -15,7 +15,8 @@ import org.apache.commons.logging.LogFactory;
 import org.mca.util.ClassUtil;
 
 /**
- * @author Cyril
+ * @author Cyril Dumont
+ * @version 1.0
  *
  */
 public class JavaSpace {
