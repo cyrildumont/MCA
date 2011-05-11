@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.mca.mca-bootstrap"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.mca.mca-core"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.mca.mca-server"/>
+	<classpathentry kind="lib" path="/home/cyril/workspaces/MCA/MCACore/lib/commons-daemon.jar"/>
+	<classpathentry kind="lib" path="lib/spring-aop-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib/spring-asm-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib/spring-beans-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib/spring-context-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib/spring-core-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib/spring-expression-3.0.5.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib/jini-core.jar"/>
+	<classpathentry kind="lib" path="lib/jini-ext.jar"/>
+	<classpathentry kind="lib" path="lib/outrigger.jar"/>
+	<classpathentry kind="lib" path="lib/jsk-platform.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.mca.mca-worker"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

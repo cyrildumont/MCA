@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================================== 
+     13 nov. 2010 23:08:25                                                        
+
+     project    
+     description
+                   
+     cyril                                                                
+     ====================================================================== -->
+<project name="project" default="default">
+    <description>
+            description
+    </description>
+
+	<path id="classpath">
+		<fileset dir="/home/cyril/MCA/lib/">
+		</fileset>
+	</path>
+	
+    <!-- ================================= 
+          target: default              
+         ================================= -->
+    <target name="default"  description="description">
+        <java classname="org.mca.master.ComputingMaster" classpathref="classpath" fork="true" >
+        	<arg value="jacobi"/>
+        	<jvmarg value="-Dmca.home=/home/cyril/MCA/"/>
+        </java>
+    </target>
+
+
+</project>
