@@ -5,11 +5,12 @@
 		<artifactId>mca-parent</artifactId>
 		<groupId>org.mca</groupId>
 		<version>1.0.0-RELEASE</version>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
-	<groupId>org.mca</groupId>
+	
 	<artifactId>mca-dist</artifactId>
-	<version>1.0.0-RELEASE</version>
 	<packaging>pom</packaging>
+	
 	<name>MCA Project - Distribution</name>
 
 	<build>

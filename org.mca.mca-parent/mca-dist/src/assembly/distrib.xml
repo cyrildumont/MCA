@@ -10,13 +10,14 @@
 	</formats>
 	<includeBaseDirectory>false</includeBaseDirectory>
 	<dependencySets>
-		<dependencySet>
+		<!--<dependencySet>
 			<outputDirectory>/codebase</outputDirectory>
 			<includes>
 				<include>org.apache.river:*-dl</include>
 			</includes>
 			<outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
 		</dependencySet>
+		-->
 		<dependencySet>
 			<outputDirectory>/lib</outputDirectory>
 			<excludes>
@@ -68,7 +69,7 @@
 		<moduleSet>
 			<useAllReactorProjects>true</useAllReactorProjects>
 			<includes>
-				<include>org.mca:mca-server</include>
+				<include>org.mca:mca-*</include>
 			</includes>
 			<sources>
 				<fileSets>
