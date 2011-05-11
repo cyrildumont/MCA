@@ -6,7 +6,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/org.mca.mca-bootstrap"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.mca.mca-core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.mca.mca-server"/>
-	<classpathentry kind="lib" path="/home/cyril/workspaces/MCA/MCACore/lib/commons-daemon.jar"/>
 	<classpathentry kind="lib" path="lib/spring-aop-3.0.5.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib/spring-asm-3.0.5.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib/spring-beans-3.0.5.RELEASE.jar"/>
@@ -17,6 +16,7 @@
 	<classpathentry kind="lib" path="lib/jini-ext.jar"/>
 	<classpathentry kind="lib" path="lib/outrigger.jar"/>
 	<classpathentry kind="lib" path="lib/jsk-platform.jar"/>
+	<classpathentry kind="lib" path="lib/commons-daemon.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/org.mca.mca-worker"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
