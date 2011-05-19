@@ -8,8 +8,6 @@ import java.io.Serializable;
 import javax.management.NotificationBroadcasterSupport;
 import javax.management.remote.JMXConnector;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.mca.mbeans.MBeanUtil;
 import org.mca.util.MCAUtils;
 

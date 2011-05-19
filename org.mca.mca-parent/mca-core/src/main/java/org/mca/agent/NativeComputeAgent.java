@@ -6,7 +6,7 @@ import org.mca.entry.DataHandler;
 import org.mca.log.LogUtil;
 
 
-public abstract class ComputeNativeAgent extends ComputeAgent {
+public abstract class NativeComputeAgent extends AbstractComputeAgent {
 
 	/**
 	 * 
@@ -27,7 +27,7 @@ public abstract class ComputeNativeAgent extends ComputeAgent {
 	private native String execute(String bytecodeFile, String functionName, String[] parameters);
 
 	
-	public ComputeNativeAgent() throws RemoteException {
+	public NativeComputeAgent() throws RemoteException {
 		super();
 	}
 	

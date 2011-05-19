@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.Serializable;
 import java.util.Collection;
 
+import net.jini.core.event.RemoteEventListener;
+
 import org.mca.core.ComponentInfo;
 import org.mca.entry.DataHandler;
 import org.mca.entry.MCAProperty;
@@ -52,6 +54,6 @@ public interface ComputationCase extends Serializable {
 
 	public Task getTask(TaskState waitForCompute) throws MCASpaceException;
 
-	public void join(ComponentInfo componentInto) throws MCASpaceException;
+	void join(RemoteEventListener listener) throws MCASpaceException;
 	
 }

@@ -36,6 +36,8 @@ public interface MCASpace extends Remote {
 	public void removeCase(String name) throws RemoteException,MCASpaceException;
 	
 	public EventRegistration register(MCASpaceEventListener listener) throws RemoteException;
+
+	public ComputationCase getCase() throws RemoteException,MCASpaceException;
 	
 }
 

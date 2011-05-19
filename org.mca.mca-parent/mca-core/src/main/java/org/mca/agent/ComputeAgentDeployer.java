@@ -50,10 +50,10 @@ public class ComputeAgentDeployer extends ServiceDeployer{
 			String sClassAgent = config.getImplClass(); 
 			ClassLoader loader = Thread.currentThread().getContextClassLoader();
 			Class<?> classAgent = loader.loadClass(sClassAgent);
-			ComputeAgent agent = (ComputeAgent)classAgent.newInstance();
-			if (agent instanceof ComputeNativeAgent) {
+			AbstractComputeAgent agent = (AbstractComputeAgent)classAgent.newInstance();
+			if (agent instanceof NativeComputeAgent) {
 				LogUtil.debug("Deploy ComputeNativeAgent ...", ComputeAgentDeployer.class);
-				ComputeNativeAgent nativeAgent = (ComputeNativeAgent) agent;
+				NativeComputeAgent nativeAgent = (NativeComputeAgent) agent;
 				nativeAgent.setByteCodeHandler(config.getByteCodeHandler());
 			}
 			JoinManager myManager = new JoinManager(agent,entries,agent,dm,new LeaseRenewalManager());

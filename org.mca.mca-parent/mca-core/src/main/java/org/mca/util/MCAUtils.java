@@ -21,13 +21,12 @@ public abstract class MCAUtils {
 	            while (ienum.hasMoreElements()) {
 	                InetAddress ia = ienum.nextElement();
 	                String adress = ia.getHostAddress().toString();     
-	                    if(adress.length() < 16 && !adress.startsWith("127") && !(adress.indexOf(":") > 0)){
+	                if(adress.length() < 16 && !adress.startsWith("127") && !(adress.indexOf(":") > 0)){
 	                    	  return adress;        
 	                    }
 	            }
 	        }
-
-	 		return null;
+	 		return "127.0.0.1";
 		}catch(Exception e){
 	        System.out.println("pas de carte reseau");
 	        e.printStackTrace();

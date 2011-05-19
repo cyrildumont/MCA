@@ -30,7 +30,7 @@ import net.jini.security.AccessPermission;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.mca.agent.ComputeAgent;
+import org.mca.agent.AbstractComputeAgent;
 import org.mca.agent.exception.DeployException;
 import org.mca.log.LogUtil;
 import org.mca.util.MCAUtils;
@@ -133,7 +133,7 @@ public class ServiceDeployer implements ServiceIDListener {
 				ServiceRegistrar registrar = ll.getRegistrar();
 				String sClassAgent = config.getImplClass(); 
 				Class<?> classAgent = Class.forName(sClassAgent);
-				ComputeAgent agent = (ComputeAgent)classAgent.newInstance();
+				AbstractComputeAgent agent = (AbstractComputeAgent)classAgent.newInstance();
 				String name = config.getName();
 				Entry[] entries = new Entry[]{new Name(name)};
 				ServiceTemplate template = new ServiceTemplate(null, null, entries);
