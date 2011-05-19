@@ -53,5 +53,13 @@ grant {
 
 	permission com.sun.jini.reggie.RegistrarPermission "register";
 	permission com.sun.jini.reggie.RegistrarPermission "notify";
+	permission net.jini.discovery.DiscoveryPermission "*";
+};
+
+grant principal "worker"{
+	permission com.sun.jini.reggie.RegistrarPermission "lookup";
+	permission com.sun.jini.reggie.RegistrarPermission "notify";
+	permission com.sun.jini.reggie.RegistrarPermission "renewEventLease";
+	permission org.mca.security.MCASpacePermission "register";
 };
 

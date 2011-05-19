@@ -2,7 +2,8 @@ package org.mca.worker;
 
 public enum ComputeWorkerState {
 	WAITING,
-	STARTING,
+	STARTED,
 	RUNNING,
-	IDLE;
+	IDLE,
+	CONNECTED;
 }

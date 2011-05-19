@@ -15,7 +15,7 @@ import net.jini.lookup.entry.Name;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.mca.agent.ComputeAgentInterface;
+import org.mca.agent.ComputeAgent;
 import org.mca.worker.exception.AgentNotFoundException;
 
 /**
@@ -32,15 +32,15 @@ public class AgentListener implements DiscoveryListener {
 
 	private Boolean serviceFind;
 
-	private ComputeAgentInterface agent;
+	private ComputeAgent agent;
 
 	private ServiceTemplate template;
 
-	private Hashtable<String, ComputeAgentInterface> agents;
+	private Hashtable<String, ComputeAgent> agents;
 
 	public AgentListener() {
 		LOG.debug("AgentListener started ...");
-		agents = new Hashtable<String, ComputeAgentInterface>();
+		agents = new Hashtable<String, ComputeAgent>();
 	}
 
 	/**
@@ -48,7 +48,7 @@ public class AgentListener implements DiscoveryListener {
 	 * @param serviceID
 	 * @return
 	 */
-	public ComputeAgentInterface getAgent(ServiceID serviceID){
+	public ComputeAgent getAgent(ServiceID serviceID){
 
 		try{
 			serviceFind = false;
@@ -80,7 +80,7 @@ public class AgentListener implements DiscoveryListener {
 	 * @param serviceID
 	 * @return
 	 */
-	public ComputeAgentInterface getAgent(String name) throws AgentNotFoundException{
+	public ComputeAgent getAgent(String name) throws AgentNotFoundException{
 
 		try{
 			agent = this.agents.get(name);
@@ -128,7 +128,7 @@ public class AgentListener implements DiscoveryListener {
 
 			ServiceRegistrar[] registrars = event.getRegistrars();
 			for (ServiceRegistrar registrar : registrars) {
-				ComputeAgentInterface agent = (ComputeAgentInterface)registrar.lookup(template);
+				ComputeAgent agent = (ComputeAgent)registrar.lookup(template);
 				if(agent != null){
 					this.agent = agent;
 					serviceFind = true;
