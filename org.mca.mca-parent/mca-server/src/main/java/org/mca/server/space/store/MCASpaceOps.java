@@ -10,6 +10,7 @@ import java.rmi.MarshalledObject;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -42,6 +43,10 @@ import com.sun.jini.outrigger.StorableResource;
 
 public class MCASpaceOps implements LogOps{
 
+	private static final String COMPONENT_NAME = "org.mca.server.space.store.MCASpaceOps";
+
+	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
+	
 	/**
 	 * 
 	 * @author Cyril Dumont
@@ -121,7 +126,7 @@ public class MCASpaceOps implements LogOps{
 	 * 
 	 */
 	public void abortOp(Long txnId) {
-		System.out.println("abortOp(" + txnId +")");
+		logger.finest("abortOp(" + txnId +")");
 		transactionMap.remove(txnId);
 	}
 
@@ -129,9 +134,7 @@ public class MCASpaceOps implements LogOps{
 	 * 
 	 */
 	public void bootOp(long time, long sessionId) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("bootOp(" + time + "," + sessionId + ")");
-		}
+		logger.finest("bootOp(" + time + "," + sessionId + ")");
 		javaspace.setAttribute("time", String.valueOf(time));
 		javaspace.setAttribute("sessionId", String.valueOf(sessionId));
 
@@ -141,14 +144,14 @@ public class MCASpaceOps implements LogOps{
 	 * 
 	 */
 	public void cancelOp(Uuid cookie, boolean expired) {
-		System.out.println("cancelOp(" + cookie + "," + expired + ")");	
+		logger.finest("cancelOp(" + cookie + "," + expired + ")");	
 	}
 
 	/**
 	 * 
 	 */
 	public void commitOp(Long txnId) {
-		System.out.println("commitOp(" + txnId + ")");
+		logger.finest("commitOp(" + txnId + ")");
 		TransactionalOp<?> to = transactionMap.get(txnId);
 		OpsType type =to.getOpsType();
 		switch (type) {
@@ -209,7 +212,7 @@ public class MCASpaceOps implements LogOps{
 	 * 
 	 */
 	public void prepareOp(Long txnId, StorableObject transaction) {
-		System.out.println("prepareOp(" + txnId + "," + transaction + ")");			
+		logger.finest("prepareOp(" + txnId + "," + transaction + ")");			
 
 	}
 
@@ -217,7 +220,7 @@ public class MCASpaceOps implements LogOps{
 	 * 
 	 */
 	public void registerOp(StorableResource registration, String type, StorableObject[] templates) {
-		System.out.println("registerOp()");
+		logger.finest("registerOp()");
 		if (listeners == null) {
 			listeners = doc.createElement("listeners");
 			javaspace.appendChild(listeners);
@@ -240,16 +243,14 @@ public class MCASpaceOps implements LogOps{
 	 * 
 	 */
 	public void renewOp(Uuid cookie, long expiration)  {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("renewOp(" + cookie + "," + expiration + ")");			
-		}
+		logger.finest("renewOp(" + cookie + "," + expiration + ")");			
 	}
 
 	/**
 	 * 
 	 */
 	public void takeOp(Uuid[] cookies, Long txnId)  {
-		System.out.println("takeOp(" + cookies + "," + txnId + ")");
+		logger.finest("takeOp(" + cookies + "," + txnId + ")");
 		for (Uuid cookie : cookies) {
 			Node node = entriesMap.get(cookie);
 			if (entries != null) {
@@ -265,7 +266,7 @@ public class MCASpaceOps implements LogOps{
 	 * 
 	 */
 	public void takeOp(Uuid cookie, Long txnId) {
-		System.out.println("takeOp(" + cookie + "," + txnId + ")");
+		logger.finest("takeOp(" + cookie + "," + txnId + ")");
 		if (txnId != null){
 			TransactionalOp<Uuid> to = new TransactionalOp<Uuid>(cookie, OpsType.TAKE);
 			transactionMap.put(txnId, to);
@@ -426,9 +427,7 @@ public class MCASpaceOps implements LogOps{
 	 * 
 	 */
 	public void writeOp(StorableResource[] entries, Long txnId) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("writeOp(" + entries + "," + txnId + ")");
-		}
+		logger.finest("writeOp(" + entries + "," + txnId + ")");
 	}
 
 	/**

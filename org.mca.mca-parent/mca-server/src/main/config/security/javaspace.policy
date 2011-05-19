@@ -13,6 +13,13 @@ grant principal "master"{
 	permission com.sun.jini.outrigger.OutriggerPermission "take";
 };
 
+grant principal "worker"{
+	permission com.sun.jini.outrigger.OutriggerPermission "write";
+	permission com.sun.jini.outrigger.OutriggerPermission "read";
+	permission com.sun.jini.outrigger.OutriggerPermission "take";
+	permission com.sun.jini.outrigger.OutriggerPermission "registerForAvailabilityEvent";
+};
+
 
 
 

@@ -2,8 +2,13 @@ package org.mca.server;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Collection;
 
+import net.jini.core.entry.Entry;
+import net.jini.core.event.RemoteEventListener;
+import net.jini.core.transaction.TransactionException;
 import net.jini.space.JavaSpace05;
 
 import org.mca.core.ComponentInfo;
@@ -12,6 +17,7 @@ import org.mca.entry.DataHandler;
 import org.mca.entry.MCAProperty;
 import org.mca.entry.State;
 import org.mca.javaspace.ComputationCase;
+import org.mca.javaspace.ComputationCaseInfo;
 import org.mca.javaspace.exceptions.EntryNotFoundException;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.log.LogUtil;
@@ -19,13 +25,27 @@ import org.mca.math.Data;
 import org.mca.scheduler.Task;
 import org.mca.scheduler.TaskState;
 
-@SuppressWarnings("serial")
-public class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCase{
+import com.sun.jini.outrigger.MCAOutriggerServerWrapper;
 
-	public ComputationCaseImpl(JavaSpace05 space) {
-		setSpace(space);
-	}
+@SuppressWarnings("serial")
+class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCase{
+
+	private String name;
+	private String description;
 	
+	ComputationCaseImpl(MCAOutriggerServerWrapper w) throws RemoteException {
+		setSpace((JavaSpace05)w.space());
+		Entry[] entries = w.getLookupAttributes();
+		for (Entry entry : entries) {
+			if (entry instanceof ComputationCaseInfo) {
+				ComputationCaseInfo infos = (ComputationCaseInfo)entry;
+				name = infos.name;
+				description = infos.description;
+				break;
+			}
+		}
+	}
+
 	@Override
 	public void addProperty(MCAProperty property) throws MCASpaceException {
 		MCAProperty template = new MCAProperty();
@@ -50,8 +70,7 @@ public class ComputationCaseImpl extends JavaSpaceParticipant implements Computa
 
 	@Override
 	public String getName() throws MCASpaceException {
-		// TODO Auto-generated method stub
-		return null;
+		return this.name;
 	}
 
 	@Override
@@ -62,8 +81,7 @@ public class ComputationCaseImpl extends JavaSpaceParticipant implements Computa
 
 	@Override
 	public void addTask(Task task) throws MCASpaceException {
-		// TODO Auto-generated method stub
-		
+		writeEntry(task, null);
 	}
 
 	@Override
@@ -99,7 +117,14 @@ public class ComputationCaseImpl extends JavaSpaceParticipant implements Computa
 
 	@Override
 	public void start() throws MCASpaceException {
-		// TODO Auto-generated method stub
+		try {
+			State state = new State();
+			state = (State)takeEntry(state, null);
+			state.state = ComputationCaseState.STARTED;
+			writeEntry(state, null);
+		} catch (EntryNotFoundException e) {
+			e.printStackTrace();
+		}
 		
 	}
 
@@ -124,8 +149,7 @@ public class ComputationCaseImpl extends JavaSpaceParticipant implements Computa
 
 	@Override
 	public String getDescription() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.description;
 	}
 
 	@Override
@@ -135,17 +159,35 @@ public class ComputationCaseImpl extends JavaSpaceParticipant implements Computa
 	}
 
 	@Override
-	public Task getTask(TaskState waitForCompute) throws MCASpaceException {
-		// TODO Auto-generated method stub
-		return null;
+	public Task getTask(TaskState state) throws MCASpaceException {
+		Task taskTemplate = new Task();
+		taskTemplate.state = state;
+		try {
+			return (Task)takeEntry(taskTemplate,null);
+		} catch (EntryNotFoundException e) {
+			throw new MCASpaceException();
+		}
 	}
 
 	@Override
-	public void join(ComponentInfo componentInto) throws MCASpaceException {
-		// TODO Auto-generated method stub
-		
+	public void join(RemoteEventListener listener) throws MCASpaceException {
+		Task task = new Task();
+		task.state = TaskState.WAIT_FOR_COMPUTE;
+		Collection<Task> tasks = new ArrayList<Task>();
+		tasks.add(task);
+		try {
+			space.registerForAvailabilityEvent(tasks, null, true, listener, Long.MAX_VALUE, null);
+			//space.notify(task, null, listener, Long.MAX_VALUE, null);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (TransactionException e) {
+			e.printStackTrace();
+		}
 	}
 	
-	
+	@Override
+	public String toString() {
+		return getClass().getName() + "[name=" + name + ", description=" + description + "]";
+	}
 
 }

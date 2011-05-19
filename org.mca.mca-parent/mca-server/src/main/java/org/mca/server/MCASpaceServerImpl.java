@@ -9,6 +9,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.management.MBeanServer;
@@ -44,6 +45,7 @@ import net.jini.space.JavaSpace05;
 import org.mca.entry.ComputationCaseState;
 import org.mca.entry.State;
 import org.mca.javaspace.ComputationCase;
+import org.mca.javaspace.ComputationCaseInfo;
 import org.mca.javaspace.MCASpace;
 import org.mca.javaspace.MCASpaceEvent;
 import org.mca.javaspace.MCASpaceEventListener;
@@ -179,7 +181,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		Object o = starter.startWithoutAdvertise();
 		MCAOutriggerServerWrapper w = (MCAOutriggerServerWrapper) o;
 
-		Entry[] entries = new Entry[]{new Name(name)};
+		Entry[] entries = new Entry[]{new ComputationCaseInfo(name,description)};
 		try {
 			w.addLookupAttributes(entries);			
 			State state = new State();
@@ -200,7 +202,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 			e.printStackTrace();
 			throw new MCASpaceException();
 		} 
-		ComputationCase computationCase = new ComputationCaseImpl((JavaSpace05)w.space());
+		ComputationCase computationCase = new ComputationCaseImpl(w);
 		fireNotify(MCASpace.ADD_CASE, computationCase);
 		return computationCase;
 	}
@@ -230,7 +232,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		Collection<ComputationCase> cases = new ArrayList<ComputationCase>();
 		for (Map.Entry<String, MCAOutriggerServerWrapper> entry : this.cases.entrySet()) {
 			MCAOutriggerServerWrapper w = entry.getValue();
-			ComputationCase c = new ComputationCaseImpl((JavaSpace05)w.space());	
+			ComputationCase c = new ComputationCaseImpl(w);	
 			cases.add(c);
 		}
 		return cases;
@@ -245,7 +247,16 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		MCAOutriggerServerWrapper w = cases.get(name);
 		if(w == null)
 			throw new MCASpaceException("[" + name + "] computation Case not exists.");
-		return new ComputationCaseImpl((JavaSpace05)w.space());
+		return new ComputationCaseImpl(w);
+	}
+	
+	@Override
+	public ComputationCase getCase() throws RemoteException,MCASpaceException{
+		MCAOutriggerServerWrapper w = null;
+		Iterator<MCAOutriggerServerWrapper> iter = cases.values().iterator();
+		if (iter.hasNext()) w = iter.next();
+		if(w == null) return null;
+		return new ComputationCaseImpl(w);
 	}
 
 	@Override
@@ -262,6 +273,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	public EventRegistration register(MCASpaceEventListener listener)
 			throws RemoteException {
 		listeners.add(MCASpaceEventListener.class, listener);
+		System.out.println("add new listener : " + listener);
 		return new EventRegistration(0, proxy, null, 0);
 	}
 	

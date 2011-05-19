@@ -30,21 +30,10 @@ public class Server extends MCAComponent {
 
 	protected void startAllServices() {
 		context = new FileSystemXmlApplicationContext("file:" + FILE_SERVICES);
-		Object registrar = startService(SERVICE_REGGIE);
+		startService(SERVICE_REGGIE);
 		startService(SERVICE_TRANSACTION);
 		startService(MCASPACE_AGENT);
-		//		ServiceConfigurator agentConfig = context.getBean(MCASPACE_AGENT, ServiceConfigurator.class);
-		//		ServiceDeployer agentDeployer = new ServiceDeployer();
-		//		agentDeployer.deploy(agentConfig,MCASpacePermission.class);
 
-		//Lookup lookup = new Lookup(registrar);
-
-		while( true ) {
-			try {
-				Thread.sleep( 100000 );
-			} catch( InterruptedException ex ) {
-			}
-		}
 	}
 
 	/**

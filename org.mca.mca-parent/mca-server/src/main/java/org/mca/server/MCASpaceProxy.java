@@ -33,6 +33,12 @@ public class MCASpaceProxy implements MCASpace, Serializable {
 	}
 
 	@Override
+	public ComputationCase getCase() throws RemoteException,
+			MCASpaceException {
+		return remoteRef.getCase();
+	}
+	
+	@Override
 	public Collection<ComputationCase> getCases() throws RemoteException,
 			MCASpaceException {
 		return remoteRef.getCases();

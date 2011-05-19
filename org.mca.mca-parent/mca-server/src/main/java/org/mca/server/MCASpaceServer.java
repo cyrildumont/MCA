@@ -42,6 +42,13 @@ public interface MCASpaceServer extends ServiceProxyAccessor, Serializable, Remo
 
 	/**
 	 * 
+	 * @return
+	 * @throws RemoteException
+	 */
+	public ComputationCase getCase() throws RemoteException;
+	
+	/**
+	 * 
 	 * @param listener
 	 * @return
 	 * @throws RemoteException
