@@ -149,17 +149,9 @@ public abstract class JavaSpaceParticipant implements Serializable{
 		try {
 			Entry entry = space.take(template, txn, timeout);
 			return entry;
-		} catch (RemoteException e) {
+		} catch (Exception e) {
 			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
-			throw new MCASpaceException();
-		} catch (TransactionException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
-			throw new MCASpaceException();
-		} catch (UnusableEntryException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
-			throw new MCASpaceException();
-		} catch (InterruptedException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			e.printStackTrace();
 			throw new MCASpaceException();
 		}
 	}
