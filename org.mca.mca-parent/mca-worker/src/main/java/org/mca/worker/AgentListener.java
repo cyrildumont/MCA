@@ -3,6 +3,7 @@ package org.mca.worker;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.Hashtable;
+import java.util.logging.Logger;
 
 import net.jini.core.entry.Entry;
 import net.jini.core.lookup.ServiceID;
@@ -11,6 +12,8 @@ import net.jini.core.lookup.ServiceTemplate;
 import net.jini.discovery.DiscoveryEvent;
 import net.jini.discovery.DiscoveryListener;
 import net.jini.discovery.LookupDiscovery;
+import net.jini.discovery.LookupLocatorDiscovery;
+import net.jini.lookup.ServiceDiscoveryListener;
 import net.jini.lookup.entry.Name;
 
 import org.apache.commons.logging.Log;
@@ -23,12 +26,13 @@ import org.mca.worker.exception.AgentNotFoundException;
  * @author Cyril
  *
  */
-public class AgentListener implements DiscoveryListener {
+public class AgentListener  {
+
+	private static final String COMPONENT_NAME = "org.mca.worker.AgentListener";
+
+	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
 
 	private final static Integer SECOND_TO_WAIT = 3;
-	
-	/** Log */
-	private final static Log LOG = LogFactory.getLog(AgentListener.class);
 
 	private Boolean serviceFind;
 
@@ -39,84 +43,32 @@ public class AgentListener implements DiscoveryListener {
 	private Hashtable<String, ComputeAgent> agents;
 
 	public AgentListener() {
-		LOG.debug("AgentListener started ...");
+		logger.finest("Worker -- AgentListener started");
 		agents = new Hashtable<String, ComputeAgent>();
 	}
 
+	
 	/**
 	 * 
 	 * @param serviceID
 	 * @return
 	 */
-	public ComputeAgent getAgent(ServiceID serviceID){
+	public ComputeAgent getAgent(String url) throws AgentNotFoundException{
 
-		try{
-			serviceFind = false;
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Search for the ComputingAgent [" + serviceID +"]");
-			}
-			template = new ServiceTemplate(serviceID, null, null);
-			LookupDiscovery ld = new LookupDiscovery(LookupDiscovery.ALL_GROUPS);
-			ld.addDiscoveryListener(this);
-			while(!serviceFind){
-				Thread.sleep(1000);
-			}
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("ComputingAgent [" + serviceID +"] found.");
-			}
-			ld.removeDiscoveryListener(this);
+		int i = url.lastIndexOf("/");
+		String host = url.substring(0, i);
+		String name = url.substring(i+1);
+
+		agent = this.agents.get(name);
+		if (agent != null) {
 			return agent;
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			return null;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
 		}
-	}
+		serviceFind = false;
+		logger.finest("Search for the ComputingAgent [" + name +"] on [" + host + "]");	
+		Name entry = new Name(name);
+		template = new ServiceTemplate(null, null, new Entry[]{entry});
+		return null;
 
-	/**
-	 * 
-	 * @param serviceID
-	 * @return
-	 */
-	public ComputeAgent getAgent(String name) throws AgentNotFoundException{
-
-		try{
-			agent = this.agents.get(name);
-			if (agent != null) {
-				return agent;
-			}
-			serviceFind = false;
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Search for the ComputingAgent [" + name +"]");	
-			}
-			Name entry = new Name(name);
-			template = new ServiceTemplate(null, null, new Entry[]{entry});
-			LookupDiscovery ld = new LookupDiscovery(LookupDiscovery.ALL_GROUPS);
-			ld.addDiscoveryListener(this);
-			int seconds = 0;
-			while(!serviceFind && seconds <= SECOND_TO_WAIT){
-				Thread.sleep(1000);
-				seconds++;
-			}
-			ld.removeDiscoveryListener(this);
-			if (!serviceFind) {
-				throw new AgentNotFoundException();
-			}
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("ComputingAgent [" + name +"] found.");			
-				LOG.debug("Type : " + agent.getClass());
-			}
-			this.agents.put(name, this.agent);
-			return agent;
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			throw new AgentNotFoundException();
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new AgentNotFoundException();
-		}
 	}
 
 	public void discarded(DiscoveryEvent event) {
