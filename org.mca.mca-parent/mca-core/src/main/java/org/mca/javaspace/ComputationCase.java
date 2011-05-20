@@ -53,6 +53,8 @@ public interface ComputationCase extends Serializable {
 	public void updateTask(Task taskInProgress) throws MCASpaceException;
 
 	public Task getTask(TaskState waitForCompute) throws MCASpaceException;
+	
+	public Task getTask(String name) throws MCASpaceException;
 
 	void join(RemoteEventListener listener) throws MCASpaceException;
 	
