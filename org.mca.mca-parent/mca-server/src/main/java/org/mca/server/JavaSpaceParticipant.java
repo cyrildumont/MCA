@@ -145,10 +145,9 @@ public abstract class JavaSpaceParticipant implements Serializable{
 	 * @throws EntryNotFoundException
 	 */
 	protected Entry takeEntry(Entry template, Transaction txn, Long timeout) 		
-			throws MCASpaceException, EntryNotFoundException  {
+			throws MCASpaceException  {
 		try {
 			Entry entry = space.take(template, txn, timeout);
-			if (entry == null) throw new EntryNotFoundException(template, host);
 			return entry;
 		} catch (RemoteException e) {
 			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
@@ -171,7 +170,7 @@ public abstract class JavaSpaceParticipant implements Serializable{
 	 * @throws EntryNotFoundException 
 	 */
 	protected Entry takeEntry(Entry template, Transaction txn) 
-		throws MCASpaceException, EntryNotFoundException  {
+		throws MCASpaceException {
 		return takeEntry(template, txn, JavaSpace05.NO_WAIT);
 	}
 
