@@ -1,23 +1,16 @@
 package org.mca.worker;
 
 import java.io.IOException;
-import java.rmi.RemoteException;
+import java.net.MalformedURLException;
 import java.util.Hashtable;
 import java.util.logging.Logger;
 
+import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
-import net.jini.core.lookup.ServiceID;
 import net.jini.core.lookup.ServiceRegistrar;
 import net.jini.core.lookup.ServiceTemplate;
-import net.jini.discovery.DiscoveryEvent;
-import net.jini.discovery.DiscoveryListener;
-import net.jini.discovery.LookupDiscovery;
-import net.jini.discovery.LookupLocatorDiscovery;
-import net.jini.lookup.ServiceDiscoveryListener;
 import net.jini.lookup.entry.Name;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.mca.agent.ComputeAgent;
 import org.mca.worker.exception.AgentNotFoundException;
 
@@ -67,29 +60,22 @@ public class AgentListener  {
 		logger.finest("Search for the ComputingAgent [" + name +"] on [" + host + "]");	
 		Name entry = new Name(name);
 		template = new ServiceTemplate(null, null, new Entry[]{entry});
-		return null;
-
-	}
-
-	public void discarded(DiscoveryEvent event) {
-
-	}
-
-	public void discovered(DiscoveryEvent event) {
 		try {
-
-			ServiceRegistrar[] registrars = event.getRegistrars();
-			for (ServiceRegistrar registrar : registrars) {
-				ComputeAgent agent = (ComputeAgent)registrar.lookup(template);
-				if(agent != null){
-					this.agent = agent;
-					serviceFind = true;
-					break;
-				}
-			}
-		} catch (RemoteException e) {
+			LookupLocator ll = new LookupLocator(host);
+			ServiceRegistrar registrar = ll.getRegistrar();
+			ComputeAgent item = (ComputeAgent)registrar.lookup(template);
+			if(item == null) throw new AgentNotFoundException();
+			return item;
+		} catch (MalformedURLException e) {
 			e.printStackTrace();
-		}
+			throw new AgentNotFoundException();
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new AgentNotFoundException();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			throw new AgentNotFoundException();
+		} 
 
 	}
 

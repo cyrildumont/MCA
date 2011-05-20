@@ -165,9 +165,6 @@ public class ComputingWorker extends MCAComponent {
 		ServiceStarter starter = new ServiceStarter(serviceConfigurator);
 		Object registrar = starter.startWithoutAdvertise();
 		this.lookup = new Lookup(registrar);
-		//		TaskNotifierAgentListener listener = new TaskNotifierAgentListener(this.lookup, this);
-		//		Thread listenerThread = new Thread(listener);
-		//		listenerThread.start();
 	}
 
 	/**
