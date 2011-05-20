@@ -11,14 +11,12 @@ import net.jini.core.event.RemoteEventListener;
 import net.jini.core.transaction.TransactionException;
 import net.jini.space.JavaSpace05;
 
-import org.mca.core.ComponentInfo;
 import org.mca.entry.ComputationCaseState;
 import org.mca.entry.DataHandler;
 import org.mca.entry.MCAProperty;
 import org.mca.entry.State;
 import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.ComputationCaseInfo;
-import org.mca.javaspace.exceptions.EntryNotFoundException;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.log.LogUtil;
 import org.mca.math.Data;
@@ -27,12 +25,17 @@ import org.mca.scheduler.TaskState;
 
 import com.sun.jini.outrigger.MCAOutriggerServerWrapper;
 
-@SuppressWarnings("serial")
+
 class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCase{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3127097490816772998L;
+	
 	private String name;
 	private String description;
-	
+
 	ComputationCaseImpl(MCAOutriggerServerWrapper w) throws RemoteException {
 		setSpace((JavaSpace05)w.space());
 		Entry[] entries = w.getLookupAttributes();
@@ -50,20 +53,17 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	public void addProperty(MCAProperty property) throws MCASpaceException {
 		MCAProperty template = new MCAProperty();
 		template.name = property.name;
-		try {
-			takeEntry(template,null);
-			LogUtil.debug("MCAProperty [" + template.name + "] exists.", getClass());
-			writeEntry(property,  null);
-			LogUtil.debug("MCAProperty [" + template.name + "] updated.", getClass());
-		} catch (EntryNotFoundException e) {
-			writeEntry(property, null);
-			LogUtil.debug("MCAProperty [" + template.name + "] added.", getClass());
-		}	
+
+		takeEntry(template,null);
+		LogUtil.debug("MCAProperty [" + template.name + "] exists.", getClass());
+		writeEntry(property,  null);
+		LogUtil.debug("MCAProperty [" + template.name + "] updated.", getClass());
+
 	}
 
 	@Override
 	public File downloadData(String name, String property)
-			throws MCASpaceException {
+	throws MCASpaceException {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -87,13 +87,13 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	@Override
 	public void addData(Data<?> data) throws MCASpaceException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void addDataHandler(DataHandler entry) throws MCASpaceException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -110,35 +110,30 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	@Override
 	public void uploadData(String dataHandlerName, FileInputStream fis)
-			throws MCASpaceException {
+	throws MCASpaceException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void start() throws MCASpaceException {
-		try {
-			State state = new State();
-			state = (State)takeEntry(state, null);
-			state.state = ComputationCaseState.STARTED;
-			writeEntry(state, null);
-		} catch (EntryNotFoundException e) {
-			e.printStackTrace();
-		}
-		
+
+		State state = new State();
+		state = (State)takeEntry(state, null);
+		state.state = ComputationCaseState.STARTED;
+		writeEntry(state, null);
+
+
 	}
 
 	@Override
 	public void stop() throws MCASpaceException {
-		try {
-			State state = new State();
-			state = (State)takeEntry(state, null);
-			state.state = ComputationCaseState.PAUSED;
-			writeEntry(state, null);
-		} catch (EntryNotFoundException e) {
-			e.printStackTrace();
-		}
-		
+		State state = new State();
+		state = (State)takeEntry(state, null);
+		state.state = ComputationCaseState.PAUSED;
+		writeEntry(state, null);
+
+
 	}
 
 	@Override
@@ -153,20 +148,17 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	}
 
 	@Override
-	public void updateTask(Task taskInProgress) throws MCASpaceException {
-		// TODO Auto-generated method stub
-		
+	public void updateTask(Task task) throws MCASpaceException {
+		getTask(task.name);
+		addTask(task);
+		LogUtil.debug("[" + this.name + "] Task [" + task.name + "] updated.", getClass());
 	}
 
 	@Override
 	public Task getTask(TaskState state) throws MCASpaceException {
 		Task taskTemplate = new Task();
 		taskTemplate.state = state;
-		try {
-			return (Task)takeEntry(taskTemplate,null);
-		} catch (EntryNotFoundException e) {
-			throw new MCASpaceException();
-		}
+		return (Task)takeEntry(taskTemplate,null);
 	}
 
 	@Override
@@ -184,10 +176,17 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			e.printStackTrace();
 		}
 	}
-	
+
 	@Override
 	public String toString() {
 		return getClass().getName() + "[name=" + name + ", description=" + description + "]";
+	}
+
+	@Override
+	public Task getTask(String name) throws MCASpaceException {
+		Task taskTemplate = new Task();
+		taskTemplate.name = name;
+		return (Task)takeEntry(taskTemplate, null);
 	}
 
 }
