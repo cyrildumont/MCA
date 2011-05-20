@@ -18,12 +18,7 @@ public abstract class MCAUtils {
 			while (en.hasMoreElements()) {
 				NetworkInterface interfaceN = (NetworkInterface)en.nextElement(); 
 				Enumeration<InetAddress> ienum = interfaceN.getInetAddresses();
-				while (ienum.hasMoreElements()) {
-					InetAddress ia = ienum.nextElement();
-					String adress = ia.getHostAddress().toString();     
-					System.out.println(adress);
-				}
-				System.out.println("-------");
+				if (ienum.hasMoreElements())interfaces.add(interfaceN);
 			}
 		} catch (SocketException e) {
 			e.printStackTrace();
