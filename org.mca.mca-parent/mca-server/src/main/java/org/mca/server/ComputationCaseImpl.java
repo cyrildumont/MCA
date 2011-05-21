@@ -75,8 +75,14 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	@Override
 	public Collection<MCAProperty> getProperties() throws MCASpaceException {
-		// TODO Auto-generated method stub
-		return null;
+		Collection<Entry> templates = new ArrayList<Entry>();
+		templates.add(new MCAProperty());
+		Collection<Entry> result = readEntry(templates,null);
+		Collection<MCAProperty> properties = new ArrayList<MCAProperty>();
+		for (Entry entry : result) {
+			properties.add((MCAProperty)entry);
+		}
+		return properties;
 	}
 
 	@Override
