@@ -9,7 +9,6 @@ import java.net.MalformedURLException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.ExportException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -24,7 +23,6 @@ import net.jini.export.Exporter;
 import net.jini.jeri.BasicILFactory;
 import net.jini.jeri.BasicJeriExporter;
 import net.jini.jeri.tcp.TcpServerEndpoint;
-import net.jini.lookup.ServiceIDListener;
 import net.jini.lookup.entry.Name;
 
 import org.mca.entry.MCAProperty;
@@ -42,8 +40,12 @@ import org.mca.util.MCAUtils;
  * 
  *
  */
-@SuppressWarnings("serial")
-public abstract class AbstractComputeAgent extends UnicastRemoteObject implements ComputeAgent, ServiceIDListener{
+public abstract class AbstractComputeAgent implements ComputeAgent{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -9162142949499544555L;
 
 	protected ComputationCase computationCase;
 
@@ -55,10 +57,7 @@ public abstract class AbstractComputeAgent extends UnicastRemoteObject implement
 
 	protected HashMap<String, Object> results;
 
-	public AbstractComputeAgent() throws RemoteException {}
-
-	final public Object compute(Task task) 
-	throws Exception{
+	final public Object compute(Task task) 	throws Exception{
 		this.task = task;
 		Collection<MCAProperty> props = computationCase.getProperties(); 
 		for (MCAProperty mcaProperty : props) {

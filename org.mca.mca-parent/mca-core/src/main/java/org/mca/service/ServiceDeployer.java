@@ -3,6 +3,7 @@ package org.mca.service;
 import java.io.IOException;
 import java.rmi.RMISecurityManager;
 import java.rmi.Remote;
+import java.util.logging.Logger;
 
 import net.jini.constraint.BasicMethodConstraints;
 import net.jini.core.constraint.Integrity;
@@ -39,9 +40,10 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 public class ServiceDeployer implements ServiceIDListener {
 
-	/** Log */
-	private final static Log LOG = LogFactory.getLog(ServiceDeployer.class);
+	private static final String COMPONENT_NAME = "org.mca.core.deployer";
 
+	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
+	
 	// utile pour garder une reference sur l'object !
 	private static Service agent;
 
@@ -79,16 +81,16 @@ public class ServiceDeployer implements ServiceIDListener {
 			Remote proxy = exporter.export(agent);
 			new JoinManager(proxy,entries,this,dm,new LeaseRenewalManager());
 		}catch (ClassNotFoundException e) {
-			LOG.error(e.getClass().getName() +" : " + e.getMessage());
+			logger.warning(e.getClass().getName() +" : " + e.getMessage());
 			e.printStackTrace();
 		} catch (InstantiationException e) {
-			LOG.error(e.getClass().getName() +" : " + e.getMessage());
+			logger.warning(e.getClass().getName() +" : " + e.getMessage());
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
-			LOG.error(e.getClass().getName() +" : " + e.getMessage());
+			logger.warning(e.getClass().getName() +" : " + e.getMessage());
 			e.printStackTrace();
 		} catch (IOException e) {
-			LOG.error(e.getClass().getName() +" : " + e.getMessage());
+			logger.warning(e.getClass().getName() +" : " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -159,7 +161,7 @@ public class ServiceDeployer implements ServiceIDListener {
 	 * 
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 
 		ApplicationContext context = new FileSystemXmlApplicationContext("file:" + args[0]);
 		ServiceConfigurator serviceConfigurator = context.getBean("agent",ServiceConfigurator.class);
@@ -168,7 +170,7 @@ public class ServiceDeployer implements ServiceIDListener {
 		System.setProperty("java.rmi.server.codebase", serviceConfigurator.getCodebaseFormate());
 		System.setProperty("java.security.policy", serviceConfigurator.getPolicy());
 		System.setSecurityManager(securityManager);
-		LOG.info("Deploy " + serviceConfigurator.getName() + " Agent.");
+		logger.info("Deploy " + serviceConfigurator.getName() + " Agent.");
 		
 		ServiceDeployer deployer = new ServiceDeployer();
 		deployer.deploy(serviceConfigurator);

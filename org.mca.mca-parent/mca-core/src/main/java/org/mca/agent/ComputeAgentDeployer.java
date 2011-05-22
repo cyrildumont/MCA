@@ -1,30 +1,31 @@
 package org.mca.agent;
 
-import java.io.IOException;
 import java.rmi.RMISecurityManager;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+import java.util.logging.Logger;
+
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
 
 import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
-import net.jini.discovery.DiscoveryManagement;
-import net.jini.discovery.LookupLocatorDiscovery;
-import net.jini.lease.LeaseRenewalManager;
-import net.jini.lookup.JoinManager;
+import net.jini.core.lookup.ServiceItem;
+import net.jini.core.lookup.ServiceRegistrar;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.mca.agent.exception.DeployException;
 import org.mca.log.LogUtil;
-import org.mca.service.ServiceDeployer;
 import org.mca.service.ServiceConfigurator;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
-public class ComputeAgentDeployer extends ServiceDeployer{
+public class ComputeAgentDeployer {
 
-	/** Log */
-	private final static Log LOG = LogFactory.getLog(ComputeAgentDeployer.class);
+	private static final String COMPONENT_NAME = "org.mca.core.deployer.agent";
 
-
+	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
+	
 	/**
 	 * 
 	 * @param file
@@ -46,26 +47,25 @@ public class ComputeAgentDeployer extends ServiceDeployer{
 		try{
 			LookupLocator[] llc = config.getLookupLocators();
 			Entry[] entries = config.getEntries();
-			DiscoveryManagement dm = new LookupLocatorDiscovery(llc);
 			String sClassAgent = config.getImplClass(); 
-			ClassLoader loader = Thread.currentThread().getContextClassLoader();
-			Class<?> classAgent = loader.loadClass(sClassAgent);
+			Class<?> classAgent = Class.forName(sClassAgent);
 			AbstractComputeAgent agent = (AbstractComputeAgent)classAgent.newInstance();
 			if (agent instanceof NativeComputeAgent) {
 				LogUtil.debug("Deploy ComputeNativeAgent ...", ComputeAgentDeployer.class);
 				NativeComputeAgent nativeAgent = (NativeComputeAgent) agent;
 				nativeAgent.setByteCodeHandler(config.getByteCodeHandler());
 			}
-			JoinManager myManager = new JoinManager(agent,entries,agent,dm,new LeaseRenewalManager());
-		}catch (ClassNotFoundException e) {
-			LOG.error(e.getClass().getName() +" : " + e.getMessage());
-		} catch (InstantiationException e) {
-			LOG.error(e.getClass().getName() +" : " + e.getMessage());
-		} catch (IllegalAccessException e) {
-			LOG.error(e.getClass().getName() +" : " + e.getMessage());
-		} catch (IOException e) {
-			LOG.error(e.getClass().getName() +" : " + e.getMessage());
-		}
+			ServiceItem item = new ServiceItem(null, agent, entries);
+			for (LookupLocator lookup : llc) {
+				logger.info("deploy on [" + lookup.getHost() + ":" + lookup.getPort() + "]" );
+				ServiceRegistrar registrar = lookup.getRegistrar();
+				registrar.register(item, Long.MAX_VALUE);
+			}
+		
+		}catch (Exception e) {
+			logger.warning(e.getClass().getName() +" : " + e.getMessage());
+			e.printStackTrace();
+		} 
 	}
 
 	/**
@@ -74,17 +74,40 @@ public class ComputeAgentDeployer extends ServiceDeployer{
 	 */
 	public static void main(String[] args) {
 
-		ApplicationContext context = new FileSystemXmlApplicationContext("file:" + args[0]);
-		ServiceConfigurator serviceConfigurator = context.getBean("agent",ServiceConfigurator.class);
+		final String file = args[0];
+		LoginContext loginContext = null;
+		try {
+			loginContext = new LoginContext("org.mca.Browser");
+			loginContext.login();
+		} catch (LoginException e1) {
+			e1.printStackTrace();
+		}
 
-		RMISecurityManager securityManager = new RMISecurityManager();
-		System.setProperty("java.rmi.server.codebase", serviceConfigurator.getCodebaseFormate());
-		System.setProperty("java.security.policy", serviceConfigurator.getPolicy());
-		System.setSecurityManager(securityManager);
-		LOG.info("Deploy " + serviceConfigurator.getName() + " Agent.");
-		
-		ComputeAgentDeployer deployer = new ComputeAgentDeployer();
-		deployer.deploy(serviceConfigurator);
+		try {
+			Subject.doAsPrivileged(
+					loginContext.getSubject(),
+					new PrivilegedExceptionAction(){
+						public Object run() throws Exception {
+							ApplicationContext context = new FileSystemXmlApplicationContext("file:" + file);
+							ServiceConfigurator serviceConfigurator = context.getBean("agent",ServiceConfigurator.class);
+
+							RMISecurityManager securityManager = new RMISecurityManager();
+							System.setProperty("java.rmi.server.codebase", serviceConfigurator.getCodebaseFormate());
+							System.setProperty("java.security.policy", serviceConfigurator.getPolicy());
+							System.setSecurityManager(securityManager);
+							logger.info("Deploy " + serviceConfigurator.getName() + " Agent.");
+							
+							ComputeAgentDeployer deployer = new ComputeAgentDeployer();
+							deployer.deploy(serviceConfigurator);
+							logger.info(serviceConfigurator.getName() + " Agent deployed.");
+							return null;
+						}
+					},
+					null);
+		} catch (PrivilegedActionException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 }

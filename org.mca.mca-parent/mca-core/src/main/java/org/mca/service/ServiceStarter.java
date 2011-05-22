@@ -5,24 +5,22 @@ package org.mca.service;
 
 import java.rmi.RMISecurityManager;
 import java.rmi.Remote;
+import java.util.logging.Logger;
 
 import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
 import net.jini.core.lookup.ServiceID;
-import net.jini.discovery.DiscoveryGroupManagement;
 import net.jini.discovery.LookupDiscoveryManager;
 import net.jini.lease.LeaseRenewalManager;
 import net.jini.lookup.JoinManager;
 import net.jini.lookup.ServiceIDListener;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 import com.sun.jini.start.NonActivatableServiceDescriptor;
-import com.sun.jini.start.ServiceDescriptor;
 import com.sun.jini.start.NonActivatableServiceDescriptor.Created;
+import com.sun.jini.start.ServiceDescriptor;
 
 /**
  * @author Cyril
@@ -30,10 +28,10 @@ import com.sun.jini.start.NonActivatableServiceDescriptor.Created;
  */
 public class ServiceStarter implements ServiceIDListener{
 
-	/** Log */
-	private final static Log LOG = LogFactory.getLog(ServiceStarter.class);
+	public final static String COMPONENT_NAME = "org.mca.service.ServiceStarter";
 
-
+	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
+	
 	private ServiceConfigurator config;
 	private Object impl;
 	private Remote proxy;
@@ -65,10 +63,10 @@ public class ServiceStarter implements ServiceIDListener{
 
 	private Object startService() {
 		
-		//System.setProperty("java.rmi.server.codebase", "https://localhost/mca/codebase/reggie-dl.jar https://localhost/mca/codebase/jsk-dl.jar https://localhost/mca/codebase/mahalo-dl.jar https://localhost/mca/codebase/mca-server.jar");
 		String codebase = config.getCodebaseFormate();
 		String policy = config.getPolicy();
 		String classpath = config.getClasspathFormate();
+		System.out.println(classpath);
 		String implClass = config.getImplClass();
 		String[] serverConfigArgs = config.getServerConfigArgs();
 		// Create the new service descriptor
@@ -78,13 +76,15 @@ public class ServiceStarter implements ServiceIDListener{
 					classpath,
 					implClass,
 					serverConfigArgs);
-		
 		// and create the service and its proxy
 		Created created = null;
 		try {
+			ServiceConfigurator config = new ServiceConfigurator();
 			created = (Created) desc.create(config);
+			System.out.println(created.impl.getClass().getProtectionDomain().getClassLoader());
 		} catch(Exception e) {
-			LOG.error(e.getClass() + " : " + e.getMessage());
+			logger.warning(e.getClass() + " : " + e.getMessage());
+			e.printStackTrace();
 			System.exit(1);
 		}
 		impl = created.impl;

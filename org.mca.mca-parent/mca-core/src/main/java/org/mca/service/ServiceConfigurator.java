@@ -11,11 +11,8 @@ import net.jini.config.ConfigurationProvider;
 import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.mca.entry.DataHandler;
 import org.mca.entry.EntryFactory;
-import org.mca.log.LogUtil;
 
 /**
  * 
@@ -27,8 +24,6 @@ import org.mca.log.LogUtil;
  */
 public class ServiceConfigurator extends AbstractConfiguration{
 
-	/** Log */
-	private final static Log LOG = LogFactory.getLog(ServiceConfigurator.class);
 
 	private static final String JINI_LOCATOR_PREFIX = "jini://";
 
@@ -78,9 +73,9 @@ public class ServiceConfigurator extends AbstractConfiguration{
 	public String getClasspathFormate() {
 		String classpath= "";
 		for (String jar : this.classpath) {
-			classpath += jar + ";";
+			classpath += jar + ":";
 		}
-		return classpath;
+		return classpath.substring(0, classpath.length()-1);
 	}
 
 	/**
@@ -145,7 +140,6 @@ public class ServiceConfigurator extends AbstractConfiguration{
 		this.serverConfigArgs = serverConfigArgs;
 	}
 
-
 	/**
 	 * 
 	 * @return
@@ -187,9 +181,6 @@ public class ServiceConfigurator extends AbstractConfiguration{
 	@Override
 	protected Object getEntryInternal(String component, String name, 
 			Class type, Object data) throws ConfigurationException {
-
-		LogUtil.debug("requested entry : [component=" + component + "]" +
-				"[name=" + name + "][type=" + type + "][data=" + data + "]",getClass());
 		Configuration config = ConfigurationProvider.getInstance(new String[0]);
 		return  config.getEntry(component, name, type);
 	}
