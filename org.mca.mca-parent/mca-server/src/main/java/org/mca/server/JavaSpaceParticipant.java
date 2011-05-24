@@ -32,15 +32,19 @@ import org.mca.log.LogUtil;
  * @author Cyril
  *
  */
-@SuppressWarnings("serial")
+
 public abstract class JavaSpaceParticipant implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5392183380787134791L;
 
 	/**  */
 	protected JavaSpace05 space;
 
 	protected String host;
-	
-	
+		
 	public void setSpace(JavaSpace05 space) {
 		this.space = space;
 	}
@@ -151,7 +155,6 @@ public abstract class JavaSpaceParticipant implements Serializable{
 			return entry;
 		} catch (Exception e) {
 			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
-			e.printStackTrace();
 			throw new MCASpaceException();
 		}
 	}

@@ -23,7 +23,7 @@ import org.mca.math.Data;
 import org.mca.scheduler.Task;
 import org.mca.scheduler.TaskState;
 
-import com.sun.jini.outrigger.MCAOutriggerServerWrapper;
+import com.sun.jini.outrigger.MCAPersistentOutriggerImpl;
 
 
 class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCase{
@@ -36,9 +36,9 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	private String name;
 	private String description;
 
-	ComputationCaseImpl(MCAOutriggerServerWrapper w) throws RemoteException {
-		setSpace((JavaSpace05)w.space());
-		Entry[] entries = w.getLookupAttributes();
+	ComputationCaseImpl(MCAPersistentOutriggerImpl server) throws RemoteException {
+		setSpace((JavaSpace05)server.space());
+		Entry[] entries = server.getLookupAttributes();
 		for (Entry entry : entries) {
 			if (entry instanceof ComputationCaseInfo) {
 				ComputationCaseInfo infos = (ComputationCaseInfo)entry;

@@ -10,6 +10,11 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 public class Server extends MCAComponent {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3472648316861710155L;
+	
 	private static final String SERVICE_REGGIE = "reggie";
 	private static final String SERVICE_TRANSACTION = "transaction";
 
@@ -23,6 +28,8 @@ public class Server extends MCAComponent {
         if (System.getSecurityManager() == null) {
             System.setSecurityManager(new RMISecurityManager());
         }
+
+		
 		startAllServices();
 
 

@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -25,7 +26,6 @@ import net.jini.config.ConfigurationProvider;
 import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
 import net.jini.core.event.EventRegistration;
-import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
 import net.jini.core.event.UnknownEventException;
 import net.jini.core.lookup.ServiceID;
@@ -38,9 +38,7 @@ import net.jini.jeri.BasicJeriExporter;
 import net.jini.jeri.tcp.TcpServerEndpoint;
 import net.jini.lookup.JoinManager;
 import net.jini.lookup.ServiceIDListener;
-import net.jini.lookup.entry.Name;
 import net.jini.lookup.entry.ServiceInfo;
-import net.jini.space.JavaSpace05;
 
 import org.mca.entry.ComputationCaseState;
 import org.mca.entry.State;
@@ -59,64 +57,73 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 import com.sun.jini.config.Config;
 import com.sun.jini.lookup.entry.BasicServiceType;
-import com.sun.jini.outrigger.MCAOutriggerServerWrapper;
+import com.sun.jini.outrigger.MCAPersistentOutriggerImpl;
 import com.sun.jini.start.LifeCycle;
 
 public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3354819183243663600L;
+
+	
 	private static final String SERVICE_JAVASPACE = "javaspace";
 	private static final String FILE_JAVASPACE = System.getProperty("mca.home") + "/conf/javaspace.xml";
-	
-	private Map<String, MCAOutriggerServerWrapper> cases;
+
+	private Map<String, MCAPersistentOutriggerImpl> cases;
 
 	public final static String COMPONENT_NAME = "org.mca.server";
 
+	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
+	
 	private final LoginContext loginContext;
-	
+
 	private Exporter exporter;
-	
+
 	private JoinManager mgr;
-	
+
 	private MCASpaceProxy proxy;
-	
+
 	private MCASpaceServer remoteRef;
-	
+
 	private LookupLocator locators[];
-	
+
 	private EventListenerList listeners;
-	
+
 	private long seqNum;
-	
+
 	public MCASpaceServerImpl(String[] configArgs, LifeCycle lifeCycle) 
 	throws IOException,ConfigurationException, LoginException
 	{
 		try {
-		final Configuration config = 
-			ConfigurationProvider.getInstance(configArgs,
-					getClass().getClassLoader());
+			final Configuration config = 
+				ConfigurationProvider.getInstance(configArgs,
+						getClass().getClassLoader());
 
-		loginContext = (LoginContext) config.getEntry(
-				COMPONENT_NAME, "loginContext", LoginContext.class, null);
+			loginContext = (LoginContext) config.getEntry(
+					COMPONENT_NAME, "loginContext", LoginContext.class, null);
 
-		if (loginContext == null) {
-			init(config);
-		}else{
-			loginContext.login();
-			try {
-				Subject.doAsPrivileged(
-						loginContext.getSubject(),
-						new PrivilegedExceptionAction(){
-							public Object run() throws Exception {
-								init(config);
-								return null;
-							}
-						},
-						null);
-			} catch (PrivilegedActionException e) {
-				e.printStackTrace();
-				throw new Error();
+			if (loginContext == null) {
+				init(config);
+			}else{
+				loginContext.login();
+				try {
+					Subject.doAsPrivileged(
+							loginContext.getSubject(),
+							new PrivilegedExceptionAction(){
+								public Object run() throws Exception {
+									init(config);
+									return null;
+								}
+							},
+							null);
+				} catch (PrivilegedActionException e) {
+					e.printStackTrace();
+					throw new Error();
+				}
 			}
-		}
+			logger.info("MCASpace started: " + this);
 		}catch (ConfigurationException e) {
 			System.out.println(e.getMessage());
 			throw e;
@@ -140,7 +147,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 				basicExporter);
 		remoteRef = (MCASpaceServer)exporter.export(this);
 		proxy = new MCASpaceProxy(remoteRef);
-		cases = new HashMap<String,MCAOutriggerServerWrapper>();
+		cases = new HashMap<String,MCAPersistentOutriggerImpl>();
 		locators = new LookupLocator[]{new LookupLocator("jini://localhost:4160")};
 		DiscoveryManagement dm = new LookupLocatorDiscovery(locators);
 		mgr = new JoinManager(proxy, getAttributes(), this,dm,null, config);
@@ -150,16 +157,16 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	 * 
 	 * @return
 	 */
-    private static Entry[] getAttributes() {
-    	final Entry info = new ServiceInfo("MCASpace", 
-    	    "LACL", "University Paris East",
-    	    "1.0", "", "");
-    	
-    	final Entry type = 
-    	    new BasicServiceType("MCASpace");
+	private static Entry[] getAttributes() {
+		final Entry info = new ServiceInfo("MCASpace", 
+				"LACL", "University Paris East",
+				"1.0", "", "");
 
-    	return new Entry[]{info, type};
-        }
+		final Entry type = 
+			new BasicServiceType("MCASpace");
+
+		return new Entry[]{info, type};
+	}
 
 	/**
 	 * 
@@ -167,20 +174,23 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	 */
 	@Override
 	public ComputationCase addCase(String name, String description) throws RemoteException,MCASpaceException {
+		logger.fine("MCASpaceServerImpl -- addCase [" + name +", " + description + "]");
 		if (cases.containsKey(name)) 
 			throw new MCASpaceException("[" + name + "] computation Case with the same name exists.");
 		ApplicationContext context = new FileSystemXmlApplicationContext("file:" + FILE_JAVASPACE);
 		ServiceConfigurator serviceConfigurator = context.getBean(SERVICE_JAVASPACE,ServiceConfigurator.class);
-
+		
 		RMISecurityManager securityManager = new RMISecurityManager();
 		System.setProperty("java.rmi.server.codebase", serviceConfigurator.getCodebaseFormate());
 		System.setProperty("java.security.policy", serviceConfigurator.getPolicy());
 		System.setSecurityManager(securityManager);
-
+		logger.fine("MCASpaceServerImpl -- codebase [" + serviceConfigurator.getCodebaseFormate() + "]");
 		ServiceStarter starter = new ServiceStarter(serviceConfigurator);
+		logger.fine("MCASpaceServerImpl -- " + starter);
 		Object o = starter.startWithoutAdvertise();
-		MCAOutriggerServerWrapper w = (MCAOutriggerServerWrapper) o;
-
+		logger.fine("MCASpaceServerImpl -- " + o );
+		MCAPersistentOutriggerImpl w = (MCAPersistentOutriggerImpl) o;
+		logger.fine("MCASpaceServerImpl -- JavaSpace [" + name + "] started.");
 		Entry[] entries = new Entry[]{new ComputationCaseInfo(name,description)};
 		try {
 			w.addLookupAttributes(entries);			
@@ -203,6 +213,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 			throw new MCASpaceException();
 		} 
 		ComputationCase computationCase = new ComputationCaseImpl(w);
+		logger.fine("MCASpaceServerImpl -- " + computationCase + " added.");
 		fireNotify(MCASpace.ADD_CASE, computationCase);
 		return computationCase;
 	}
@@ -213,12 +224,8 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	 */
 	@Override
 	public void removeCase(String name) throws RemoteException,MCASpaceException {
-		MCAOutriggerServerWrapper server = cases.get(name);
-		try {
-			server.destroy();
-		} catch (RemoteException e) {
-			throw new MCASpaceException(e.getMessage());
-		}
+		MCAPersistentOutriggerImpl server = cases.get(name);
+		server.destroy();
 		cases.remove(name);
 		fireNotify(MCASpace.REMOVE_CASE,null);
 	}
@@ -230,9 +237,9 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	@Override
 	public Collection<ComputationCase> getCases() throws RemoteException{
 		Collection<ComputationCase> cases = new ArrayList<ComputationCase>();
-		for (Map.Entry<String, MCAOutriggerServerWrapper> entry : this.cases.entrySet()) {
-			MCAOutriggerServerWrapper w = entry.getValue();
-			ComputationCase c = new ComputationCaseImpl(w);	
+		for (Map.Entry<String, MCAPersistentOutriggerImpl> entry : this.cases.entrySet()) {
+			MCAPersistentOutriggerImpl server = entry.getValue();
+			ComputationCase c = new ComputationCaseImpl(server);	
 			cases.add(c);
 		}
 		return cases;
@@ -244,19 +251,19 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	 */
 	@Override
 	public ComputationCase getCase(String name) throws RemoteException,MCASpaceException{
-		MCAOutriggerServerWrapper w = cases.get(name);
+		MCAPersistentOutriggerImpl w = cases.get(name);
 		if(w == null)
 			throw new MCASpaceException("[" + name + "] computation Case not exists.");
 		return new ComputationCaseImpl(w);
 	}
-	
+
 	@Override
 	public ComputationCase getCase() throws RemoteException,MCASpaceException{
-		MCAOutriggerServerWrapper w = null;
-		Iterator<MCAOutriggerServerWrapper> iter = cases.values().iterator();
-		if (iter.hasNext()) w = iter.next();
-		if(w == null) return null;
-		return new ComputationCaseImpl(w);
+		MCAPersistentOutriggerImpl server = null;
+		Iterator<MCAPersistentOutriggerImpl> iter = cases.values().iterator();
+		if (iter.hasNext()) server = iter.next();
+		if(server == null) return null;
+		return new ComputationCaseImpl(server);
 	}
 
 	@Override
@@ -271,12 +278,12 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 
 	@Override
 	public EventRegistration register(MCASpaceEventListener listener)
-			throws RemoteException {
+	throws RemoteException {
 		listeners.add(MCASpaceEventListener.class, listener);
 		System.out.println("add new listener : " + listener);
 		return new EventRegistration(0, proxy, null, 0);
 	}
-	
+
 	/**
 	 * 
 	 * @param eventID
@@ -285,7 +292,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		RemoteEventListener[] listeners = 
 			this.listeners.getListeners(MCASpaceEventListener.class);
 		for (RemoteEventListener listener : listeners) {
-			
+
 			MCASpaceEvent event = new MCASpaceEvent(proxy, eventID, seqNum++, null, computationCase);
 			try {
 				listener.notify(event);

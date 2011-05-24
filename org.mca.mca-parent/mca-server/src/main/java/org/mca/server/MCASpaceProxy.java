@@ -11,9 +11,14 @@ import org.mca.javaspace.MCASpace;
 import org.mca.javaspace.MCASpaceEventListener;
 import org.mca.javaspace.exceptions.MCASpaceException;
 
-@SuppressWarnings("serial")
+
 public class MCASpaceProxy implements MCASpace, Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7833611893651366342L;
+	
 	private MCASpaceServer remoteRef;
 	
 	public MCASpaceProxy(MCASpaceServer remoteRef) {
@@ -23,6 +28,7 @@ public class MCASpaceProxy implements MCASpace, Serializable {
 	@Override
 	public ComputationCase addCase(String name, String description)
 			throws RemoteException, MCASpaceException {
+		System.out.println(remoteRef);
 		return remoteRef.addCase(name, description);
 	}
 
