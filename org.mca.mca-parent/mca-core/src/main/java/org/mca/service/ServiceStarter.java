@@ -66,7 +66,6 @@ public class ServiceStarter implements ServiceIDListener{
 		String codebase = config.getCodebaseFormate();
 		String policy = config.getPolicy();
 		String classpath = config.getClasspathFormate();
-		System.out.println(classpath);
 		String implClass = config.getImplClass();
 		String[] serverConfigArgs = config.getServerConfigArgs();
 		// Create the new service descriptor
@@ -81,7 +80,6 @@ public class ServiceStarter implements ServiceIDListener{
 		try {
 			ServiceConfigurator config = new ServiceConfigurator();
 			created = (Created) desc.create(config);
-			System.out.println(created.impl.getClass().getProtectionDomain().getClassLoader());
 		} catch(Exception e) {
 			logger.warning(e.getClass() + " : " + e.getMessage());
 			e.printStackTrace();
