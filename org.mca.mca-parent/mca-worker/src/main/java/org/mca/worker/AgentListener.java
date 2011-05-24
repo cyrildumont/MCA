@@ -1,7 +1,11 @@
 package org.mca.worker;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
+import java.io.FileInputStream;
+import java.net.URL;
+import java.security.CodeSource;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.Hashtable;
 import java.util.logging.Logger;
 
@@ -25,10 +29,6 @@ public class AgentListener  {
 
 	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
 
-	private final static Integer SECOND_TO_WAIT = 3;
-
-	private Boolean serviceFind;
-
 	private ComputeAgent agent;
 
 	private ServiceTemplate template;
@@ -40,7 +40,7 @@ public class AgentListener  {
 		agents = new Hashtable<String, ComputeAgent>();
 	}
 
-	
+
 	/**
 	 * 
 	 * @param serviceID
@@ -56,27 +56,41 @@ public class AgentListener  {
 		if (agent != null) {
 			return agent;
 		}
-		serviceFind = false;
 		logger.finest("Search for the ComputingAgent [" + name +"] on [" + host + "]");	
 		Name entry = new Name(name);
 		template = new ServiceTemplate(null, null, new Entry[]{entry});
 		try {
 			LookupLocator ll = new LookupLocator(host);
 			ServiceRegistrar registrar = ll.getRegistrar();
-			ComputeAgent item = (ComputeAgent)registrar.lookup(template);
-			if(item == null) throw new AgentNotFoundException();
-			return item;
-		} catch (MalformedURLException e) {
+			ComputeAgent agent = (ComputeAgent)registrar.lookup(template);
+			if(agent == null) throw new AgentNotFoundException("Agent not found");
+			verifyComputeAgent(agent);
+			return agent;
+		} catch (Exception e) {
 			e.printStackTrace();
-			throw new AgentNotFoundException();
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new AgentNotFoundException();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-			throw new AgentNotFoundException();
-		} 
+			throw new AgentNotFoundException(e.getMessage());
+		}
 
 	}
 
+	/**
+	 * 
+	 * @param agent
+	 * @throws Exception
+	 */
+	public void verifyComputeAgent(ComputeAgent agent) throws Exception{
+		CodeSource source = agent.getClass().getProtectionDomain().getCodeSource();
+		URL url = source.getLocation();
+		logger.fine("AgentListener -- download ComputeAgent bytecode on " + url);
+		Certificate[] certificates = source.getCertificates();
+		KeyStore keystore = KeyStore.getInstance("jks");
+		String keystoreFile = System.getProperty("javax.net.ssl.trustStore");
+		FileInputStream fis = new FileInputStream(keystoreFile);
+		keystore.load(fis, "worker".toCharArray());
+		X509Certificate cert = (X509Certificate)keystore.getCertificate("root");
+		X509Certificate certToVerify = (X509Certificate)certificates[0];
+		logger.fine("AgentListener -- agent certificate issuer: " + certToVerify.getIssuerDN());
+		certToVerify.verify(cert.getPublicKey());
+		logger.fine("AgentListener -- signature verification succeeded");
+	}
 }
