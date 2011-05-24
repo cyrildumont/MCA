@@ -18,10 +18,10 @@
 		</property>
 		<property name="implClass" value="com.sun.jini.reggie.TransientRegistrarImpl" />
 		<property name="policy" value="${mca.home}/conf/security/worker.policy" />
-		<property name="serverConfigArgs" value="${mca.home}/conf/transient-reggie-worker.config" />
+		<property name="serverConfigArgs" value="${mca.home}/conf/worker.config" />
 		<property name="classpath">
 			<list>
-				<value>${mca.home}/lib/reggie.jar</value>
+				<value>${mca.home}/lib/reggie-2.1.1.jar</value>
 			</list>
 		</property>
 	</bean>

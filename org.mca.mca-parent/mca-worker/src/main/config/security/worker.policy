@@ -40,7 +40,7 @@ grant {
 
 	permission java.io.FilePermission "${mca.home}/lib","read";
 	permission java.io.FilePermission "${mca.home}/lib/*","read";
-	permission java.io.FilePermission "${mca.home}/conf/*","read";
+	permission java.io.FilePermission "${mca.home}/conf/-","read";
 	permission java.io.FilePermission "${mca.home}/work","read,write";
 	permission java.io.FilePermission "${mca.home}/work/-","read,write";
 
@@ -56,15 +56,15 @@ grant {
 	permission java.util.PropertyPermission "temp.worker.result","write,read";
 	permission java.util.PropertyPermission "java.security.policy","read,write";
 	permission java.util.PropertyPermission "java.rmi.server.codebase","write";
-
+	permission java.util.PropertyPermission "javax.net.ssl.trustStore","read";
+	
 	permission javax.management.MBeanServerPermission "findMBeanServer";
 	permission javax.management.MBeanServerPermission "createMBeanServer";
 	permission javax.management.MBeanPermission "*","registerMBean";
 	permission javax.management.MBeanTrustPermission "register";
 
-	permission com.sun.jini.reggie.RegistrarPermission "register";
-	permission com.sun.jini.reggie.RegistrarPermission "notify";
 	permission net.jini.discovery.DiscoveryPermission "*";
+	permission net.jini.export.ExportPermission "*"; 
 };
 
 grant principal "worker"{
