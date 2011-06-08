@@ -83,6 +83,10 @@ public class AgentListener  {
 		URL url = source.getLocation();
 		logger.fine("AgentListener -- download ComputeAgent bytecode on " + url);
 		Certificate[] certificates = source.getCertificates();
+		if (certificates == null) {
+			logger.warning("AgentListener -- bytecode is not signed");
+			throw new Exception("bytecode of the agent not signed");
+		}
 		KeyStore keystore = KeyStore.getInstance("jks");
 		String keystoreFile = System.getProperty("javax.net.ssl.trustStore");
 		FileInputStream fis = new FileInputStream(keystoreFile);

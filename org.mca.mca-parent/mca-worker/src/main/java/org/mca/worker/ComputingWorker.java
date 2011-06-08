@@ -410,7 +410,9 @@ public class ComputingWorker extends MCAComponent {
 					}else{
 						try {
 							sleep(3000);
-						} catch (InterruptedException e) {}
+						} catch (InterruptedException e) {
+							interrupted= true;
+						}
 					}
 				}		
 			}catch (Exception e) {
