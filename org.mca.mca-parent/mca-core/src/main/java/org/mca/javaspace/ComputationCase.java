@@ -7,7 +7,6 @@ import java.util.Collection;
 
 import net.jini.core.event.RemoteEventListener;
 
-import org.mca.core.ComponentInfo;
 import org.mca.entry.DataHandler;
 import org.mca.entry.MCAProperty;
 import org.mca.javaspace.exceptions.MCASpaceException;
@@ -26,7 +25,7 @@ public interface ComputationCase extends Serializable {
 
 	public File downloadData(String name, String property) throws MCASpaceException;
 
-	public String getName() throws MCASpaceException;
+	public String getName();
 
 	public Collection<MCAProperty> getProperties() throws MCASpaceException;
 
@@ -57,5 +56,7 @@ public interface ComputationCase extends Serializable {
 	public Task getTask(String name) throws MCASpaceException;
 
 	void join(RemoteEventListener listener) throws MCASpaceException;
+
+	public Task getTaskToCompute(String hostname);
 	
 }

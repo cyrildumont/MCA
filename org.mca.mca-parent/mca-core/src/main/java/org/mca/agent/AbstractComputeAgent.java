@@ -57,23 +57,27 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 
 	protected HashMap<String, Object> results;
 
-	final public Object compute(Task task) 	throws Exception{
-		this.task = task;
-		Collection<MCAProperty> props = computationCase.getProperties(); 
-		for (MCAProperty mcaProperty : props) {
-			properties.put(mcaProperty.name, mcaProperty.value);
+	final public Object compute(Task task) 	throws ComputeAgentException{
+		try{
+			this.task = task;
+			Collection<MCAProperty> props = computationCase.getProperties(); 
+			for (MCAProperty mcaProperty : props) {
+				properties.put(mcaProperty.name, mcaProperty.value);
+			}
+			LogUtil.debug("[JacobiAgent][" + computationCase.getName() + "] ", getClass());
+			LogUtil.debug("[JacobiAgent]" +
+					"[" + computationCase.getName() + "] : " + properties.size() + " properties", getClass());
+			for (Map.Entry<String, String> property : properties.entrySet()) {
+				LogUtil.debug(" \t " + property.getKey() + " = " + property.getValue(), getClass());
+			}
+			preCompute();
+			if (tasksToCheck.size() != 0) {
+				checkTasks();	
+			}
+			return execute();
+		}catch(Exception e){
+			throw new ComputeAgentException();
 		}
-		LogUtil.debug("[JacobiAgent][" + computationCase.getName() + "] ", getClass());
-		LogUtil.debug("[JacobiAgent]" +
-				"[" + computationCase.getName() + "] : " + properties.size() + " properties", getClass());
-		for (Map.Entry<String, String> property : properties.entrySet()) {
-			LogUtil.debug(" \t " + property.getKey() + " = " + property.getValue(), getClass());
-		}
-		preCompute();
-		if (tasksToCheck.size() != 0) {
-			checkTasks();	
-		}
-		return execute();	
 	}
 
 
@@ -82,7 +86,7 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 		System.exit(1);
 	}
 
-	final public void setCase(ComputationCase computationCase) throws RemoteException{
+	final public void setCase(ComputationCase computationCase){
 		this.computationCase = computationCase;
 	}
 
@@ -113,10 +117,10 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 		LogUtil.info("No precompute", getClass());
 	}
 
-	
+
 	protected void shareData(String name, Remote data)
-			throws MalformedURLException, IOException, ClassNotFoundException,
-					ExportException, RemoteException {
+	throws MalformedURLException, IOException, ClassNotFoundException,
+	ExportException, RemoteException {
 		LookupLocator lookup = new LookupLocator("jini://localhost");
 		ServiceRegistrar registrar = lookup.getRegistrar();
 		Entry[] entries = new Entry[]{new Name(name)};
@@ -131,10 +135,10 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 		File file = computationCase.downloadData(name, System.getProperty("temp.worker.download"));
 		return file;
 	}
-	
+
 	protected File getTempFile(String name){
 		File file = new File(System.getProperty("temp.worker.result") + "/" + name);
 		return file;
 	}
-	
+
 }

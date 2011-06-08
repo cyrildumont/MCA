@@ -80,6 +80,8 @@ public class ServiceStarter implements ServiceIDListener{
 		try {
 			ServiceConfigurator config = new ServiceConfigurator();
 			created = (Created) desc.create(config);
+			logger.fine("ServiceStarter -- Classloader { " + 
+					created.impl.getClass().getProtectionDomain().getClassLoader() + " }");
 		} catch(Exception e) {
 			logger.warning(e.getClass() + " : " + e.getMessage());
 			e.printStackTrace();
