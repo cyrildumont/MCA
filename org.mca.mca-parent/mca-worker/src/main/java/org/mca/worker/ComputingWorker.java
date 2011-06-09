@@ -437,6 +437,7 @@ public class ComputingWorker extends MCAComponent {
 			logger.finest("Worker -- check for task to compute: [" + computationCase.getName() + "]");	
 			Task task = computationCase.getTaskToCompute(hostname);
 			if (task == null){
+				logger.finest("Worker -- No task to compute: [" + computationCase.getName() + "]");	
 				return;
 			}
 			taskInProgress = task;
@@ -460,9 +461,9 @@ public class ComputingWorker extends MCAComponent {
 				taskInProgress.message = e1.getMessage();
 			}finally{
 				try {
-					computationCase.updateTask(taskInProgress);
+					computationCase.updateTaskComputed(taskInProgress);
 				}catch (MCASpaceException e) {
-					e.printStackTrace();
+					logger.warning("Worker -- Error during update of  the task in progress :" + e.getMessage());
 				}
 				setState(ComputeWorkerState.WAITING);
 			}
