@@ -6,6 +6,7 @@ package org.mca.scheduler;
 import java.util.ArrayList;
 
 import org.mca.entry.Storable;
+import org.mca.transaction.Transaction;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -42,6 +43,8 @@ public class Task extends Storable{
 	public String dataHandlerName;
 	
 	public String message;
+	
+	private transient Transaction transaction;
 	
 	@Override
 	public String toString() {
@@ -201,4 +204,11 @@ public class Task extends Storable{
 	
 	}
 	
+	public void setTransaction(Transaction transaction) {
+		this.transaction = transaction;
+	}
+	
+	public Transaction getTransaction() {
+		return transaction;
+	}
 }

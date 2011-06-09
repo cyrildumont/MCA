@@ -58,5 +58,7 @@ public interface ComputationCase extends Serializable {
 	void join(RemoteEventListener listener) throws MCASpaceException;
 
 	public Task getTaskToCompute(String hostname);
+
+	public void updateTaskComputed(Task task) throws MCASpaceException;
 	
 }
