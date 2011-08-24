@@ -3,7 +3,9 @@ package org.mca.worker;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.rmi.server.ExportException;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.logging.Logger;
@@ -20,7 +22,6 @@ import net.jini.core.lookup.ServiceItem;
 import net.jini.core.lookup.ServiceTemplate;
 import net.jini.discovery.DiscoveryEvent;
 import net.jini.discovery.DiscoveryListener;
-import net.jini.discovery.LookupDiscovery;
 import net.jini.discovery.LookupDiscoveryManager;
 import net.jini.export.Exporter;
 import net.jini.jeri.BasicILFactory;
@@ -35,9 +36,10 @@ import net.jini.lookup.ServiceDiscoveryManager;
 import org.apache.commons.io.FileUtils;
 import org.mca.agent.ComputeAgent;
 import org.mca.agent.ComputeAgentException;
-import org.mca.agent.WaitForAnotherTaskException;
 import org.mca.core.MCAComponent;
+import org.mca.entry.ComputationCaseState;
 import org.mca.javaspace.ComputationCase;
+import org.mca.javaspace.ComputationCaseListener;
 import org.mca.javaspace.MCASpace;
 import org.mca.javaspace.MCASpaceEvent;
 import org.mca.javaspace.MCASpaceEventListener;
@@ -57,6 +59,8 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 @ManagedResource(objectName = "MCA:type=ComputingWorker")
 public class ComputingWorker extends MCAComponent {
 
+	private static final int READ_TASK_INTERVAL = 3000;
+
 	private static final String COMPONENT_NAME = "org.mca.worker.Worker";
 
 	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
@@ -65,14 +69,18 @@ public class ComputingWorker extends MCAComponent {
 
 	private static final String TEMP_WORKER_DOWNLOAD = "temp.worker.download";
 
+	public static final String TEMP_WORKER = "temp.worker";
+	
 	private static final String FILE_REGGIE = 
 		System.getProperty("mca.home") + "/conf/worker-reggie.xml";
 
 	private static final String[] CONFIG_FILES = 
 		new String[]{System.getProperty("mca.home") + "/conf/worker.config"};
 
-	private final Configuration config = 
+	private transient final Configuration config = 
 		ConfigurationProvider.getInstance(CONFIG_FILES);
+
+	private static final String[] MCA_GROUPS = {"MCA"}; 
 
 	/** state of the ComputeWorker*/
 	private ComputeWorkerState state; 
@@ -91,6 +99,12 @@ public class ComputingWorker extends MCAComponent {
 
 	private transient MCASpaceListener spaceListener;
 
+	private transient CaseStateListener caseListener;
+
+	private transient TaskExecutor taskExecutor;
+
+	public boolean signalStop = false;
+	
 	public ComputingWorker() throws Exception {
 		loginContext = new LoginContext("org.mca.Worker");
 		loginContext.login();
@@ -130,6 +144,7 @@ public class ComputingWorker extends MCAComponent {
 			}else {
 				FileUtils.cleanDirectory(dirDownload);
 			}
+			System.setProperty(TEMP_WORKER, tmpDir);
 			System.setProperty(TEMP_WORKER_DOWNLOAD, dirDownload.getPath());
 			System.setProperty(TEMP_WORKER_RESULT, dirResult.getPath());
 
@@ -149,11 +164,9 @@ public class ComputingWorker extends MCAComponent {
 	 */
 	private void start(){
 		setState(ComputeWorkerState.STARTED);
-		agentListener = new AgentListener();		
+		agentListener = new AgentListener();	
 		spaceListener = new MCASpaceListener();
 		spaceListener.start();
-		//		spaceListener = new WorkerMCASpaceEventListener();
-		//		new Thread(spaceListener).start();
 	}
 
 	/**
@@ -204,24 +217,32 @@ public class ComputingWorker extends MCAComponent {
 		return nbTasksComputed;
 	}
 
-	private void setComputationCase(ComputationCase computationCase) {
+	private void setComputationCase(ComputationCase computationCase) throws MCASpaceException {
 		if (!state.equals(ComputeWorkerState.STARTED)) {
 			logger.fine("Worker -- already connected");
 		}else{
 			this.computationCase = computationCase;
-			setState(ComputeWorkerState.CONNECTED);
 			spaceListener.disconnect();
+			caseListener = new CaseStateListener(computationCase);
+			setState(ComputeWorkerState.WAITING);
 			logger.fine("Worker -- connected on " + computationCase);
-			TaskExecutor te = new TaskExecutor();;
-			te.start();
+			if (computationCase.getState() == ComputationCaseState.STARTED) {
+				taskExecutor = new TaskExecutor();
+				taskExecutor.start();
+			}
 		}
 	}
 
-	private void setComputationCaseFinish(){
+	private void setComputationCaseFinish() throws ExportException{
+		taskExecutor.interrupt();
+		taskExecutor = null;
+		caseListener.interrupt();
+		caseListener = null;
 		computationCase = null;
 		setState(ComputeWorkerState.STARTED);
 		spaceListener.listen();
 	}
+	
 	/**
 	 * 
 	 * @author cyril
@@ -257,7 +278,7 @@ public class ComputingWorker extends MCAComponent {
 
 		}
 
-		public void listen(){
+		public void listen() throws ExportException{
 			eventListener = new WorkerMCASpaceEventListener();
 			eventListener.start();
 			cache.addListener(this);
@@ -271,7 +292,7 @@ public class ComputingWorker extends MCAComponent {
 		public void run(){
 			logger.fine("Worker -- MCASpaceListener started");
 			try {
-				LookupDiscoveryManager mgr = new LookupDiscoveryManager(LookupDiscovery.ALL_GROUPS, null, this,config);
+				LookupDiscoveryManager mgr = new LookupDiscoveryManager(MCA_GROUPS, null, this,config);
 				ServiceDiscoveryManager clientMgr = new ServiceDiscoveryManager(mgr, 
 						new LeaseRenewalManager());
 				Class<?>[] classes = new Class[]{MCASpace.class};
@@ -303,8 +324,15 @@ public class ComputingWorker extends MCAComponent {
 
 		@Override
 		public void discovered(DiscoveryEvent event) {
+
 			logger.fine("lookup discovered : " + event);
 		}
+	}
+
+	private Object getSSLProxy(Remote remote) throws ExportException{
+		Exporter exporter = 
+			new BasicJeriExporter(SslServerEndpoint.getInstance(MCAUtils.getIP(),0), new BasicILFactory());
+		return exporter.export(remote);
 	}
 
 	/**
@@ -314,22 +342,14 @@ public class ComputingWorker extends MCAComponent {
 	 */
 	private class WorkerMCASpaceEventListener extends Thread implements MCASpaceEventListener{
 
-		private Exporter exporter;
-
 		private MCASpaceEventListener proxy;
 
 		private boolean interrupted = false;
 
-		public WorkerMCASpaceEventListener() {
+		public WorkerMCASpaceEventListener() throws ExportException {
 			super("mcaspace event listener thread");
 			setDaemon(true);
-			try {
-				exporter = 
-					new BasicJeriExporter(SslServerEndpoint.getInstance(MCAUtils.getIP(),0), new BasicILFactory());
-				proxy = (MCASpaceEventListener)exporter.export(this);
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}
+			proxy = (MCASpaceEventListener)getSSLProxy(this);
 		}
 
 		public void notify(RemoteEvent event) throws UnknownEventException,RemoteException {
@@ -378,6 +398,7 @@ public class ComputingWorker extends MCAComponent {
 				}
 			} catch (RemoteException e) {
 				e.printStackTrace();
+				logger.warning("Worker -- Impossible to connect to [" + space + "]");
 			}
 		}
 
@@ -404,17 +425,17 @@ public class ComputingWorker extends MCAComponent {
 
 		public synchronized void run() {
 			try {
-				setState(ComputeWorkerState.WAITING);
 				interrupted = false;
 				while(!interrupted){
 					executeTask();
 					try {
-						sleep(3000);
+						sleep(READ_TASK_INTERVAL);
 					} catch (InterruptedException e) {
 						interrupted= true;
 					}
 				}
 			}catch (Exception e) {
+				e.printStackTrace();
 				logger.warning("Worker -- error during TaskExecutor execution : " + e.getMessage() );
 				interrupt();
 			}
@@ -425,7 +446,6 @@ public class ComputingWorker extends MCAComponent {
 			super.interrupt();
 			interrupted = true;
 			logger.fine("Worker -- TaskExecutor stopped");
-			setComputationCaseFinish();
 		}
 
 		/**
@@ -435,13 +455,22 @@ public class ComputingWorker extends MCAComponent {
 		 */
 		private void executeTask(){
 			logger.finest("Worker -- check for task to compute: [" + computationCase.getName() + "]");	
-			Task task = computationCase.getTaskToCompute(hostname);
-			if (task == null){
-				logger.finest("Worker -- No task to compute: [" + computationCase.getName() + "]");	
+			try {
+				Task task = computationCase.getTaskToCompute(hostname);
+				if (task == null){
+					logger.finest("Worker -- No task to compute: [" + computationCase.getName() + "]");	
+					return;
+				}
+				taskInProgress = task;
+			} catch (MCASpaceException e2) {
+				e2.printStackTrace();
+				try {
+					setComputationCaseFinish();
+				} catch (ExportException e) {
+					e.printStackTrace();
+				}
 				return;
 			}
-			taskInProgress = task;
-			
 			setState(ComputeWorkerState.RUNNING);	
 			try {
 				ComputeAgent agent = agentListener.getAgent(taskInProgress.computing_agent_name);
@@ -452,6 +481,7 @@ public class ComputingWorker extends MCAComponent {
 				taskInProgress.setState(TaskState.COMPUTED);
 				nbTasksComputed++;
 			} catch (ComputeAgentException e) {
+				e.printStackTrace();
 				logger.warning("Worker -- ComputeAgent execution error : " + e.getMessage());
 				taskInProgress.message = e.getMessage();
 				taskInProgress.setState(TaskState.ON_ERROR);
@@ -466,7 +496,76 @@ public class ComputingWorker extends MCAComponent {
 					logger.warning("Worker -- Error during update of  the task in progress :" + e.getMessage());
 				}
 				setState(ComputeWorkerState.WAITING);
+				if (signalStop) {
+					taskExecutor.interrupt();
+					taskExecutor = null;
+				}
 			}
 		}
 	}
+
+	/**
+	 * 
+	 * @author cyril
+	 *
+	 */
+	private class CaseStateListener extends Thread implements ComputationCaseListener{
+
+		private boolean interrupted = false;
+
+		public CaseStateListener(ComputationCase computationCase) 
+		throws MCASpaceException {
+			super("computation case event listener thread");
+			setDaemon(true);
+			computationCase.join(this);
+		}
+
+		
+		public void run() {
+			logger.finest("Worker -- ComputationCaseListener started");
+			while (!interrupted) {
+				try{
+					Thread.sleep(1000);
+				}catch (InterruptedException e) {}
+			}
+		}
+
+		public synchronized void interrupt(){
+			interrupted = true;
+			super.interrupt();
+			logger.fine("Worker -- ComputationCaseListener stopped");
+		}
+
+
+		@Override
+		public void caseStart() {
+			taskExecutor = new TaskExecutor();
+			taskExecutor.start();
+		}
+
+
+		@Override
+		public void caseStop() {
+			if(state == ComputeWorkerState.RUNNING){
+				logger.fine("Worker -- Worker agent is running --> send STOP signal");
+				signalStop = true;
+			}
+			else{
+				taskExecutor.interrupt();
+				taskExecutor = null;
+			}
+		}
+
+
+		@Override
+		public void caseFinish() {
+			try {
+				setComputationCaseFinish();
+			} catch (ExportException e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
+
 }

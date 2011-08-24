@@ -16,6 +16,7 @@ import net.jini.core.lookup.ServiceTemplate;
 import net.jini.lookup.entry.Name;
 
 import org.mca.agent.ComputeAgent;
+import org.mca.agent.NativeComputeAgent;
 import org.mca.worker.exception.AgentNotFoundException;
 
 /**
@@ -47,7 +48,8 @@ public class AgentListener  {
 	 * @return
 	 */
 	public ComputeAgent getAgent(String url) throws AgentNotFoundException{
-
+		if (url == null || url.length() == 0) 
+			throw new AgentNotFoundException("URL can't be null");
 		int i = url.lastIndexOf("/");
 		String host = url.substring(0, i);
 		String name = url.substring(i+1);
@@ -65,6 +67,10 @@ public class AgentListener  {
 			ComputeAgent agent = (ComputeAgent)registrar.lookup(template);
 			if(agent == null) throw new AgentNotFoundException("Agent not found");
 			verifyComputeAgent(agent);
+			if (agent instanceof NativeComputeAgent){
+				String dir = System.getProperty(ComputingWorker.TEMP_WORKER);
+				((NativeComputeAgent) agent).downloadByteCode(dir);
+			}
 			return agent;
 		} catch (Exception e) {
 			e.printStackTrace();
