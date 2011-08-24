@@ -26,7 +26,7 @@ public class MCAStore implements Store {
 
 	public void destroy() throws IOException {
 		File file = MCASpace.getFile();
-		file.delete();
+			file.delete();
 	}
 
 	public LogOps setupStore(Recover space) {

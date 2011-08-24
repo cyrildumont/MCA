@@ -9,6 +9,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.logging.Logger;
 
 import net.jini.core.entry.Entry;
 import net.jini.core.entry.UnusableEntryException;
@@ -33,13 +34,17 @@ import org.mca.log.LogUtil;
  *
  */
 
-public abstract class JavaSpaceParticipant implements Serializable{
+abstract class JavaSpaceParticipant implements Serializable{
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -5392183380787134791L;
 
+	private static final String COMPONENT_NAME = "org.mca.JavaSpaceParticipant";
+	
+	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
+	
 	/**  */
 	protected JavaSpace05 space;
 
@@ -151,10 +156,12 @@ public abstract class JavaSpaceParticipant implements Serializable{
 	protected Entry takeEntry(Entry template, Transaction txn, Long timeout) 		
 			throws MCASpaceException  {
 		try {
+
 			Entry entry = space.take(template, txn, timeout);
 			return entry;
 		} catch (Exception e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("JavaSpacePerticipant - take entry error :" + e.getMessage());
+			e.printStackTrace();
 			throw new MCASpaceException();
 		}
 	}

@@ -47,4 +47,14 @@
 			<version>2.1.1</version>
 		</dependency>
 	</dependencies>
+	
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/archive-files</directory>
+				<targetPath>META-INF</targetPath>
+			</resource>
+		</resources>
+	</build>
+	
 </project>

@@ -7,8 +7,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.rmi.MarshalledObject;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -93,7 +95,7 @@ public class MCASpaceOps implements LogOps{
 	private Map<Uuid, Node> entriesMap;
 	
 	
-	private Map<Long, TransactionalOp<?>> transactionMap; 
+	private Map<Long, List<TransactionalOp<?>>> transactionMap; 
 	
 	private Node joinStateManager;
 	private String path;
@@ -113,7 +115,7 @@ public class MCASpaceOps implements LogOps{
 			javaspace = doc.createElement("javaspace");
 			doc.appendChild(javaspace);
 			entriesMap = new HashMap<Uuid, Node>();
-			transactionMap = new HashMap<Long, TransactionalOp<?>>();
+			transactionMap = new HashMap<Long, List<TransactionalOp<?>>>();
 			entries = doc.createElement("entries");
 			javaspace.appendChild(entries);
 		} catch (ParserConfigurationException e) {
@@ -152,17 +154,19 @@ public class MCASpaceOps implements LogOps{
 	 */
 	public void commitOp(Long txnId) {
 		logger.finest("commitOp(" + txnId + ")");
-		TransactionalOp<?> to = transactionMap.get(txnId);
-		OpsType type =to.getOpsType();
-		switch (type) {
-		case TAKE:	
-			Uuid uuid = (Uuid)to.getOpsElement();
-			takeOp(uuid, null);
-			break;
-		case WRITE:	
-			StorableResource entry = (StorableResource)to.getOpsElement();
-			writeOp(entry, null);
-			break;
+		List<TransactionalOp<?>> tos = transactionMap.get(txnId);
+		for (TransactionalOp<?> to : tos) {
+			OpsType type =to.getOpsType();
+			switch (type) {
+			case TAKE:	
+				Uuid uuid = (Uuid)to.getOpsElement();
+				takeOp(uuid, null);
+				break;
+			case WRITE:	
+				StorableResource entry = (StorableResource)to.getOpsElement();
+				writeOp(entry, null);
+				break;
+			}
 		}
 		transactionMap.remove(txnId);
 	}
@@ -269,7 +273,7 @@ public class MCASpaceOps implements LogOps{
 		logger.finest("takeOp(" + cookie + "," + txnId + ")");
 		if (txnId != null){
 			TransactionalOp<Uuid> to = new TransactionalOp<Uuid>(cookie, OpsType.TAKE);
-			transactionMap.put(txnId, to);
+			addOperation(txnId, to);
 			return;
 		}
 		Node node = entriesMap.get(cookie);
@@ -300,7 +304,7 @@ public class MCASpaceOps implements LogOps{
 		if (txnId != null){
 			TransactionalOp<StorableResource> to = 
 				new TransactionalOp<StorableResource>(entry, OpsType.WRITE);
-			transactionMap.put(txnId, to);
+			addOperation(txnId, to);
 			return;
 		}
 		try{
@@ -316,6 +320,22 @@ public class MCASpaceOps implements LogOps{
 			e.printStackTrace();
 		} 
 		save();
+	}
+
+	/**
+	 * 
+	 * @param txnId
+	 * @param to
+	 */
+	private void addOperation(Long txnId, TransactionalOp<?> to) {
+		List<TransactionalOp<?>> tos = transactionMap.get(txnId);
+		if(tos != null )
+			tos.add(to);
+		else{
+			tos = new ArrayList<MCASpaceOps.TransactionalOp<?>>();
+			tos.add(to);
+			transactionMap.put(txnId, tos);
+		}
 	}
 
 	/**
