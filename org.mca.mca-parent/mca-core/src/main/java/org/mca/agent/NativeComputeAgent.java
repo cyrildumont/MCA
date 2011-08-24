@@ -1,35 +1,45 @@
 package org.mca.agent;
 
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.rmi.RemoteException;
+import java.util.Date;
 
-import org.mca.entry.DataHandler;
 import org.mca.log.LogUtil;
 
 
 public abstract class NativeComputeAgent extends AbstractComputeAgent {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -2950513737977664490L;
 
 	private static final String JNI_LIBRARY = "MCA";
 	
-	protected String byteCode;
+	private byte[] byteCode;
 	
-	private DataHandler byteCodeHandler;
+	private String byteCodeFile;
 	
 	/**
 	 * 
 	 * @param parameters
 	 * @return
 	 */
-	private native String execute(String bytecodeFile, String functionName, String[] parameters);
+	private native String executeByteCode(String bytecodeFile, String functionName, Object[] parameters);
 
 	
 	public NativeComputeAgent() throws RemoteException {
 		super();
 	}
+
+	public void downloadByteCode(String dir) throws IOException{
+		System.out.println(" byteCode length : " + byteCode.length);
+		this.byteCodeFile = dir + "/" + new Date().getTime() + ".bc";
+		OutputStream output = new FileOutputStream(byteCodeFile);
+		output.write(byteCode);
+		output.close();
+	}
+	
 	
 	/**
 	 * 
@@ -37,30 +47,20 @@ public abstract class NativeComputeAgent extends AbstractComputeAgent {
 	 * @param libraries
 	 * @return
 	 */
-	final protected Object executeNative(String[] parameters, String functionName){
+	final protected Object executeNative(String functionName, Object[] parameters){
 		LogUtil.info("Natif code execution", getClass());
 		LogUtil.info(JNI_LIBRARY + " library loading...", getClass());
 		System.loadLibrary(JNI_LIBRARY);
-		LogUtil.debug("bytecodeFile : " + byteCode, getClass());
+		LogUtil.debug("bytecodeFile : " + byteCodeFile, getClass());
 		LogUtil.info(JNI_LIBRARY + " library loaded", getClass());
-		String tmpDir = System.getProperty("mca.home") + "/work/" ; 
-		return execute(byteCode, functionName, parameters);
+		return executeByteCode(byteCodeFile, functionName, parameters);
 	}
 	
-	public void setByteCode(String byteCode) {
+	public void setByteCode(byte[] byteCode) {
 		this.byteCode = byteCode;
 	}
 
-	public String getByteCode() {
-		return byteCode;
-	}
-	
-	public DataHandler getByteCodeHandler() {
-		return byteCodeHandler;
-	}
 
-	public void setByteCodeHandler(DataHandler byteCodeHandler) {
-		this.byteCodeHandler = byteCodeHandler;
-	}
+
 
 }

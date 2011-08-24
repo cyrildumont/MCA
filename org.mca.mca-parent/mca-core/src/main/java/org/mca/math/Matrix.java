@@ -2,26 +2,30 @@ package org.mca.math;
 
 import java.io.File;
 
+import org.mca.entry.DataHandlerFactory;
+import org.mca.javaspace.ComputationCase;
+import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.log.LogUtil;
+import org.mca.math.format.DataFormat;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 
 @SuppressWarnings("serial")
 public class Matrix<E> extends Data<E> {
 
-	
-	
+
+
 	/**
 	 * 
 	 * @author cyril
 	 *
 	 */
 	private class LocalPartInfo{
-	
+
 		private int partNumber;
 		private int row;
 		private int column;
-		
+
 		public LocalPartInfo(int partNumber, int row, int column) {
 			this.partNumber = partNumber;
 			this.row = row;
@@ -29,7 +33,7 @@ public class Matrix<E> extends Data<E> {
 		}
 
 	}
-	
+
 	/**
 	 * 
 	 * @author cyril
@@ -40,7 +44,7 @@ public class Matrix<E> extends Data<E> {
 		private SubMatrix<E> south;
 		private SubMatrix<E> east;
 		private SubMatrix<E> west;
-		
+
 		public SubMatrix<E> getNorth() {
 			return north;
 		}
@@ -53,33 +57,39 @@ public class Matrix<E> extends Data<E> {
 		public SubMatrix<E> getWest() {
 			return west;
 		}
-		
+
 	}
-	
+
 	private Integer m;
-	
+
 	private Integer n;
-	
+
 	private Integer rowSize;
-	
+
 	private Integer columnSize;
-	
-	public Matrix(int m, int n, int rowSize, int columnSize) {
+
+	/** Constructor for JavaSpaces specification */
+	public Matrix() {
+		super(null,null);
+	}
+
+	public Matrix(String name, DataFormat<E> format, int m, int n, int rowSize, int columnSize) {
+		super(name, format);
 		this.m = m;
 		this.n = n;
 		this.rowSize = rowSize;
 		this.columnSize = columnSize;
 	}
-	
-	/**
-	 * 
-	 * @param inputFile
-	 * @param rowSize
-	 * @param columnSize
-	 */
-	public Matrix(File inputFile, int rowSize, int columnSize){
-		
-	}
+
+	//	/**
+	//	 * 
+	//	 * @param inputFile
+	//	 * @param rowSize
+	//	 * @param columnSize
+	//	 */
+	//	public Matrix(File inputFile, int rowSize, int columnSize){
+	//		
+	//	}
 
 	/** Get row dimension.
 	   @return     m, the number of rows.
@@ -100,7 +110,7 @@ public class Matrix<E> extends Data<E> {
 		SubMatrix<E> vector = (SubMatrix<E>)dataParts.get(infosLocal.partNumber);
 		return vector.get(infosLocal.row, infosLocal.column);
 	}
-	
+
 	public void set(int row, int column, E value) throws Exception{
 		LocalPartInfo infosLocal = getlocalPartInfo(row, column);
 		SubMatrix<E> subMatrix = (SubMatrix<E>)dataParts.get(infosLocal.partNumber);
@@ -119,15 +129,15 @@ public class Matrix<E> extends Data<E> {
 				"[" + partNumber + "] à l'index [" + rowLocal + "," + columnLocal + "]", getClass());
 		return new LocalPartInfo(partNumber, rowLocal, columnLocal);
 	}
-	
-	
+
+
 	public Neighborhood getNeighborhood(int part){
 		LogUtil.debug("Part [" + part + "] neighborhood :", getClass());
 		int nbColumnParts = m%columnSize == 0 ? m / columnSize : m / columnSize  + 1;
 		int nbRowParts = n%rowSize == 0 ? n / rowSize : n / rowSize  + 1;
 		int nbParts = nbColumnParts * nbRowParts;
 		Neighborhood neighborhood = new Neighborhood();
-		
+
 		int numPartNorth = (part - nbColumnParts) < 1 ? -1 : part - nbColumnParts ;
 		int numPartSouth = (part + nbColumnParts) > nbParts  ? -1 : part + nbColumnParts ;
 		int row = (int)Math.ceil(part / (double)nbColumnParts);
@@ -142,10 +152,10 @@ public class Matrix<E> extends Data<E> {
 		LogUtil.debug("\t West neighbor : Part [" + numPartWest + "]" , getClass());
 		LogUtil.debug("\t East neighbor : Part [" + numPartEast + "]" , getClass());
 		return neighborhood;
-		
+
 	}
-	
-	
+
+
 	@Override
 	protected void storeProperties(Element node) {
 		node.setAttribute("nbRows", this.n.toString());		
@@ -158,5 +168,17 @@ public class Matrix<E> extends Data<E> {
 	protected void parseProperties(NamedNodeMap attributes) {
 		m = Integer.valueOf(attributes.getNamedItem("nbRows").getNodeValue());
 		n = Integer.valueOf(attributes.getNamedItem("nbColumns").getNodeValue());
+	}
+
+	@Override
+	protected int getNbParts() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void deploy(ComputationCase cc, DataHandlerFactory factory) throws MCASpaceException {
+		// TODO Auto-generated method stub
+
 	}
 }

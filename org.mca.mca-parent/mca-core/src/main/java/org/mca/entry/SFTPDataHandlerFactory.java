@@ -26,6 +26,18 @@ public class SFTPDataHandlerFactory implements DataHandlerFactory{
 		LOG.debug("SFTPDataReader created : " + entry.name);
 		return entry;
 	}
+	
+	@Override
+	public DataHandler getDataHandler(String filename) {
+		SFTPDataHandler entry = new SFTPDataHandler();
+		entry.filename = path + "/" + filename;
+		entry.name = FilenameUtils.getBaseName(entry.filename);
+		entry.login = this.login;
+		entry.server = this.host;
+		entry.password = this.password;
+		LOG.debug("SFTPDataReader created : " + entry.name);
+		return entry;
+	}
 
 
 	public void setLogin(String login) {

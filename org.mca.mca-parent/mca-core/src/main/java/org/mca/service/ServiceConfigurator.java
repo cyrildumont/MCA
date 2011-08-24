@@ -1,4 +1,9 @@
 package org.mca.service;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -11,7 +16,6 @@ import net.jini.config.ConfigurationProvider;
 import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
 
-import org.mca.entry.DataHandler;
 import org.mca.entry.EntryFactory;
 
 /**
@@ -43,7 +47,7 @@ public class ServiceConfigurator extends AbstractConfiguration{
 
 	private  List<String> locators;
 
-	private DataHandler byteCodeHandler;
+	private String byteCodeFile;
 
 	public ServiceConfigurator() {
 		locators = new ArrayList<String>();
@@ -155,6 +159,9 @@ public class ServiceConfigurator extends AbstractConfiguration{
 		this.entries = entries;
 	}
 
+	public void addEntry(Entry entry){
+		entries.add(entry);
+	}
 
 	/**
 	 * @return the locators
@@ -197,12 +204,32 @@ public class ServiceConfigurator extends AbstractConfiguration{
 		entries.add(entry);
 	}
 
-	public DataHandler getByteCodeHandler() {
-		return byteCodeHandler;
+	public byte[] getByteCode() {
+		File file = new File(byteCodeFile);
+		long length = file.length();
+		byte[] bytes = new byte[(int)length];
+		try {
+			InputStream is = new FileInputStream(file);
+			int offset = 0;
+			int numRead = 0;
+			while ( (offset < bytes.length)
+					&&
+					( (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) ) {
+
+				offset += numRead;
+
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return bytes;
 	}
 
-	public void setByteCodeHandler(DataHandler byteCodeHandler) {
-		this.byteCodeHandler = byteCodeHandler;
+	public void setByteCodeFile(String byteCodeFile) {
+		this.byteCodeFile = byteCodeFile;
 	}
+
 
 }

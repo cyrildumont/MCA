@@ -211,4 +211,16 @@ public class Task extends Storable{
 	public Transaction getTransaction() {
 		return transaction;
 	}
+
+
+	public int getIntParameter(int i) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+	public String getStringParameter(int i) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

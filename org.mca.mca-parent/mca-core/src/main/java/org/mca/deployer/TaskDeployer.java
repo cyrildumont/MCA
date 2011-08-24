@@ -4,7 +4,6 @@ import java.util.Map;
 
 import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.exceptions.MCASpaceException;
-import org.mca.math.Data;
 import org.mca.scheduler.Task;
 
 public abstract class TaskDeployer {
@@ -23,10 +22,6 @@ public abstract class TaskDeployer {
 	
 	protected void addTask(Task task) throws MCASpaceException{
 		computationCase.addTask(task);
-	}
-	
-	protected void addData(Data data) throws MCASpaceException{
-		computationCase.addData(data);
 	}
 	
 	public abstract void deploy() throws MCASpaceException;

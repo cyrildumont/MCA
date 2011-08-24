@@ -2,11 +2,7 @@ package org.mca.math;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.rmi.Remote;
-import java.rmi.RemoteException;
-import java.rmi.server.ExportException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,10 +18,12 @@ import net.jini.jeri.tcp.TcpServerEndpoint;
 import net.jini.lookup.entry.Name;
 
 import org.mca.entry.DataHandler;
+import org.mca.entry.DataHandlerFactory;
 import org.mca.entry.Storable;
 import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.log.LogUtil;
+import org.mca.math.format.DataFormat;
 import org.mca.util.MCAUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -36,30 +34,41 @@ import org.w3c.dom.NodeList;
 
 public abstract class Data<E> extends Storable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7042018059419847706L;
+
 	protected int localPart;
 	
 	protected File localFile;
 	
 	public String name;
 	
+	public DataFormat<E> format;
+	
 	protected ComputationCase computationCase;
 	
-	protected Map<Integer, String> dataHandlers;
 	protected Map<Integer, DataPart<E>> dataParts;
+	
+	
+	public Data(String name, DataFormat<E> format) {
+		this.name = name;
+		this.format = format;
+	}
 	
 	public void setComputationCase(ComputationCase computationCase) {
 		this.computationCase = computationCase;
 	}
 
-	public DataPart<E> load(int part, DataFormat<E> format) throws Exception{
+	public DataPart<E> load(int part) throws Exception{
 		LogUtil.debug("Loading part [" + part + "] ...", getClass());
 		localPart = part;
-		String name = dataHandlers.get(part);
 		localFile = download(name);
 		DataPart<E> data = format.parse(localFile);
 		publishPart(name, data);
 		DataHandler handler = computationCase.removeDataHandler(name);
-		handler.lookup = MCAUtils.getIP();
+		handler.worker = MCAUtils.getIP();
 		computationCase.addDataHandler(handler);
 		addPart(part, data);
 		return data;
@@ -91,26 +100,21 @@ public abstract class Data<E> extends Storable{
 	public void update() throws Exception {
 		LogUtil.debug("Update local part [" + name + "]...", getClass());
 		LogUtil.debug("Part [" + localPart + "] local", getClass());
-		for (Map.Entry<Integer, String> handler : dataHandlers.entrySet()) {
-			int part = handler.getKey();
-			String subVectorName = handler.getValue();
+		
+		for(int part = 1; part <= getNbParts(); part++)	{
 			if (localPart != part) {
-				DataHandler dataHandler = computationCase.getDataHandler(handler.getValue());
-				String lookup = dataHandler.lookup;
+				String partName = this.name + "-" + part;
+				DataHandler dataHandler = computationCase.getDataHandler(partName);
+				String lookup = dataHandler.worker;
 				LookupLocator ll = new LookupLocator("jini://"+ lookup);
 				ServiceRegistrar registrar = ll.getRegistrar();
-				Entry[] entries = new Entry[]{new Name(subVectorName)};
+				Entry[] entries = new Entry[]{new Name(partName)};
 				ServiceTemplate template = new ServiceTemplate(null, null,entries);
 				DataPart<E> dataPart = (DataPart<E>)registrar.lookup(template);
-				dataParts.put(handler.getKey(), dataPart);
+				dataParts.put(part, dataPart);
 				LogUtil.debug("Part [" + part + "] updated --> " + dataPart, getClass());
 			}
 		}
-	}
-	
-	public void addDataHandler(Integer number, String name){
-		if (dataHandlers == null) dataHandlers = new HashMap<Integer, String>();
-		dataHandlers.put(number, name);
 	}
 	
 	private void addPart(int part, DataPart<E> data) {
@@ -120,7 +124,7 @@ public abstract class Data<E> extends Storable{
 	
 	private File download(String name) throws MCASpaceException{
 		LogUtil.debug("Download file [" + name + "]  ...", getClass());
-		File file = computationCase.downloadData(name, System.getProperty("temp.worker.download"));
+		File file = computationCase.download(name, System.getProperty("temp.worker.download"));
 		return file;
 	}
 	
@@ -132,35 +136,11 @@ public abstract class Data<E> extends Storable{
 		NamedNodeMap attributes = node.getAttributes();
 		name = attributes.getNamedItem("name").getNodeValue();
 		parseProperties(attributes);
-		NodeList childs = node.getChildNodes();
-		for (int i = 0; i < childs.getLength(); i++) {
-			Node child = childs.item(i);
-			if(child.getNodeName().equals("parts")){
-				parseParts(child);
-			}
-		}
 	}
 
 	protected abstract void parseProperties(NamedNodeMap attributes);
 
-	/**
-	 * 
-	 * @param node
-	 */
-	private void parseParts(Node node) {
-		NodeList childs = node.getChildNodes();
-		for (int i = 0; i < childs.getLength(); i++) {
-			Node child = childs.item(i);
-			if(child.getNodeName().equals("part")){
-				NamedNodeMap attributes = child.getAttributes();
-				Integer number = 
-					Integer.valueOf(attributes.getNamedItem("number").getNodeValue());
-				String name = attributes.getNamedItem("name").getNodeValue();
-				addDataHandler(number, name);
-			}
-		}
-	}
-
+	
 	/**
 	 * @see org.mca.entry.Storable#store(org.w3c.dom.Node)
 	 */
@@ -170,17 +150,6 @@ public abstract class Data<E> extends Storable{
 		Element node = doc.createElement(this.getClass().getName());
 		node.setAttribute("name", this.name);
 		storeProperties(node);
-
-		if (dataHandlers.size() > 0) {
-			Element eParts = doc.createElement("parts");
-			for (Map.Entry<Integer, String> part : dataHandlers.entrySet()) {
-				Element ePart = doc.createElement("part");
-				ePart.setAttribute("number", String.valueOf(part.getKey()));
-				ePart.setAttribute("name", part.getValue());
-				eParts.appendChild(ePart);
-			}
-			node.appendChild(eParts);
-		}
 		parent.appendChild(node);
 	}
 
@@ -192,18 +161,26 @@ public abstract class Data<E> extends Storable{
 	 * @throws Exception
 	 */
 	public void save(DataFormat<E> format) throws Exception{
-		String dataHandlerName = dataHandlers.get(localPart);
+		String dataHandlerName = name + "-" + localPart;
 		DataPart<E> part = dataParts.get(localPart);
 		File out = new File(System.getProperty("temp.worker.result") + dataHandlerName);
 		format.format(part, out);
 		FileInputStream fis = new FileInputStream(out);
-		computationCase.uploadData(dataHandlerName, fis);
-	}
-	
-	
-	public void deploy(String host){
-		
+		computationCase.upload(dataHandlerName, fis);
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
+	protected abstract int getNbParts();	
+	
+	/**
+	 * 
+	 * @param cc
+	 * @param factory
+	 */
+	public abstract void deploy(ComputationCase cc, 
+			DataHandlerFactory factory) throws MCASpaceException;
 		
 }

@@ -75,11 +75,12 @@ public class ServiceStarter implements ServiceIDListener{
 					classpath,
 					implClass,
 					serverConfigArgs);
-		// and create the service and its proxy
 		Created created = null;
 		try {
 			ServiceConfigurator config = new ServiceConfigurator();
+			
 			created = (Created) desc.create(config);
+			
 			logger.fine("ServiceStarter -- Classloader { " + 
 					created.impl.getClass().getProtectionDomain().getClassLoader() + " }");
 		} catch(Exception e) {
@@ -88,9 +89,8 @@ public class ServiceStarter implements ServiceIDListener{
 			System.exit(1);
 		}
 		impl = created.impl;
-		if (needProxy) 
-			proxy = (Remote) created.proxy;
-		return impl;
+
+		return created.proxy;
 
 	}	
 

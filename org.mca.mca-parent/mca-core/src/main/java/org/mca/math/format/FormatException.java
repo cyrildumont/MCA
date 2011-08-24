@@ -1,4 +1,4 @@
-package org.mca.math;
+package org.mca.math.format;
 
 public class FormatException extends Exception {
 

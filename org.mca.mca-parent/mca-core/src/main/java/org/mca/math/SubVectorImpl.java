@@ -31,7 +31,11 @@ public class SubVectorImpl<E> implements SubVector<E> {
 		data.add(e);
 	}
 
-
+	@Override
+	public int size() throws RemoteException {
+		return data.size();
+	}
+	
 	@Override
 	public Iterator<E> iterator() {
 		return new SubVectorIterator();

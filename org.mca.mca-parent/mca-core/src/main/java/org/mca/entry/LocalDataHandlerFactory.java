@@ -19,5 +19,14 @@ public class LocalDataHandlerFactory implements DataHandlerFactory{
 		LogUtil.debug("LocalDataHandler created : " + entry.name, getClass());
 		return entry;
 	}
+	
+	@Override
+	public DataHandler getDataHandler(String filename) {
+		LocalDataHandler entry = new LocalDataHandler();
+		entry.filename =filename;
+		entry.name = FilenameUtils.getBaseName(entry.filename);
+		LogUtil.debug("LocalDataHandler created : " + entry.name, getClass());
+		return entry;
+	}
 
 }

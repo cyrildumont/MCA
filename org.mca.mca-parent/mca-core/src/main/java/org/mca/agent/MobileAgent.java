@@ -5,10 +5,9 @@ import java.io.Serializable;
 /**
  * Interface on a Mobile Agent
  * 
- * @author cyril
+ * @author Cyril Dumont
  *
  */
-
 public interface MobileAgent extends Serializable {
 
 }

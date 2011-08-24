@@ -53,7 +53,7 @@ public class ComputeAgentDeployer {
 			if (agent instanceof NativeComputeAgent) {
 				LogUtil.debug("Deploy ComputeNativeAgent ...", ComputeAgentDeployer.class);
 				NativeComputeAgent nativeAgent = (NativeComputeAgent) agent;
-				nativeAgent.setByteCodeHandler(config.getByteCodeHandler());
+				nativeAgent.setByteCode(config.getByteCode());
 			}
 			ServiceItem item = new ServiceItem(null, agent, entries);
 			for (LookupLocator lookup : llc) {
@@ -77,7 +77,7 @@ public class ComputeAgentDeployer {
 		final String file = args[0];
 		LoginContext loginContext = null;
 		try {
-			loginContext = new LoginContext("org.mca.Browser");
+			loginContext = new LoginContext("org.mca.Server");
 			loginContext.login();
 		} catch (LoginException e1) {
 			e1.printStackTrace();

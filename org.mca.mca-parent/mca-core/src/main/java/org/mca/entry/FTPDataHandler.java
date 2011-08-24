@@ -20,23 +20,28 @@ import org.w3c.dom.Node;
  */
 public class FTPDataHandler extends DataHandler {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -551412548569786714L;
+
 	public String login;
 	public String password;
 	public String server;
 	public String filename;
-	
+
 	private FTPClient ftp;
 	/**
 	 * @see org.mca.entry.DataHandler#getInputStream()
 	 */
 	@Override
-	public InputStream getInputStream() {
+	protected InputStream getInputStream() {
 		try {
-		ftp = new FTPClient();
-		ftp.connect(this.server);
-		ftp.login(this.login, this.password);
-		InputStream inputStream = ftp.retrieveFileStream(this.filename);
-		return inputStream;
+			ftp = new FTPClient();
+			ftp.connect(this.server);
+			ftp.login(this.login, this.password);
+			InputStream inputStream = ftp.retrieveFileStream(this.filename);
+			return inputStream;
 		} catch (SocketException e) {
 			e.printStackTrace();
 			return null;
@@ -47,12 +52,14 @@ public class FTPDataHandler extends DataHandler {
 	}
 
 	@Override
-	public OutputStream getOutputStream() {
+	protected OutputStream getOutputStream() {
 		try {
 			ftp = new FTPClient();
 			ftp.connect(this.server);
 			ftp.login(this.login, this.password);
 			OutputStream outputStream = ftp.storeFileStream(this.filename);
+			if (outputStream == null )
+				outputStream = ftp.appendFileStream(this.filename);
 			return outputStream;
 		} catch (SocketException e) {
 			e.printStackTrace();
@@ -63,9 +70,9 @@ public class FTPDataHandler extends DataHandler {
 		}
 	}
 
-	
+
 	@Override
-	public void close() {
+	protected void close() {
 		try {
 			ftp.disconnect();
 		} catch (IOException e) {
@@ -84,8 +91,7 @@ public class FTPDataHandler extends DataHandler {
 		password = attributes.getNamedItem("password").getNodeValue();
 		server = attributes.getNamedItem("server").getNodeValue();
 		filename = attributes.getNamedItem("filename").getNodeValue();
-		lookup = attributes.getNamedItem("lookup").getNodeValue();
-
+		worker = attributes.getNamedItem("worker").getNodeValue();
 	}
 
 	/**
@@ -100,7 +106,7 @@ public class FTPDataHandler extends DataHandler {
 		node.setAttribute("password", this.password);
 		node.setAttribute("server", this.server);
 		node.setAttribute("filename", this.filename);
-		node.setAttribute("lookup", this.lookup);
+		node.setAttribute("worker", this.worker);
 		parent.appendChild(node);
 	}
 

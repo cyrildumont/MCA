@@ -24,6 +24,11 @@ import com.jcraft.jsch.SftpException;
  */
 public class SFTPDataHandler extends DataHandler {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -9132346207185100637L;
+	
 	public String login;
 	public String password;
 	public String server;
@@ -96,7 +101,7 @@ public class SFTPDataHandler extends DataHandler {
 		password = attributes.getNamedItem("password").getNodeValue();
 		server = attributes.getNamedItem("server").getNodeValue();
 		filename = attributes.getNamedItem("filename").getNodeValue();
-
+		worker = attributes.getNamedItem("worker").getNodeValue();
 	}
 
 	/**
@@ -111,6 +116,7 @@ public class SFTPDataHandler extends DataHandler {
 		node.setAttribute("password", this.password);
 		node.setAttribute("server", this.server);
 		node.setAttribute("filename", this.filename);
+		node.setAttribute("worker", this.worker);
 		parent.appendChild(node);
 	}
 

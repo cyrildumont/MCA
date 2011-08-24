@@ -14,6 +14,11 @@ import org.w3c.dom.Node;
 
 public class URLDataHandler extends DataHandler{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3365417549155237073L;
+
 	public URLDataHandler() {}
 	
 	public String url;
@@ -48,7 +53,7 @@ public class URLDataHandler extends DataHandler{
 		NamedNodeMap attributes = node.getAttributes();
 		name = attributes.getNamedItem("name").getNodeValue();	
 		url = attributes.getNamedItem("url").getNodeValue();
-		lookup = attributes.getNamedItem("lookup").getNodeValue();
+		worker = attributes.getNamedItem("worker").getNodeValue();
 	}
 
 
@@ -58,7 +63,7 @@ public class URLDataHandler extends DataHandler{
 		Element node = doc.createElement(this.getClass().getName());
 		node.setAttribute("name", this.name);
 		node.setAttribute("url", this.url);
-		node.setAttribute("lookup", this.lookup);
+		node.setAttribute("worker", this.worker);
 		parent.appendChild(node);
 		
 	}

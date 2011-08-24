@@ -18,7 +18,7 @@ import org.mca.agent.ComputeAgentDeployer;
 import org.mca.computation.exception.NoProjectFoundException;
 import org.mca.deployer.TaskDeployer;
 import org.mca.entry.EntryGenerator;
-import org.mca.entry.MCAProperty;
+import org.mca.entry.Property;
 import org.mca.files.FileGenerator;
 import org.mca.files.FileGeneratorException;
 import org.mca.javaspace.MCASpace;
@@ -230,7 +230,7 @@ public class ComputationCase {
 			for (Map.Entry<String, String> property : properties.entrySet()) {
 				String key = property.getKey();
 				String value = property.getValue();
-				computationCase.addProperty(new MCAProperty(key, value));
+				computationCase.addProperty(new Property(key, value));
 			}
 		} catch (CaseNotFoundException e) {
 			LogUtil.error(" Case [" + projectName + "] not found.", getClass());

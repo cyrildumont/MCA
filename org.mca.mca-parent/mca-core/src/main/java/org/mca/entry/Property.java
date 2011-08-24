@@ -12,7 +12,7 @@ import org.w3c.dom.Node;
  * @author cyril
  *
  */
-public class MCAProperty extends Storable {
+public class Property extends Storable {
 
 	/**
 	 * 
@@ -23,7 +23,7 @@ public class MCAProperty extends Storable {
 	
 	public String value;
 	
-	public MCAProperty() {
+	public Property() {
 	
 	}
 	
@@ -32,7 +32,7 @@ public class MCAProperty extends Storable {
 	 * @param name
 	 * @param value
 	 */
-	public MCAProperty(String name, String value) {
+	public Property(String name, String value) {
 		this.name = name;
 		this.value = value;
 	}
@@ -78,7 +78,7 @@ public class MCAProperty extends Storable {
 	
 	@Override
 	public String toString() {
-		return "[MCAProperty] -- [name : " + name + "][value : " + value + "]";
+		return "[Property] -- [name : " + name + "][value : " + value + "]";
 	}
 
 }

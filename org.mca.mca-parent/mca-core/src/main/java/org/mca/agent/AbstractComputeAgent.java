@@ -25,7 +25,7 @@ import net.jini.jeri.BasicJeriExporter;
 import net.jini.jeri.tcp.TcpServerEndpoint;
 import net.jini.lookup.entry.Name;
 
-import org.mca.entry.MCAProperty;
+import org.mca.entry.Property;
 import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.log.LogUtil;
@@ -53,6 +53,8 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 
 	protected Map<String, String> properties = new HashMap<String, String>();
 
+	protected Object[] parameters;
+	
 	private ArrayList<Task> tasksToCheck = new ArrayList<Task>();
 
 	protected HashMap<String, Object> results;
@@ -60,8 +62,9 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 	final public Object compute(Task task) 	throws ComputeAgentException{
 		try{
 			this.task = task;
-			Collection<MCAProperty> props = computationCase.getProperties(); 
-			for (MCAProperty mcaProperty : props) {
+			this.parameters = task.parameters;
+			Collection<Property> props = computationCase.getProperties(); 
+			for (Property mcaProperty : props) {
 				properties.put(mcaProperty.name, mcaProperty.value);
 			}
 			LogUtil.debug("[JacobiAgent][" + computationCase.getName() + "] ", getClass());
@@ -76,6 +79,7 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 			}
 			return execute();
 		}catch(Exception e){
+			e.printStackTrace();
 			throw new ComputeAgentException();
 		}
 	}
@@ -132,7 +136,7 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 	}
 
 	protected File download(String name) throws MCASpaceException{
-		File file = computationCase.downloadData(name, System.getProperty("temp.worker.download"));
+		File file = computationCase.download(name, System.getProperty("temp.worker.download"));
 		return file;
 	}
 
