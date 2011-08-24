@@ -5,7 +5,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
-import java.rmi.RMISecurityManager;
+import java.util.logging.Logger;
 
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanRegistrationException;
@@ -27,6 +27,10 @@ import org.apache.commons.daemon.DaemonContext;
  */
 public class Bootstrap implements Daemon{
 
+	public final static String COMPONENT_NAME = "org.mca.start.Bootstrap";
+
+	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
+	
 	private static Bootstrap daemon = null;
 
 	private ClassLoader loader = null;
@@ -41,8 +45,10 @@ public class Bootstrap implements Daemon{
 
 	public void init(DaemonContext context) throws Exception{
 		
-		System.setSecurityManager(new RMISecurityManager());
-		loader = createClassLoader();
+		logger.finest("Bootstrap -- init");
+		
+		//ClassLoaderFactory.updateCurrentClassloader(System.getProperty("mca.home") + DIR_LIB);
+		loader = createClassLoader();	
 		Thread.currentThread().setContextClassLoader(loader);
 		String[] args = context.getArguments();
 		this.configFile = args[0];
@@ -88,10 +94,13 @@ public class Bootstrap implements Daemon{
 	 * @throws Exception
 	 */
 	public void start() throws Exception {
+		
+		logger.finest("Bootstrap -- start");
 		Class mcaClass = loader.loadClass("org.mca.core.MCA");
 		Class[] paramClass = new Class[]{};
 		Constructor constructor = mcaClass.getConstructor(paramClass);
 		Object mcaDaemon = constructor.newInstance();
+		logger.finest("Bootstrap -- configfile : " + configFile );
         Method method = mcaDaemon.getClass().getMethod("start",new Class[]{String.class});
         Object[] parameters = new Object[]{configFile};
         method.invoke(mcaDaemon, parameters);

@@ -11,6 +11,8 @@ import java.util.ArrayList;
 
 import org.mca.loader.StandardClassLoader;
 
+import sun.misc.Launcher;
+
 
 /**
  * @author Cyril
@@ -29,7 +31,6 @@ public class ClassLoaderFactory {
 		}
 
 	}
-
 
 	private static URL[] generateUrls(String... locations) throws IOException {
 		ArrayList<URL> list = new ArrayList<URL>();
