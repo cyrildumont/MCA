@@ -8,6 +8,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.ExportException;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.security.auth.Subject;
@@ -15,10 +16,12 @@ import javax.security.auth.login.LoginContext;
 
 import net.jini.config.Configuration;
 import net.jini.config.ConfigurationProvider;
+import net.jini.core.discovery.LookupLocator;
 import net.jini.core.event.EventRegistration;
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.UnknownEventException;
 import net.jini.core.lookup.ServiceItem;
+import net.jini.core.lookup.ServiceRegistrar;
 import net.jini.core.lookup.ServiceTemplate;
 import net.jini.discovery.DiscoveryEvent;
 import net.jini.discovery.DiscoveryListener;
@@ -70,7 +73,7 @@ public class ComputingWorker extends MCAComponent {
 	private static final String TEMP_WORKER_DOWNLOAD = "temp.worker.download";
 
 	public static final String TEMP_WORKER = "temp.worker";
-	
+
 	private static final String FILE_REGGIE = 
 		System.getProperty("mca.home") + "/conf/worker-reggie.xml";
 
@@ -80,7 +83,7 @@ public class ComputingWorker extends MCAComponent {
 	private transient final Configuration config = 
 		ConfigurationProvider.getInstance(CONFIG_FILES);
 
-	private static final String[] MCA_GROUPS = {"MCA"}; 
+	private static final String[] MCA_GROUPS = {"Servers"}; 
 
 	/** state of the ComputeWorker*/
 	private ComputeWorkerState state; 
@@ -104,7 +107,7 @@ public class ComputingWorker extends MCAComponent {
 	private transient TaskExecutor taskExecutor;
 
 	public boolean signalStop = false;
-	
+
 	public ComputingWorker() throws Exception {
 		loginContext = new LoginContext("org.mca.Worker");
 		loginContext.login();
@@ -242,13 +245,13 @@ public class ComputingWorker extends MCAComponent {
 		setState(ComputeWorkerState.STARTED);
 		spaceListener.listen();
 	}
-	
+
 	/**
 	 * 
 	 * @author cyril
 	 *
 	 */
-	private class MCASpaceListener extends Thread implements ServiceDiscoveryListener, DiscoveryListener{
+	private class MCASpaceListener extends Thread implements DiscoveryListener{
 
 		private transient LookupCache cache;
 
@@ -261,31 +264,12 @@ public class ComputingWorker extends MCAComponent {
 			setDaemon(true);
 		}
 
-		public void serviceAdded(ServiceDiscoveryEvent event) {
-			ServiceItem item =  event.getPostEventServiceItem();
-			logger.fine("Worker -- new MCASpace appears: " + item);
-			MCASpace space = (MCASpace)item.service;
-			eventListener.connect(space);
-		}
-
-		public void serviceChanged(ServiceDiscoveryEvent event) {
-			// DO NOTHING
-		}
-
-		public void serviceRemoved(ServiceDiscoveryEvent event) {
-			ServiceItem item =  event.getPreEventServiceItem();
-			logger.fine("Worker -- a MCASpace disappears: " + item);
-
-		}
-
 		public void listen() throws ExportException{
 			eventListener = new WorkerMCASpaceEventListener();
 			eventListener.start();
-			cache.addListener(this);
 		}
 
 		public void disconnect(){
-			cache.removeListener(this);
 			eventListener.interrupt();
 		}
 
@@ -293,11 +277,6 @@ public class ComputingWorker extends MCAComponent {
 			logger.fine("Worker -- MCASpaceListener started");
 			try {
 				LookupDiscoveryManager mgr = new LookupDiscoveryManager(MCA_GROUPS, null, this,config);
-				ServiceDiscoveryManager clientMgr = new ServiceDiscoveryManager(mgr, 
-						new LeaseRenewalManager());
-				Class<?>[] classes = new Class[]{MCASpace.class};
-				ServiceTemplate template = new ServiceTemplate(null, classes,null);
-				cache = clientMgr.createLookupCache(template, null, null); 
 				listen();
 				while (!interrupted) {
 					try{
@@ -319,13 +298,32 @@ public class ComputingWorker extends MCAComponent {
 
 		@Override
 		public void discarded(DiscoveryEvent event) {
-			logger.fine("lookup discarded : " + event);
+			ServiceRegistrar[] registrars = event.getRegistrars();
+			ServiceRegistrar registrar = registrars[0];
+			try {
+				LookupLocator locator = registrar.getLocator();
+				logger.fine("MCASpaceListener -- lookup discarded on [" + locator.getHost() + ":" + locator.getPort() + "]");
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
 		}
 
 		@Override
 		public void discovered(DiscoveryEvent event) {
+			ServiceRegistrar[] registrars = event.getRegistrars();
+			ServiceRegistrar registrar = registrars[0];
+			try {
+				LookupLocator locator = registrar.getLocator();
+				logger.fine("MCASpaceListener -- lookup discovered on [" + locator.getHost() + ":" + locator.getPort() + "]");
+				Class<?>[] classes = new Class[]{MCASpace.class};
+				ServiceTemplate template = new ServiceTemplate(null, classes,null);
+				MCASpace space = (MCASpace)registrar.lookup(template);
+				eventListener.connect(space);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
 
-			logger.fine("lookup discovered : " + event);
+
 		}
 	}
 
@@ -520,7 +518,7 @@ public class ComputingWorker extends MCAComponent {
 			computationCase.join(this);
 		}
 
-		
+
 		public void run() {
 			logger.finest("Worker -- ComputationCaseListener started");
 			while (!interrupted) {
