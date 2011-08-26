@@ -31,9 +31,7 @@ public class Vector<E> extends Data<E> {
 	private E[] values;
 
 	/** Constructor for JavaSpaces specification */
-	public Vector() {
-		super(null,null);
-	}
+	public Vector() {}
 	
 	public Vector(String name, DataFormat<E> format, E[] values, int partSize) {
 		super(name, format);
@@ -82,16 +80,6 @@ public class Vector<E> extends Data<E> {
 							? size / partSize : size / partSize + 1;
 	}
 	
-	@Override
-	public void deploy(ComputationCase cc, DataHandlerFactory factory) throws MCASpaceException {
-		
-		int nbParts = getNbParts();
-		for (int i = 1; i <= nbParts; i++) {
-			deployPart(i,cc,factory);
-		}
-
-	}
-
 	/**
 	 * 
 	 * @param i
@@ -99,7 +87,7 @@ public class Vector<E> extends Data<E> {
 	 * @param factory
 	 * @throws MCASpaceException
 	 */
-	private void deployPart(int part, ComputationCase cc,
+	protected void deployPart(int part, ComputationCase cc,
 			DataHandlerFactory factory) throws MCASpaceException {
 		int start = partSize * (part -1);
 		
@@ -124,5 +112,5 @@ public class Vector<E> extends Data<E> {
 		}
 
 	}
-	
+		
 }

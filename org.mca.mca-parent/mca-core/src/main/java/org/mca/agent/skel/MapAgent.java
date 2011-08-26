@@ -30,8 +30,8 @@ public class MapAgent<T,S> extends AbstractComputeAgent {
 		int rank = task.getIntParameter(0);
 		String inputName = task.getStringParameter(1);
 		String outputName = task.getStringParameter(2);
-		Vector<T> input = computationCase.getData(inputName,Vector.class);
-		Vector<S> output = computationCase.getData(outputName,Vector.class);
+		Vector<T> input = computationCase.getData(inputName);
+		Vector<S> output = computationCase.getData(outputName);
 		SubVector<T> localInput = (SubVector<T>)input.load(rank);
 		SubVector<S> localOutput = (SubVector<S>)output.load(rank);
 		for(int i=0;i < localInput.size();i++){

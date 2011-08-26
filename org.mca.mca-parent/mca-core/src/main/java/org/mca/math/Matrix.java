@@ -1,7 +1,5 @@
 package org.mca.math;
 
-import java.io.File;
-
 import org.mca.entry.DataHandlerFactory;
 import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.exceptions.MCASpaceException;
@@ -10,10 +8,12 @@ import org.mca.math.format.DataFormat;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 
-@SuppressWarnings("serial")
 public class Matrix<E> extends Data<E> {
 
-
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * 
@@ -177,8 +177,9 @@ public class Matrix<E> extends Data<E> {
 	}
 
 	@Override
-	public void deploy(ComputationCase cc, DataHandlerFactory factory) throws MCASpaceException {
+	protected void deployPart(int i, ComputationCase cc,
+			DataHandlerFactory factory) throws MCASpaceException {
 		// TODO Auto-generated method stub
-
+		
 	}
 }

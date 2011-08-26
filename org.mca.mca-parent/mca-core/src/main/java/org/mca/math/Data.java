@@ -29,10 +29,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 
-public abstract class Data<E> extends Storable{
+public class Data<E> extends Storable{
 
 	/**
 	 * 
@@ -51,6 +52,12 @@ public abstract class Data<E> extends Storable{
 	
 	protected Map<Integer, DataPart<E>> dataParts;
 	
+	
+	public Data() {}
+	
+	public Data(String name) {
+		this.name = name;
+	}
 	
 	public Data(String name, DataFormat<E> format) {
 		this.name = name;
@@ -138,7 +145,7 @@ public abstract class Data<E> extends Storable{
 		parseProperties(attributes);
 	}
 
-	protected abstract void parseProperties(NamedNodeMap attributes);
+	protected void parseProperties(NamedNodeMap attributes){throw new NotImplementedException();}
 
 	
 	/**
@@ -149,12 +156,13 @@ public abstract class Data<E> extends Storable{
 		Document doc = parent.getOwnerDocument();
 		Element node = doc.createElement(this.getClass().getName());
 		node.setAttribute("name", this.name);
+		
 		storeProperties(node);
 		parent.appendChild(node);
 	}
 
 
-	protected abstract void storeProperties(Element node);
+	protected void storeProperties(Element node){throw new NotImplementedException();}
 
 	/**
 	 * 
@@ -173,14 +181,26 @@ public abstract class Data<E> extends Storable{
 	 * 
 	 * @return
 	 */
-	protected abstract int getNbParts();	
+	protected int getNbParts(){throw new NotImplementedException();};	
 	
+
 	/**
 	 * 
 	 * @param cc
 	 * @param factory
+	 * @throws MCASpaceException
 	 */
-	public abstract void deploy(ComputationCase cc, 
-			DataHandlerFactory factory) throws MCASpaceException;
+	public void deploy(ComputationCase cc, DataHandlerFactory factory) throws MCASpaceException {
 		
+		int nbParts = getNbParts();
+		for (int i = 1; i <= nbParts; i++) {
+			deployPart(i,cc,factory);
+		}
+
+	}
+
+	protected void deployPart(int i, ComputationCase cc,
+			DataHandlerFactory factory) throws MCASpaceException{throw new NotImplementedException();};
+
+	
 }

@@ -1,12 +1,9 @@
 package org.mca.javaspace;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Collection;
-
-import net.jini.core.event.RemoteEventListener;
 
 import org.mca.entry.ComputationCaseState;
 import org.mca.entry.DataHandler;
@@ -14,17 +11,12 @@ import org.mca.entry.DataHandlerFactory;
 import org.mca.entry.Property;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.math.Data;
-import org.mca.math.format.DataFormat;
 import org.mca.scheduler.Task;
 import org.mca.scheduler.TaskState;
 
 public interface ComputationCase extends Serializable {
 
-	/**
-	 * 
-	 * @param property
-	 * @throws MCASpaceException
-	 */
+
 	public void addProperty(Property property) throws MCASpaceException;
 
 	public File download(String name, String dir) throws MCASpaceException;
@@ -67,6 +59,6 @@ public interface ComputationCase extends Serializable {
 
 	public void updateTaskComputed(Task task) throws MCASpaceException;
 	
-	public <T extends Data<?>> T getData(String name, Class<T> formatClass);
+	public <T extends Data<?>> T getData(String name) throws MCASpaceException;
 	
 }

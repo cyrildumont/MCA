@@ -1,7 +1,6 @@
 package org.mca.agent.skel;
 
 import org.mca.agent.AbstractComputeAgent;
-import org.mca.math.Element;
 import org.mca.math.SubVector;
 import org.mca.math.Vector;
 
@@ -25,9 +24,9 @@ public class ScanAgent<T> extends AbstractComputeAgent {
 		String inputName = task.getStringParameter(1);
 		String outputName = task.getStringParameter(2);
 		Vector<T> input = 
-			computationCase.getData(inputName,Vector.class) ;
+			computationCase.getData(inputName) ;
 		Vector<T> output = 
-			computationCase.getData(outputName,Vector.class) ;
+			computationCase.getData(outputName) ;
 		SubVector<T> localInput = (SubVector<T>)input.load(rank);
 		SubVector<T> localOutput = (SubVector<T>)output.load(rank);
 		T temp = null;
