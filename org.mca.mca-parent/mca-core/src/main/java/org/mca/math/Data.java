@@ -71,10 +71,11 @@ public class Data<E> extends Storable{
 	public DataPart<E> load(int part) throws Exception{
 		LogUtil.debug("Loading part [" + part + "] ...", getClass());
 		localPart = part;
-		localFile = download(name);
+		String localPartName = name + "-" + part;
+		localFile = download(localPartName);
 		DataPart<E> data = format.parse(localFile);
-		publishPart(name, data);
-		DataHandler handler = computationCase.removeDataHandler(name);
+		publishPart(localPartName, data);
+		DataHandler handler = computationCase.removeDataHandler(localPartName);
 		handler.worker = MCAUtils.getIP();
 		computationCase.addDataHandler(handler);
 		addPart(part, data);
