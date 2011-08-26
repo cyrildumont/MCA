@@ -14,6 +14,7 @@ import net.jini.core.lookup.ServiceTemplate;
 import net.jini.export.Exporter;
 import net.jini.jeri.BasicILFactory;
 import net.jini.jeri.BasicJeriExporter;
+import net.jini.jeri.ssl.SslServerEndpoint;
 import net.jini.jeri.tcp.TcpServerEndpoint;
 import net.jini.lookup.entry.Name;
 
@@ -94,11 +95,11 @@ public class Data<E> extends Storable{
 	 */
 	private void publishPart(String name, DataPart<E> data)
 			throws Exception {
-		LookupLocator lookup = new LookupLocator("jini://localhost");
+		LookupLocator lookup = new LookupLocator(MCAUtils.getIP(),4161);
 		ServiceRegistrar registrar = lookup.getRegistrar();
 		Entry[] entries = new Entry[]{new Name(name)};
 		Exporter exporter =
-			new BasicJeriExporter(TcpServerEndpoint.getInstance(MCAUtils.getIP(),0), new BasicILFactory());
+			new BasicJeriExporter(SslServerEndpoint.getInstance(MCAUtils.getIP(),0), new BasicILFactory());
 		Remote remote = exporter.export(data);
 		ServiceItem item = new ServiceItem(null, remote, entries);
 		registrar.register(item, Long.MAX_VALUE);
