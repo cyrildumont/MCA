@@ -57,6 +57,7 @@ public class Barrier extends Storable {
 	}
 	
 	public void increment(){
+		if (counter == null) counter = 0;
 		counter++;
 	}
 
