@@ -166,10 +166,10 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 		int numEndRow = row * nbColumnParts;
 		int numPartWest = (part - 1) < numStartRow  ? -1 : part - 1 ;
 		int numPartEast = (part + 1) > numEndRow  ? -1 : part + 1 ;
-		neighborhood.north = (SubMatrix<E>)getDataPart(numPartNorth);
-		neighborhood.south = (SubMatrix<E>)getDataPart(numPartSouth);
-		neighborhood.east = (SubMatrix<E>)getDataPart(numPartEast);
-		neighborhood.west = (SubMatrix<E>)getDataPart(numPartWest);
+		neighborhood.north = numPartNorth == -1 ? null : (SubMatrix<E>)getDataPart(numPartNorth);
+		neighborhood.south = numPartSouth == -1 ? null : (SubMatrix<E>)getDataPart(numPartSouth);
+		neighborhood.east = numPartEast == -1 ? null : (SubMatrix<E>)getDataPart(numPartEast);
+		neighborhood.west = numPartWest == -1 ? null : (SubMatrix<E>)getDataPart(numPartWest);
 		LogUtil.debug("\t North neighbor : Part [" + numPartNorth + "]" , getClass());
 		LogUtil.debug("\t South neighbor : Part [" + numPartSouth + "]" , getClass());
 		LogUtil.debug("\t West neighbor : Part [" + numPartWest + "]" , getClass());

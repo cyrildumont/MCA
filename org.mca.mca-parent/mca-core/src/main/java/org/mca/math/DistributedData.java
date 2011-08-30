@@ -79,8 +79,25 @@ public class DistributedData<E> extends Storable{
 		return data;
 	}
 
-	public DataPart<E> getDataPart(int index){
-		return dataParts.get(index);
+	public DataPart<E> getDataPart(int part){
+		DataPart<E> result = dataParts.get(part);
+		if (result != null) return result;
+		String partName = this.name + "-" + part;
+		try {
+			DataHandler dataHandler = computationCase.getDataHandler(partName);
+			String lookup = dataHandler.worker;
+			LookupLocator ll = new LookupLocator(lookup, 4161);
+			ServiceRegistrar registrar = ll.getRegistrar();
+			Entry[] entries = new Entry[]{new Name(partName)};
+			ServiceTemplate template = new ServiceTemplate(null, null,entries);
+			DataPart<E> dataPart = (DataPart<E>)registrar.lookup(template);
+			dataParts.put(part, dataPart);
+			return dataPart;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+
 	}
 	
 	/**
