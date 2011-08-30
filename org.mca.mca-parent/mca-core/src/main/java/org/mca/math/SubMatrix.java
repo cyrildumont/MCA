@@ -23,4 +23,7 @@ public interface SubMatrix<E> extends DataPart<E>{
 	public E[] getWestBorder() throws RemoteException;
 
 	public E[] getEastBorder() throws RemoteException;
+
+	@Override
+	public E[][] getValues() throws RemoteException;
 }

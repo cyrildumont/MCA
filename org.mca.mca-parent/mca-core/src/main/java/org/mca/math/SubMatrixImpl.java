@@ -79,7 +79,7 @@ public class SubMatrixImpl<E> implements SubMatrix<E> {
 	}
 	
 	@Override
-	public Object getValues() throws RemoteException {
+	public E[][] getValues() throws RemoteException {
 		return values;
 	}
 
