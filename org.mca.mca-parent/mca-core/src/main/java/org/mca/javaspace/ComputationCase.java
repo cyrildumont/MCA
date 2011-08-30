@@ -60,5 +60,7 @@ public interface ComputationCase extends Serializable {
 	public void updateTaskComputed(Task task) throws MCASpaceException;
 	
 	public <T extends DistributedData<?>> T getData(String name) throws MCASpaceException;
+
+	public void barrier(String name, int nbWorker) throws MCASpaceException;
 	
 }

@@ -178,7 +178,7 @@ public class DistributedData<E> extends Storable{
 	 * 
 	 * @return
 	 */
-	protected int getNbParts(){throw new NotImplementedException();};	
+	public int getNbParts(){throw new NotImplementedException();};	
 	
 	/**
 	 * @param part

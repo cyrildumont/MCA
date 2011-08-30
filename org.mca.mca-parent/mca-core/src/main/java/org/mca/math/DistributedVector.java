@@ -77,7 +77,7 @@ public class DistributedVector<E> extends DistributedData<E> {
 	}
 
 	@Override
-	protected int getNbParts() {
+	public int getNbParts() {
 		return size % partSize == 0 
 							? size / partSize : size / partSize + 1;
 	}

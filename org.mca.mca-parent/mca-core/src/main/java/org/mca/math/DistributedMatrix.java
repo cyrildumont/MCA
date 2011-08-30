@@ -196,7 +196,7 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 	}
 
 	@Override
-	protected int getNbParts() {
+	public int getNbParts() {
 		int nbColumnParts = m%columnPartSize == 0 ?
 				m / columnPartSize : m / columnPartSize  + 1;
 		int nbRowParts = n%rowPartSize == 0 ?
