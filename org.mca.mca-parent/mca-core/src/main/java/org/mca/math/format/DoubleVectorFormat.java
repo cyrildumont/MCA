@@ -6,37 +6,40 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.rmi.RemoteException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.mca.math.DataPart;
-import org.mca.math.Iterator;
-import org.mca.math.SubVector;
 import org.mca.math.SubVectorImpl;
 
 @SuppressWarnings("serial")
 public class DoubleVectorFormat extends DataFormat<Double>{
 
+	private static DecimalFormat format;
+	
+	public DoubleVectorFormat() {
+		format = new DecimalFormat();
+		format.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.US));
+		format.setMinimumIntegerDigits(1);
+		format.setMaximumFractionDigits(4);
+		format.setMinimumFractionDigits(4);
+		format.setGroupingUsed(false);
+	}
+	
 	@Override
-	public File format(DataPart<Double> subVector, File out) throws FormatException {
-		SubVector<Double> vector = null;
-		if (subVector instanceof SubVector)
-			vector = (SubVector<Double>)subVector;
-		else
-			throw new FormatException();
+	public File format(Object data, File out) throws FormatException {
+		Object[] vector = (Object[])data;
 		PrintWriter pw = null;
 		try { 
 			pw = new PrintWriter(out);
-			Iterator<Double> iterator = vector.iterator();
-			while (iterator.hasNext()) {
-				Double e = iterator.next();
-				pw.println(e);
+			for (int i = 0; i < vector.length; i++) {
+				String s = format.format(vector[i]);
+				pw.println(s);
 			}
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			throw new FormatException();
-		} catch (RemoteException e) {
 			e.printStackTrace();
 			throw new FormatException();
 		}finally{
@@ -66,7 +69,8 @@ public class DoubleVectorFormat extends DataFormat<Double>{
 				e.printStackTrace();
 			}
 		}
-		SubVectorImpl<Double> result = new SubVectorImpl<Double>(input);
+		Double[] values = (Double[])input.toArray();
+		SubVectorImpl<Double> result = new SubVectorImpl<Double>(values);
 		return result;
 	}
 

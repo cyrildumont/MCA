@@ -1,19 +1,26 @@
 package org.mca.math;
 
 import java.rmi.RemoteException;
-import java.util.Collection;
 
 public interface SubMatrix<E> extends DataPart<E>{
 
+	public int getRowDimension() throws RemoteException;
+
+	public int getColumnDimension() throws RemoteException;
+	
+	public E[] getColumn(int numColumn) throws RemoteException;
+	
+	public E[] getRow(int numRow) throws RemoteException;
+	
 	public E get(int row, int column) throws RemoteException;
 	
 	public void set(int row, int column, E value) throws RemoteException;
 	
-	public Collection<E> getNorthBorder() throws RemoteException;
+	public E[] getNorthBorder() throws RemoteException;
 	
-	public Collection<E> getSouthBorder() throws RemoteException;
+	public E[] getSouthBorder() throws RemoteException;
 	
-	public Collection<E> getWestBorder() throws RemoteException;
+	public E[] getWestBorder() throws RemoteException;
 
-	public Collection<E> getEastBorder() throws RemoteException;
+	public E[] getEastBorder() throws RemoteException;
 }

@@ -1,19 +1,27 @@
 package org.mca.math;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Arrays;
+
+import org.mca.entry.DataHandler;
 import org.mca.entry.DataHandlerFactory;
 import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.log.LogUtil;
 import org.mca.math.format.DataFormat;
+import org.mca.math.format.DoubleMatrixFormat;
+import org.mca.math.format.FormatException;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 
-public class Matrix<E> extends Data<E> {
+public class DistributedMatrix<E> extends DistributedData<E> {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
+
+	private static final DataFormat DEFAULT_MATRIX_FORMAT = new DoubleMatrixFormat();
 
 	/**
 	 * 
@@ -60,36 +68,46 @@ public class Matrix<E> extends Data<E> {
 
 	}
 
-	private Integer m;
+	private E[][] values;
 
-	private Integer n;
+	public Integer m;
 
-	private Integer rowSize;
+	public Integer n;
 
-	private Integer columnSize;
+	public Integer rowPartSize;
+
+	public Integer columnPartSize;
 
 	/** Constructor for JavaSpaces specification */
-	public Matrix() {
+	public DistributedMatrix() {
 		super(null,null);
+
 	}
 
-	public Matrix(String name, DataFormat<E> format, int m, int n, int rowSize, int columnSize) {
+	public DistributedMatrix(String name, DataFormat<E> format,
+			Dimension dimension, Dimension partDimension) {
 		super(name, format);
-		this.m = m;
-		this.n = n;
-		this.rowSize = rowSize;
-		this.columnSize = columnSize;
+		this.m = dimension.getHeight();
+		this.n = dimension.getWidth();
+		this.rowPartSize = partDimension.getHeight();
+		this.columnPartSize = partDimension.getWidth();
 	}
 
-	//	/**
-	//	 * 
-	//	 * @param inputFile
-	//	 * @param rowSize
-	//	 * @param columnSize
-	//	 */
-	//	public Matrix(File inputFile, int rowSize, int columnSize){
-	//		
-	//	}
+	public DistributedMatrix(String name,Dimension dimension, 
+			Dimension partDimension) {
+		this(name,DEFAULT_MATRIX_FORMAT,dimension, partDimension);
+	}
+
+	public DistributedMatrix(String name,E[][] values, 
+			Dimension partDimension) {
+		super(name,DEFAULT_MATRIX_FORMAT);
+		m = values.length;
+		n = values[0].length;
+		this.rowPartSize = partDimension.getHeight();
+		this.columnPartSize = partDimension.getWidth();
+		this.values = values;
+	}
+
 
 	/** Get row dimension.
 	   @return     m, the number of rows.
@@ -119,12 +137,13 @@ public class Matrix<E> extends Data<E> {
 
 	private LocalPartInfo getlocalPartInfo(int row, int column) throws Exception{
 		if (row >= m || row <= 0 || column >= n || column <= 0 ) throw new Exception();
-		int rowPartnumber = (int)Math.ceil(row / (double)rowSize);
-		int columnPartnumber = (int)Math.ceil(column / (double)columnSize);
-		int nbColumnParts = m%columnSize == 0 ? m / columnSize : m / columnSize  + 1;
+		int rowPartnumber = (int)Math.ceil(row / (double)rowPartSize);
+		int columnPartnumber = (int)Math.ceil(column / (double)columnPartSize);
+		int nbColumnParts = m%columnPartSize == 0 ?
+				m / columnPartSize : m / columnPartSize  + 1;
 		int partNumber = columnPartnumber + (rowPartnumber-1) * nbColumnParts;
-		int rowLocal = row - ((rowPartnumber-1) * rowSize);
-		int columnLocal = column - ((columnPartnumber-1) * columnSize);
+		int rowLocal = row - ((rowPartnumber-1) * rowPartSize);
+		int columnLocal = column - ((columnPartnumber-1) * columnPartSize);
 		LogUtil.debug("l'élément [" + row + "," + column + "] se trouve dans la partie " +
 				"[" + partNumber + "] à l'index [" + rowLocal + "," + columnLocal + "]", getClass());
 		return new LocalPartInfo(partNumber, rowLocal, columnLocal);
@@ -133,8 +152,10 @@ public class Matrix<E> extends Data<E> {
 
 	public Neighborhood getNeighborhood(int part){
 		LogUtil.debug("Part [" + part + "] neighborhood :", getClass());
-		int nbColumnParts = m%columnSize == 0 ? m / columnSize : m / columnSize  + 1;
-		int nbRowParts = n%rowSize == 0 ? n / rowSize : n / rowSize  + 1;
+		int nbColumnParts = m%columnPartSize == 0 ?
+				m / columnPartSize : m / columnPartSize  + 1;
+		int nbRowParts = n%rowPartSize == 0 ?
+				n / rowPartSize : n / rowPartSize  + 1;
 		int nbParts = nbColumnParts * nbRowParts;
 		Neighborhood neighborhood = new Neighborhood();
 
@@ -147,6 +168,8 @@ public class Matrix<E> extends Data<E> {
 		int numPartEast = (part + 1) > numEndRow  ? -1 : part + 1 ;
 		neighborhood.north = (SubMatrix<E>)getDataPart(numPartNorth);
 		neighborhood.south = (SubMatrix<E>)getDataPart(numPartSouth);
+		neighborhood.east = (SubMatrix<E>)getDataPart(numPartEast);
+		neighborhood.west = (SubMatrix<E>)getDataPart(numPartWest);
 		LogUtil.debug("\t North neighbor : Part [" + numPartNorth + "]" , getClass());
 		LogUtil.debug("\t South neighbor : Part [" + numPartSouth + "]" , getClass());
 		LogUtil.debug("\t West neighbor : Part [" + numPartWest + "]" , getClass());
@@ -160,26 +183,64 @@ public class Matrix<E> extends Data<E> {
 	protected void storeProperties(Element node) {
 		node.setAttribute("nbRows", this.n.toString());		
 		node.setAttribute("nbColumns", this.m.toString());
-		node.setAttribute("rowPartSize", this.rowSize.toString());
-		node.setAttribute("columnPartSize", this.columnSize.toString());
+		node.setAttribute("rowPartSize", rowPartSize.toString());
+		node.setAttribute("columnPartSize", columnPartSize.toString());
 	}
 
 	@Override
 	protected void parseProperties(NamedNodeMap attributes) {
 		m = Integer.valueOf(attributes.getNamedItem("nbRows").getNodeValue());
 		n = Integer.valueOf(attributes.getNamedItem("nbColumns").getNodeValue());
+		rowPartSize = Integer.valueOf(attributes.getNamedItem("rowPartSize").getNodeValue());
+		columnPartSize = Integer.valueOf(attributes.getNamedItem("columnPartSize").getNodeValue());
 	}
 
 	@Override
 	protected int getNbParts() {
-		// TODO Auto-generated method stub
-		return 0;
+		int nbColumnParts = m%columnPartSize == 0 ?
+				m / columnPartSize : m / columnPartSize  + 1;
+		int nbRowParts = n%rowPartSize == 0 ?
+				n / rowPartSize : n / rowPartSize  + 1;
+		return nbColumnParts * nbRowParts;
 	}
 
-	@Override
-	protected void deployPart(int i, ComputationCase cc,
-			DataHandlerFactory factory) throws MCASpaceException {
-		// TODO Auto-generated method stub
-		
+	private E[][] getPart(int i0, int i1, int j0, int j1){
+		E[][] part = Arrays.copyOfRange(values, i0, i1);
+		for (int i = 0; i < part.length; i++) {
+			part[i] = Arrays.copyOfRange(part[i], j0, j1);
+		}
+		return part;
 	}
+	
+	@Override
+	protected void deployPart(int part, ComputationCase cc,
+			DataHandlerFactory factory) throws MCASpaceException {
+
+		int nbColumnParts = m%columnPartSize == 0 ?
+				m / columnPartSize : m / columnPartSize  + 1;
+
+		int rowPart = (int)Math.ceil((double)part / nbColumnParts);
+		int row = ( rowPart -1) * rowPartSize;
+		int columnPart = part%nbColumnParts == 0 ? 
+				nbColumnParts : part%nbColumnParts;
+		int column = (columnPart - 1) * columnPartSize;	
+		File file = generatePartFile(part);
+		E[][] partValues = 
+			getPart(row, row + rowPartSize, column, column + columnPartSize);
+		try {
+			format.format(partValues, file);
+			DataHandler dh = factory.getDataHandler(file);
+			FileInputStream input = new FileInputStream(file);
+			dh.upload(input);
+			input.close();
+			cc.addDataHandler(dh);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (FormatException e) {
+			e.printStackTrace();
+		}		
+	}
+
 }

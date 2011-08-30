@@ -15,7 +15,6 @@ import net.jini.export.Exporter;
 import net.jini.jeri.BasicILFactory;
 import net.jini.jeri.BasicJeriExporter;
 import net.jini.jeri.ssl.SslServerEndpoint;
-import net.jini.jeri.tcp.TcpServerEndpoint;
 import net.jini.lookup.entry.Name;
 
 import org.mca.entry.DataHandler;
@@ -34,12 +33,9 @@ import org.w3c.dom.Node;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 
-public class Data<E> extends Storable{
+public class DistributedData<E> extends Storable{
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 7042018059419847706L;
+	private static final long serialVersionUID = 1L;
 
 	protected int localPart;
 	
@@ -54,13 +50,13 @@ public class Data<E> extends Storable{
 	protected Map<Integer, DataPart<E>> dataParts;
 	
 	
-	public Data() {}
+	public DistributedData() {}
 	
-	public Data(String name) {
+	public DistributedData(String name) {
 		this.name = name;
 	}
 	
-	public Data(String name, DataFormat<E> format) {
+	public DistributedData(String name, DataFormat<E> format) {
 		this.name = name;
 		this.format = format;
 	}
@@ -107,15 +103,14 @@ public class Data<E> extends Storable{
 
 	
 	public void update() throws Exception {
-		LogUtil.debug("Update local part [" + name + "]...", getClass());
-		LogUtil.debug("Part [" + localPart + "] local", getClass());
-		
+		LogUtil.debug("Update local part [" + localPart + "]...", getClass());
+				
 		for(int part = 1; part <= getNbParts(); part++)	{
 			if (localPart != part) {
 				String partName = this.name + "-" + part;
 				DataHandler dataHandler = computationCase.getDataHandler(partName);
 				String lookup = dataHandler.worker;
-				LookupLocator ll = new LookupLocator("jini://"+ lookup);
+				LookupLocator ll = new LookupLocator(lookup, 4161);
 				ServiceRegistrar registrar = ll.getRegistrar();
 				Entry[] entries = new Entry[]{new Name(partName)};
 				ServiceTemplate template = new ServiceTemplate(null, null,entries);
@@ -185,7 +180,16 @@ public class Data<E> extends Storable{
 	 */
 	protected int getNbParts(){throw new NotImplementedException();};	
 	
-
+	/**
+	 * @param part
+	 * @return
+	 */
+	protected File generatePartFile(int part) {
+		String tmpDir = System.getProperty("mca.home") + "/work/" ;
+		File file = new File(tmpDir + "/" + name + "-" + part + ".dat");
+		return file;
+	}
+	
 	/**
 	 * 
 	 * @param cc

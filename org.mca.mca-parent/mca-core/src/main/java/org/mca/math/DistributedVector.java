@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.List;
 
 import org.mca.entry.DataHandler;
 import org.mca.entry.DataHandlerFactory;
@@ -13,10 +14,11 @@ import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.log.LogUtil;
 import org.mca.math.format.DataFormat;
 import org.mca.math.format.DoubleVectorFormat;
+import org.mca.math.format.FormatException;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 
-public class Vector<E> extends Data<E> {
+public class DistributedVector<E> extends DistributedData<E> {
 
 	/**
 	 * 
@@ -31,16 +33,16 @@ public class Vector<E> extends Data<E> {
 	private E[] values;
 
 	/** Constructor for JavaSpaces specification */
-	public Vector() {}
+	public DistributedVector() {}
 	
-	public Vector(String name, DataFormat<E> format, E[] values, int partSize) {
+	public DistributedVector(String name, DataFormat<E> format, E[] values, int partSize) {
 		super(name, format);
 		this.size = values.length;
 		this.values = values;
 		this.partSize = partSize;
 	}
 	
-	public Vector(String name, E[] values, int partSize) {
+	public DistributedVector(String name, E[] values, int partSize) {
 		this(name, DEFAULT_VECTOR_FORMAT, values, partSize);
 	}
 	
@@ -89,17 +91,12 @@ public class Vector<E> extends Data<E> {
 	 */
 	protected void deployPart(int part, ComputationCase cc,
 			DataHandlerFactory factory) throws MCASpaceException {
-		int start = partSize * (part -1);
-		
-		int end = part < getNbParts() ? partSize * part - 1 : size - 1;
-		String tmpDir = System.getProperty("mca.home") + "/work/" ;
-		File file = new File(tmpDir + "/" + name + "-" + part + ".dat");
+		int start = partSize * (part-1);
+		int end = part < getNbParts() ? partSize * part : size;
+		E[] partValues = Arrays.copyOfRange(values, start, end);
+		File file = generatePartFile(part);
 		try {
-			PrintWriter writer = new PrintWriter(file);
-			for(int i = start; i <= end;i++){
-				writer.println(values[i]);
-			}		
-			writer.close();
+			format.format(partValues, file);
 			DataHandler dh = factory.getDataHandler(file);
 			FileInputStream input = new FileInputStream(file);
 			dh.upload(input);
@@ -109,8 +106,8 @@ public class Vector<E> extends Data<E> {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} catch (FormatException e) {
+			e.printStackTrace();
 		}
-
-	}
-		
+	}	
 }

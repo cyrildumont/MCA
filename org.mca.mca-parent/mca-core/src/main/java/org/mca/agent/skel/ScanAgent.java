@@ -2,7 +2,7 @@ package org.mca.agent.skel;
 
 import org.mca.agent.AbstractComputeAgent;
 import org.mca.math.SubVector;
-import org.mca.math.Vector;
+import org.mca.math.DistributedVector;
 
 
 public class ScanAgent<T> extends AbstractComputeAgent {
@@ -23,9 +23,9 @@ public class ScanAgent<T> extends AbstractComputeAgent {
 		int rank = task.getIntParameter(0);
 		String inputName = task.getStringParameter(1);
 		String outputName = task.getStringParameter(2);
-		Vector<T> input = 
+		DistributedVector<T> input = 
 			computationCase.getData(inputName) ;
-		Vector<T> output = 
+		DistributedVector<T> output = 
 			computationCase.getData(outputName) ;
 		SubVector<T> localInput = (SubVector<T>)input.load(rank);
 		SubVector<T> localOutput = (SubVector<T>)output.load(rank);
