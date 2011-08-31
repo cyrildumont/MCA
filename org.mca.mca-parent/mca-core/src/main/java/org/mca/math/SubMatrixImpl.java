@@ -23,7 +23,7 @@ public class SubMatrixImpl<E> implements SubMatrix<E> {
 		width = values[0].length;
 		this.values = values;
 	}
-
+	
 	@Override
 	public int getColumnDimension() throws RemoteException {
 		return width;

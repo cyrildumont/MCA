@@ -42,32 +42,6 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 
 	}
 
-	/**
-	 * 
-	 * @author cyril
-	 *
-	 */
-	public class Neighborhood{
-		private SubMatrix<E> north;
-		private SubMatrix<E> south;
-		private SubMatrix<E> east;
-		private SubMatrix<E> west;
-
-		public SubMatrix<E> getNorth() {
-			return north;
-		}
-		public SubMatrix<E> getSouth() {
-			return south;
-		}
-		public SubMatrix<E> getEast() {
-			return east;
-		}
-		public SubMatrix<E> getWest() {
-			return west;
-		}
-
-	}
-
 	private E[][] values;
 
 	public Integer m;
@@ -150,14 +124,14 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 	}
 
 
-	public Neighborhood getNeighborhood(int part){
+	public Neighborhood<E> getNeighborhood(int part){
 		LogUtil.debug("Part [" + part + "] neighborhood :", getClass());
 		int nbColumnParts = m%columnPartSize == 0 ?
 				m / columnPartSize : m / columnPartSize  + 1;
 		int nbRowParts = n%rowPartSize == 0 ?
 				n / rowPartSize : n / rowPartSize  + 1;
 		int nbParts = nbColumnParts * nbRowParts;
-		Neighborhood neighborhood = new Neighborhood();
+		Neighborhood<E> neighborhood = new Neighborhood<E>();
 
 		int numPartNorth = (part - nbColumnParts) < 1 ? -1 : part - nbColumnParts ;
 		int numPartSouth = (part + nbColumnParts) > nbParts  ? -1 : part + nbColumnParts ;
@@ -166,10 +140,10 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 		int numEndRow = row * nbColumnParts;
 		int numPartWest = (part - 1) < numStartRow  ? -1 : part - 1 ;
 		int numPartEast = (part + 1) > numEndRow  ? -1 : part + 1 ;
-		neighborhood.north = numPartNorth == -1 ? null : (SubMatrix<E>)getDataPart(numPartNorth);
-		neighborhood.south = numPartSouth == -1 ? null : (SubMatrix<E>)getDataPart(numPartSouth);
-		neighborhood.east = numPartEast == -1 ? null : (SubMatrix<E>)getDataPart(numPartEast);
-		neighborhood.west = numPartWest == -1 ? null : (SubMatrix<E>)getDataPart(numPartWest);
+		neighborhood.setNorth(numPartNorth == -1 ? null : (SubMatrix<E>)getDataPart(numPartNorth));
+		neighborhood.setSouth(numPartSouth == -1 ? null : (SubMatrix<E>)getDataPart(numPartSouth));
+		neighborhood.setEast(numPartEast == -1 ? null : (SubMatrix<E>)getDataPart(numPartEast));
+		neighborhood.setWest(numPartWest == -1 ? null : (SubMatrix<E>)getDataPart(numPartWest));
 		LogUtil.debug("\t North neighbor : Part [" + numPartNorth + "]" , getClass());
 		LogUtil.debug("\t South neighbor : Part [" + numPartSouth + "]" , getClass());
 		LogUtil.debug("\t West neighbor : Part [" + numPartWest + "]" , getClass());
