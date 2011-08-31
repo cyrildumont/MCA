@@ -68,7 +68,7 @@ public class SubMatrixImpl<E> implements SubMatrix<E> {
 	public E[] getColumn(int numColumn) throws RemoteException {
 		List<E> result = new ArrayList<E>();
 		for (int i = 0; i < height; i++) {
-			result.set(i,values[i][numColumn]);
+			result.add(values[i][numColumn]);
 		}
 		return (E[])result.toArray();
 	}
