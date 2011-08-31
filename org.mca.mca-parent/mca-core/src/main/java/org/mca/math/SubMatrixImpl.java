@@ -1,5 +1,6 @@
 package org.mca.math;
 
+import java.lang.reflect.Array;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,11 +67,12 @@ public class SubMatrixImpl<E> implements SubMatrix<E> {
 
 	@Override
 	public E[] getColumn(int numColumn) throws RemoteException {
-		List<E> result = new ArrayList<E>();
+		Class<?> clazz = values[0][0].getClass();
+		E[] column = (E[])Array.newInstance(clazz, height);
 		for (int i = 0; i < height; i++) {
-			result.add(values[i][numColumn]);
+			column[i] = values[i][numColumn];
 		}
-		return (E[])result.toArray();
+		return column;
 	}
 
 	@Override
