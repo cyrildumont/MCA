@@ -100,7 +100,8 @@ public class DistributedData<E> extends Storable{
 			throw new MCASpaceException("No part load on local");
 		LogUtil.debug("Unloading part [" + localPart + "] ...", getClass());
 		localSave();
-		upload();
+		String localPartName = name + "-" + localPart;
+		upload(localPartName);
 	}
 	
 
@@ -174,7 +175,7 @@ public class DistributedData<E> extends Storable{
 		return file;
 	}
 	
-	private File upload() throws Exception{
+	private File upload(String name) throws Exception{
 		LogUtil.debug("Upload file [" + name + "]  ...", getClass());
 		InputStream input = new FileInputStream(outputlocalFile);
 		computationCase.upload(name, input);
