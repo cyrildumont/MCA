@@ -63,4 +63,6 @@ public interface ComputationCase extends Serializable {
 
 	public void barrier(String name, int nbWorker) throws MCASpaceException;
 	
+	public void createBarrier(String name) throws MCASpaceException;
+	
 }
