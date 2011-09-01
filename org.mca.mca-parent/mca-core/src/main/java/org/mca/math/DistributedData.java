@@ -229,7 +229,7 @@ public class DistributedData<E> extends Storable{
 	 */
 	public void localSave() throws Exception{
 		DataPart<E> part = dataParts.get(localPart);
-		format.format(part, outputlocalFile);
+		format.format(part.getValues(), outputlocalFile);
 	}
 
 	/**
