@@ -107,6 +107,7 @@ public class ComputingWorker extends MCAComponent {
 	private transient TaskExecutor taskExecutor;
 
 	public boolean signalStop = false;
+	public boolean signalFinish = false;
 
 	public ComputingWorker() throws Exception {
 		loginContext = new LoginContext("org.mca.Worker");
@@ -236,14 +237,18 @@ public class ComputingWorker extends MCAComponent {
 		}
 	}
 
-	private void setComputationCaseFinish() throws ExportException{
+	private void setComputationCaseFinish() throws MCASpaceException{
 		taskExecutor.interrupt();
 		taskExecutor = null;
 		caseListener.interrupt();
 		caseListener = null;
 		computationCase = null;
 		setState(ComputeWorkerState.STARTED);
-		spaceListener.listen();
+		try {
+			spaceListener.listen();
+		} catch (ExportException e) {
+			throw new MCASpaceException();
+		}
 	}
 
 	/**
@@ -464,7 +469,7 @@ public class ComputingWorker extends MCAComponent {
 				e2.printStackTrace();
 				try {
 					setComputationCaseFinish();
-				} catch (ExportException e) {
+				} catch (MCASpaceException e) {
 					e.printStackTrace();
 				}
 				return;
@@ -490,13 +495,15 @@ public class ComputingWorker extends MCAComponent {
 			}finally{
 				try {
 					computationCase.updateTaskComputed(taskInProgress);
+					setState(ComputeWorkerState.WAITING);
+					if (signalStop) {
+						taskExecutor.interrupt();
+						taskExecutor = null;
+					}else if(signalFinish){
+						setComputationCaseFinish();
+					}
 				}catch (MCASpaceException e) {
 					logger.warning("Worker -- Error during update of  the task in progress :" + e.getMessage());
-				}
-				setState(ComputeWorkerState.WAITING);
-				if (signalStop) {
-					taskExecutor.interrupt();
-					taskExecutor = null;
 				}
 			}
 		}
@@ -557,13 +564,18 @@ public class ComputingWorker extends MCAComponent {
 
 		@Override
 		public void caseFinish() {
-			try {
-				setComputationCaseFinish();
-			} catch (ExportException e) {
-				e.printStackTrace();
+			if(state == ComputeWorkerState.RUNNING){
+				logger.fine("Worker -- Worker agent is running --> send STOP signal");
+				signalFinish = true;
+			}
+			else{
+				try {
+					setComputationCaseFinish();
+				} catch (MCASpaceException e) {
+					e.printStackTrace();
+				}
 			}
 		}
-
 	}
 
 }
