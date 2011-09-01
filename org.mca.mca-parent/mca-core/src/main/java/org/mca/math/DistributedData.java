@@ -2,6 +2,7 @@ package org.mca.math;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.rmi.Remote;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,8 +40,10 @@ public class DistributedData<E> extends Storable{
 
 	protected int localPart;
 	
-	protected File localFile;
-	
+	protected File inputlocalFile;
+
+	protected File outputlocalFile;
+
 	public String name;
 	
 	public DataFormat<E> format;
@@ -65,12 +68,20 @@ public class DistributedData<E> extends Storable{
 		this.computationCase = computationCase;
 	}
 
+	/**
+	 * 
+	 * @param part
+	 * @return
+	 * @throws Exception
+	 */
 	public DataPart<E> load(int part) throws Exception{
 		LogUtil.debug("Loading part [" + part + "] ...", getClass());
 		localPart = part;
 		String localPartName = name + "-" + part;
-		localFile = download(localPartName);
-		DataPart<E> data = format.parse(localFile);
+		inputlocalFile = download(localPartName);
+		outputlocalFile = 
+			new File(System.getProperty("temp.worker.result") + "/" + localPartName + ".dat");
+		DataPart<E> data = format.parse(inputlocalFile);
 		publishPart(localPartName, data);
 		DataHandler handler = computationCase.removeDataHandler(localPartName);
 		handler.worker = MCAUtils.getIP();
@@ -78,6 +89,20 @@ public class DistributedData<E> extends Storable{
 		addPart(part, data);
 		return data;
 	}
+	
+	/**
+	 * 
+	 * @param part
+	 * @throws Exception
+	 */
+	public void unload() throws Exception{
+		if (localPart == 0) 
+			throw new MCASpaceException("No part load on local");
+		LogUtil.debug("Unloading part [" + localPart + "] ...", getClass());
+		localSave();
+		upload();
+	}
+	
 
 	public DataPart<E> getDataPart(int part){
 		DataPart<E> result = dataParts.get(part);
@@ -149,6 +174,13 @@ public class DistributedData<E> extends Storable{
 		return file;
 	}
 	
+	private File upload() throws Exception{
+		LogUtil.debug("Upload file [" + name + "]  ...", getClass());
+		InputStream input = new FileInputStream(outputlocalFile);
+		computationCase.upload(name, input);
+		return outputlocalFile;
+	}
+	
 	/**
 	 * @see org.mca.entry.Storable#parse(org.w3c.dom.Node)
 	 */
@@ -189,6 +221,15 @@ public class DistributedData<E> extends Storable{
 		format.format(part, out);
 		FileInputStream fis = new FileInputStream(out);
 		computationCase.upload(dataHandlerName, fis);
+	}
+	
+	/**
+	 * 
+	 * @throws Exception
+	 */
+	public void localSave() throws Exception{
+		DataPart<E> part = dataParts.get(localPart);
+		format.format(part, outputlocalFile);
 	}
 
 	/**

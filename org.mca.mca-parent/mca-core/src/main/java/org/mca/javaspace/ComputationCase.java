@@ -65,4 +65,6 @@ public interface ComputationCase extends Serializable {
 	
 	public void createBarrier(String name) throws MCASpaceException;
 	
+	public void removeBarrier(String name) throws MCASpaceException;
+	
 }
