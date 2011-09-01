@@ -20,18 +20,22 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 
 	private static DecimalFormat format;
 	
+	private final static int MAX_INTEGER_DIGIT = 10;
+	private final static int MAX_FRACTION_DIGIT = 10;
+	
 	public DoubleMatrixFormat() {
 		format = new DecimalFormat();
 		format.setDecimalFormatSymbols(new DecimalFormatSymbols(Locale.US));
 		format.setMinimumIntegerDigits(1);
-		format.setMaximumFractionDigits(4);
-		format.setMinimumFractionDigits(4);
+		format.setMaximumFractionDigits(MAX_FRACTION_DIGIT);
+		format.setMinimumFractionDigits(MAX_FRACTION_DIGIT);
 		format.setGroupingUsed(false);
 	}
 	
 	@Override
 	public File format(Object data, File out) throws FormatException {
 		Object[][] matrix = (Object[][])data;
+		int maxFormatSize = MAX_INTEGER_DIGIT + MAX_FRACTION_DIGIT + 1;
 		PrintWriter pw = null;
 		try { 
 			pw = new PrintWriter(out);
@@ -41,7 +45,7 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 				for (int j = 0; j < width; j++) {
 					Double d = (Double)matrix[i][j];
 					String s = format.format(d);
-					int padding = Math.max(1,width-s.length());
+					int padding = maxFormatSize - s.length();
 					for (int k = 0; k < padding; k++)
 						pw.print(' ');
 					pw.print(s);
