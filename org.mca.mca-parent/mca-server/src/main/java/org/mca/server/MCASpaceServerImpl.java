@@ -51,6 +51,7 @@ import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.lookup.Lookup;
 import org.mca.service.ServiceConfigurator;
 import org.mca.service.ServiceStarter;
+import org.mca.util.MCAUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
@@ -71,7 +72,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	private static final String FILE_JAVASPACE = System.getProperty("mca.home") + "/conf/javaspace.xml";
 
 
-	public final static String COMPONENT_NAME = "org.mca.server";
+	public final static String COMPONENT_NAME = "org.mca.server.MCASpaceServer";
 
 	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
 
@@ -146,12 +147,12 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 				basicExporter);
 		remoteRef = (MCASpaceServer)exporter.export(this);
 		proxy = new MCASpaceProxy(remoteRef);
-		locators = new LookupLocator[]{new LookupLocator("jini://localhost:4160")};
+		locators = new LookupLocator[]{new LookupLocator(MCAUtils.getIP(),4160)};
 		DiscoveryManagement dm = new LookupLocatorDiscovery(locators);
 		mgr = new JoinManager(proxy, getAttributes(), this,dm,null, config);
 		Lookup finder = new Lookup(net.jini.core.transaction.server.TransactionManager.class);
 		transactionManager =
-			(net.jini.core.transaction.server.TransactionManager) finder.getService("localhost");
+				(net.jini.core.transaction.server.TransactionManager) finder.getService("localhost");
 		logger.fine("MCASpaceServerImpl -- Transaction Manager : [" + transactionManager + "]");
 	}
 
