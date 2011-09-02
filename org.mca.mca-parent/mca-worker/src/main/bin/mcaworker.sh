@@ -8,7 +8,7 @@ ERR_FILE=$MCA_HOME/logs/mcaworker_`hostname`.err
 NAME=mcaworker 
 MCA_USER=${jsvc.user}
 
-OPTIONS="-user $MCA_USER -Dmca.home=$MCA_HOME -Djava.security.policy=$MCA_HOME/conf/security/worker.policy -Dcom.sun.management.jmxremote.port=9097 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -cp ./commons-daemon.jar:./bootstrap.jar:../conf/ -outfile $OUT_FILE -errfile $ERR_FILE -pidfile $PIDFILE"
+OPTIONS="-user $MCA_USER -Dmca.home=$MCA_HOME -Djava.security.policy=$MCA_HOME/conf/security/worker.policy -Dcom.sun.management.jmxremote.port=9097 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -Djava.util.logging.config.file=$MCA_HOME/conf/logging.properties -Djavax.net.ssl.trustStore=$MCA_HOME/conf/security/keystore.worker -Djava.security.auth.login.config=$MCA_HOME/conf/security/worker.login-cp ./commons-daemon.jar:./bootstrap.jar:../conf/ -outfile $OUT_FILE -errfile $ERR_FILE -pidfile $PIDFILE"
   	
 start(){ 
 	echo -n "Starting MCAWorker daemon: " 
