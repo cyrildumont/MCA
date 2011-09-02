@@ -1,7 +1,6 @@
 package org.mca.math.format;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -37,12 +36,13 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 		Object[][] matrix = (Object[][])data;
 		int maxFormatSize = MAX_INTEGER_DIGIT + MAX_FRACTION_DIGIT + 1;
 		PrintWriter pw = null;
+		int i = 0 ,j = 0;
 		try { 
 			pw = new PrintWriter(out);
 			int height = matrix.length;
 		    int width = matrix[0].length;
-			for (int i = 0; i < height; i++) {
-				for (int j = 0; j < width; j++) {
+			for (i = 0; i < height; i++) {
+				for (j = 0; j < width; j++) {
 					Double d = (Double)matrix[i][j];
 					String s = format.format(d);
 					int padding = maxFormatSize - s.length();
@@ -53,8 +53,8 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 				pw.println();
 			}
 			pw.flush();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+		} catch (Exception e) {
+			System.out.println("[row : " + i + "][column : " + j + "] --> [" + matrix[i][j] + "]");
 			throw new FormatException();
 		}finally{
 			pw.close();
