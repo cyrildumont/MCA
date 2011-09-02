@@ -125,6 +125,20 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>fm.void.jetm</groupId>
+			<artifactId>jetm</artifactId>
+			<version>1.2.3</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>fm.void.jetm</groupId>
+			<artifactId>jetm-optional</artifactId>
+			<version>1.2.3</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
