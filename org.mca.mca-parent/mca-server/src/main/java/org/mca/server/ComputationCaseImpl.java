@@ -50,7 +50,7 @@ import org.mca.util.MCAUtils;
 
 
 class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCase, RemoteEventListener{ 
-	
+
 	/**
 	 * 
 	 */
@@ -62,18 +62,18 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	private Task taskInProgress;
 	private LeaseRenewalTask leaseRenewalTask;
-	
+
 	private static final int LEASE_DURATION = 7000;
 	private static final int SLEEP_TIME = 6000;
 
 	private String name;
 	private String description;
 	private TransactionManager transactionManager;
-	
+
 	private ComputationCaseState state;
-	
+
 	private List<ComputationCaseListener> listeners = new ArrayList<ComputationCaseListener>();
-	
+
 	ComputationCaseImpl(JavaSpace05 space, TransactionManager transactionManager) throws RemoteException {	
 		setSpace(space);
 		init(space);
@@ -105,7 +105,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			}
 		}
 	}
-	
+
 	@Override
 	public void addProperty(Property property) throws MCASpaceException {
 		Property template = new Property();
@@ -123,13 +123,21 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		DataHandler dh = getDataHandler(name);
 		if(dh == null)
 			throw new MCASpaceException("DataHandler [" + name + "] not found");
-		try {
-			File file = dh.download(dir);
-			return file;
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new MCASpaceException("Error during download of data [" + name + "]");
+		DownloadTask task = new DownloadTask(dh, dir);
+		task.start();
+		while (!task.isFileDownloaded()) {
+			try {
+				System.out.println("OK");
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
+		File file = task.getFile();
+		if (file == null)
+			throw new MCASpaceException("Error during download of data [" + name + "]");
+		return file;
+
 	}
 
 	@Override
@@ -226,7 +234,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		else
 			updateState(ComputationCaseState.FINISHED);
 	}
-	
+
 	private void updateState(ComputationCaseState state) throws MCASpaceException{
 		State template = new State();
 		try {
@@ -241,7 +249,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			throw new MCASpaceException();
 		}
 	}
-	
+
 	private void setState(ComputationCaseState state) {
 		logger.fine(
 				"ComputationCaseImpl -- State changed : [" + this.state + "] --> [" + state + "]");
@@ -257,7 +265,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			}	
 		}
 	}
-	
+
 	@Override
 	public ComputationCaseState getState() throws MCASpaceException {
 		return state;
@@ -279,7 +287,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	public Task getTask(TaskState state) throws MCASpaceException {
 		return getTask(state, null);
 	}
-	
+
 	/**
 	 * 
 	 * @param state
@@ -288,7 +296,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	 * @throws MCASpaceException
 	 */
 	private Task getTask(TaskState state, net.jini.core.transaction.Transaction txn)
-		throws MCASpaceException{
+	throws MCASpaceException{
 		Task taskTemplate = new Task();
 		taskTemplate.state = state;
 		return (Task)takeEntry(taskTemplate,txn);	
@@ -323,7 +331,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		taskTemplate.name = name;
 		return (Task)takeEntry(taskTemplate, null);
 	}
-	
+
 	private Task getTask(String name, net.jini.core.transaction.Transaction txn) throws MCASpaceException {
 		Task taskTemplate = new Task();
 		taskTemplate.name = name;
@@ -412,7 +420,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		Barrier barrier = new Barrier(name, 0);
 		writeEntry(barrier, null);
 	}
-	
+
 	@Override
 	public void removeBarrier(String name) throws MCASpaceException {
 		Barrier barrier = new Barrier(name, null);
@@ -430,9 +438,9 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			return null;
 		}
 	}
-	
 
-	
+
+
 	@Override
 	public void notify(RemoteEvent event) throws UnknownEventException,
 	RemoteException {
@@ -445,41 +453,78 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			e.printStackTrace();
 		}
 	}
-		/**
-		 * 
-		 * @author cyril
-		 *
-		 */
-		class LeaseRenewalTask extends Thread{
+	/**
+	 * 
+	 * @author cyril
+	 *
+	 */
+	class LeaseRenewalTask extends Thread{
 
-			private Lease lease;
-			private boolean interrupt;
+		private Lease lease;
+		private boolean interrupt;
 
-			public LeaseRenewalTask(Lease lease) {
-				this.lease = lease;
-			}
+		public LeaseRenewalTask(Lease lease) {
+			this.lease = lease;
+		}
 
-			@Override
-			public void run() {
-				while(!interrupt){
-					try {
-						Thread.sleep(SLEEP_TIME);
-						logger.finest("LeaseRenewalTask -- Renew transaction lease");
-						lease.renew(LEASE_DURATION);
-					} catch (Exception e) {
-						interrupt = true;
-					}
+		@Override
+		public void run() {
+			while(!interrupt){
+				try {
+					Thread.sleep(SLEEP_TIME);
+					logger.finest("LeaseRenewalTask -- Renew transaction lease [" + lease + "]");
+					lease.renew(LEASE_DURATION);
+				} catch (Exception e) {
+					interrupt = true;
 				}
 			}
+		}
 
-			@Override
-			public synchronized void interrupt() {
-				interrupt = true;
-				super.interrupt();
+		@Override
+		public synchronized void interrupt() {
+			logger.finest("LeaseRenewalTask -- interrupt [" + lease + "]");
+			interrupt = true;
+			super.interrupt();
+		}
+
+	}
+
+	/**
+	 * 
+	 * @author Cyril Dumont
+	 *
+	 */
+	class DownloadTask extends Thread{
+
+		private File file;
+		private DataHandler dh;
+		private boolean downloaded = false;
+		private String dir;
+
+		public DownloadTask(DataHandler dh,  String dir) {
+			this.dh = dh;
+			this.dir = dir;
+		}
+
+		@Override
+		public void run() {
+			try {
+				file = dh.download(dir);
+			}catch (IOException e) {
+				e.printStackTrace();
+			}finally{
+				downloaded = true;
 			}
 
 		}
 
-	
+		boolean isFileDownloaded(){
+			return downloaded;
+		}
+
+		public File getFile() {
+			return file;
+		}
+	}
 
 }
