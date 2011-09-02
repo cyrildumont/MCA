@@ -32,6 +32,7 @@ public abstract class SPMDAgent<T extends DistributedData<?>, P extends DataPart
 	protected abstract Object program() throws Exception;
 	
 	protected void barrier(String name) throws MCASpaceException{
+		System.out.println("barrier [" + name + "]");
 		if (rank == 1)
 			computationCase.createBarrier(name);
 		computationCase.barrier(name, size);

@@ -172,6 +172,7 @@ public class DistributedData<E> extends Storable{
 	private File download(String name) throws MCASpaceException{
 		LogUtil.debug("Download file [" + name + "]  ...", getClass());
 		File file = computationCase.download(name, System.getProperty("temp.worker.download"));
+		LogUtil.debug("File [" + name + "]  downloaded", getClass());
 		return file;
 	}
 	

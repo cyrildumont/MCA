@@ -113,8 +113,8 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 		if (row >= m || row <= 0 || column >= n || column <= 0 ) throw new Exception();
 		int rowPartnumber = (int)Math.ceil(row / (double)rowPartSize);
 		int columnPartnumber = (int)Math.ceil(column / (double)columnPartSize);
-		int nbColumnParts = m%columnPartSize == 0 ?
-				m / columnPartSize : m / columnPartSize  + 1;
+		int nbColumnParts = n%columnPartSize == 0 ?
+				n / columnPartSize : n / columnPartSize  + 1;
 		int partNumber = columnPartnumber + (rowPartnumber-1) * nbColumnParts;
 		int rowLocal = row - ((rowPartnumber-1) * rowPartSize);
 		int columnLocal = column - ((columnPartnumber-1) * columnPartSize);
@@ -126,10 +126,10 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 
 	public Neighborhood<E> getNeighborhood(int part){
 		LogUtil.debug("Part [" + part + "] neighborhood :", getClass());
-		int nbColumnParts = m%columnPartSize == 0 ?
-				m / columnPartSize : m / columnPartSize  + 1;
-		int nbRowParts = n%rowPartSize == 0 ?
-				n / rowPartSize : n / rowPartSize  + 1;
+		int nbColumnParts = n%columnPartSize == 0 ?
+				n / columnPartSize : n / columnPartSize  + 1;
+		int nbRowParts = m%rowPartSize == 0 ?
+				m / rowPartSize : m / rowPartSize  + 1;
 		int nbParts = nbColumnParts * nbRowParts;
 		Neighborhood<E> neighborhood = new Neighborhood<E>();
 
@@ -155,8 +155,8 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 
 	@Override
 	protected void storeProperties(Element node) {
-		node.setAttribute("nbRows", this.n.toString());		
-		node.setAttribute("nbColumns", this.m.toString());
+		node.setAttribute("nbRows", this.m.toString());		
+		node.setAttribute("nbColumns", this.n.toString());
 		node.setAttribute("rowPartSize", rowPartSize.toString());
 		node.setAttribute("columnPartSize", columnPartSize.toString());
 	}
@@ -171,10 +171,10 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 
 	@Override
 	public int getNbParts() {
-		int nbColumnParts = m%columnPartSize == 0 ?
-				m / columnPartSize : m / columnPartSize  + 1;
-		int nbRowParts = n%rowPartSize == 0 ?
-				n / rowPartSize : n / rowPartSize  + 1;
+		int nbColumnParts = n%columnPartSize == 0 ?
+				n / columnPartSize : n / columnPartSize  + 1;
+		int nbRowParts = m%rowPartSize == 0 ?
+				m / rowPartSize : m / rowPartSize  + 1;
 		return nbColumnParts * nbRowParts;
 	}
 
@@ -190,8 +190,8 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 	protected void deployPart(int part, ComputationCase cc,
 			DataHandlerFactory factory) throws MCASpaceException {
 
-		int nbColumnParts = m%columnPartSize == 0 ?
-				m / columnPartSize : m / columnPartSize  + 1;
+		int nbColumnParts = n%columnPartSize == 0 ?
+				n / columnPartSize : n / columnPartSize  + 1;
 
 		int rowPart = (int)Math.ceil((double)part / nbColumnParts);
 		int row = ( rowPart -1) * rowPartSize;
