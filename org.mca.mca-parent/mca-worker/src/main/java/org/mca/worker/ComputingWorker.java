@@ -8,7 +8,6 @@ import java.rmi.RemoteException;
 import java.rmi.server.ExportException;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.security.auth.Subject;
@@ -20,7 +19,6 @@ import net.jini.core.discovery.LookupLocator;
 import net.jini.core.event.EventRegistration;
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.UnknownEventException;
-import net.jini.core.lookup.ServiceItem;
 import net.jini.core.lookup.ServiceRegistrar;
 import net.jini.core.lookup.ServiceTemplate;
 import net.jini.discovery.DiscoveryEvent;
@@ -30,11 +28,7 @@ import net.jini.export.Exporter;
 import net.jini.jeri.BasicILFactory;
 import net.jini.jeri.BasicJeriExporter;
 import net.jini.jeri.ssl.SslServerEndpoint;
-import net.jini.lease.LeaseRenewalManager;
 import net.jini.lookup.LookupCache;
-import net.jini.lookup.ServiceDiscoveryEvent;
-import net.jini.lookup.ServiceDiscoveryListener;
-import net.jini.lookup.ServiceDiscoveryManager;
 
 import org.apache.commons.io.FileUtils;
 import org.mca.agent.ComputeAgent;
@@ -305,12 +299,7 @@ public class ComputingWorker extends MCAComponent {
 		public void discarded(DiscoveryEvent event) {
 			ServiceRegistrar[] registrars = event.getRegistrars();
 			ServiceRegistrar registrar = registrars[0];
-			try {
-				LookupLocator locator = registrar.getLocator();
-				logger.fine("MCASpaceListener -- lookup discarded on [" + locator.getHost() + ":" + locator.getPort() + "]");
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}
+			logger.fine("MCASpaceListener -- lookup discarded on [" + registrar + "]");
 		}
 
 		@Override
