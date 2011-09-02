@@ -26,20 +26,11 @@ public class DataHandler extends Storable{
 	public File download(String dir) throws IOException{
 		String dest = dir + "/" + name +".dat";
 		final File file = new File(dest);
-		new Thread(new Runnable() {	
-			@Override
-			public void run(){
-				try {
-					FileOutputStream out = new FileOutputStream(file);
-					InputStream stream = getInputStream();
-					Util.copyStream(stream, out, 1024);
-					stream.close();
-					close();
-				}catch (IOException e) {
-					e.printStackTrace();
-				}	
-			}
-		}).start();
+		FileOutputStream out = new FileOutputStream(file);
+		InputStream stream = getInputStream();
+		Util.copyStream(stream, out, 1024);
+		stream.close();
+		close();
 		return file;
 	}
 
@@ -47,20 +38,11 @@ public class DataHandler extends Storable{
 	 * 
 	 * @param input
 	 */
-	public void upload(final InputStream input) throws IOException{
-		new Thread(new Runnable() {	
-			@Override
-			public void run(){
-				try {
-					OutputStream stream = getOutputStream();
-					Util.copyStream(input, stream);
-					stream.close();
-					close();
-				}catch (IOException e) {
-					e.printStackTrace();
-				}	
-			}
-		}).start();
+	public void upload(InputStream input) throws IOException{
+		OutputStream stream = getOutputStream();
+		Util.copyStream(input, stream);
+		stream.close();
+		close();
 	}
 
 	protected InputStream getInputStream(){return null;}

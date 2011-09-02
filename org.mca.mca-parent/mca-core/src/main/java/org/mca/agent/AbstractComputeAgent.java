@@ -4,34 +4,24 @@
 package org.mca.agent;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.rmi.Remote;
-import java.rmi.RemoteException;
-import java.rmi.server.ExportException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.jini.core.discovery.LookupLocator;
-import net.jini.core.entry.Entry;
 import net.jini.core.lookup.ServiceID;
-import net.jini.core.lookup.ServiceItem;
-import net.jini.core.lookup.ServiceRegistrar;
-import net.jini.export.Exporter;
-import net.jini.jeri.BasicILFactory;
-import net.jini.jeri.BasicJeriExporter;
-import net.jini.jeri.tcp.TcpServerEndpoint;
-import net.jini.lookup.entry.Name;
 
 import org.mca.entry.Property;
 import org.mca.javaspace.ComputationCase;
-import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.log.LogUtil;
 import org.mca.result.TaskVerifier;
 import org.mca.scheduler.Task;
-import org.mca.util.MCAUtils;
+
+import etm.core.configuration.BasicEtmConfigurator;
+import etm.core.configuration.EtmManager;
+import etm.core.monitor.EtmMonitor;
+import etm.core.monitor.EtmPoint;
+import etm.core.renderer.SimpleTextRenderer;
 
 /**
  * Classe abstraite définissant un ComputeAgent
@@ -42,10 +32,9 @@ import org.mca.util.MCAUtils;
  */
 public abstract class AbstractComputeAgent implements ComputeAgent{
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -9162142949499544555L;
+	private static final long serialVersionUID = 1L;
+
+	private static EtmMonitor monitor;
 
 	protected ComputationCase computationCase;
 
@@ -54,11 +43,22 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 	protected Map<String, String> properties = new HashMap<String, String>();
 
 	protected Object[] parameters;
-	
+
 	private ArrayList<Task> tasksToCheck = new ArrayList<Task>();
 
 	protected HashMap<String, Object> results;
+	
+	private boolean benchMode;
 
+	public AbstractComputeAgent() {
+		this(true);
+	}
+	
+	public AbstractComputeAgent(boolean benchMode) {
+		this.benchMode = benchMode;
+	}
+	
+	
 	final public Object compute(Task task) 	throws ComputeAgentException{
 		try{
 			this.task = task;
@@ -77,7 +77,14 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 			if (tasksToCheck.size() != 0) {
 				checkTasks();	
 			}
-			return execute();
+			if (benchMode) setup();
+			Object result= execute();
+			if (benchMode){
+				 monitor.render(new SimpleTextRenderer());
+				tearDown();
+			}
+			
+			return result;
 		}catch(Exception e){
 			e.printStackTrace();
 			throw new ComputeAgentException();
@@ -121,28 +128,32 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 		LogUtil.info("No precompute", getClass());
 	}
 
-
-	protected void shareData(String name, Remote data)
-	throws MalformedURLException, IOException, ClassNotFoundException,
-	ExportException, RemoteException {
-		LookupLocator lookup = new LookupLocator("jini://localhost");
-		ServiceRegistrar registrar = lookup.getRegistrar();
-		Entry[] entries = new Entry[]{new Name(name)};
-		Exporter exporter = 
-			new BasicJeriExporter(TcpServerEndpoint.getInstance(MCAUtils.getIP(),0), new BasicILFactory());
-		Remote remote = exporter.export(data);
-		ServiceItem item = new ServiceItem(null, remote, entries);
-		registrar.register(item, Long.MAX_VALUE);
-	}
-
-	protected File download(String name) throws MCASpaceException{
-		File file = computationCase.download(name, System.getProperty("temp.worker.download"));
-		return file;
-	}
-
 	protected File getTempFile(String name){
 		File file = new File(System.getProperty("temp.worker.result") + "/" + name);
 		return file;
 	}
 
+	/* Bench Methods */
+	
+	protected EtmPoint start(String pointName){
+		if (!benchMode) return null;
+		return monitor.createPoint(pointName);
+	}
+	
+	protected void stop(EtmPoint point){
+		if (benchMode) point.collect();
+	}
+
+	private static void setup() {
+		BasicEtmConfigurator.configure();
+		monitor = EtmManager.getEtmMonitor();
+		monitor.start();
+	}
+
+	private static void tearDown() {
+		monitor.stop();
+	}
+
+	/*
+	 * **********************************/
 }
