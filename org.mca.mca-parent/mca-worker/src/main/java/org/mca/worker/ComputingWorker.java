@@ -304,6 +304,11 @@ public class ComputingWorker extends MCAComponent {
 
 		@Override
 		public void discovered(DiscoveryEvent event) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
 			ServiceRegistrar[] registrars = event.getRegistrars();
 			ServiceRegistrar registrar = registrars[0];
 			try {
