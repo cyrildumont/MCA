@@ -30,6 +30,7 @@ import net.jini.jeri.ssl.SslServerEndpoint;
 import net.jini.space.AvailabilityEvent;
 import net.jini.space.JavaSpace05;
 
+import org.mca.entry.Barrier;
 import org.mca.entry.ComputationCaseState;
 import org.mca.entry.DataHandler;
 import org.mca.entry.DataHandlerFactory;
@@ -41,7 +42,7 @@ import org.mca.javaspace.ComputationCaseListener;
 import org.mca.javaspace.exceptions.EntryNotFoundException;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.log.LogUtil;
-import org.mca.math.Data;
+import org.mca.math.DistributedData;
 import org.mca.scheduler.Task;
 import org.mca.scheduler.TaskState;
 import org.mca.transaction.Transaction;
@@ -157,7 +158,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	}
 
 	@Override
-	public void addData(Data<?> data, DataHandlerFactory factory) throws MCASpaceException {
+	public void addData(DistributedData<?> data, DataHandlerFactory factory) throws MCASpaceException {
 		data.deploy(this, factory);
 		writeEntry(data, null);
 	}
@@ -177,7 +178,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	}
 
 	@Override
-	public DataHandler getDataHandler(String value) throws MCASpaceException {
+	public DataHandler getDataHandler(String name) throws MCASpaceException {
 		DataHandler dataTemplate = new DataHandler();
 		dataTemplate.name = name;
 		try {
@@ -231,7 +232,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		try {
 			Created created = TransactionFactory.create(transactionManager, LEASE_DURATION);
 			net.jini.core.transaction.Transaction t = created.transaction;
-			template = (State)takeEntry(template, t);
+			template = (State)takeEntry(template, t,Long.MAX_VALUE);
 			template.state = state;
 			writeEntry(template, t);
 			t.commit();
@@ -390,47 +391,48 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		logger.fine("ComputationCaseImpl -- Task [" + task.name + "] updated.");
 	}
 
-	/**
-	 * 
-	 * @author cyril
-	 *
-	 */
-	class LeaseRenewalTask extends Thread{
-
-		private Lease lease;
-		private boolean interrupt;
-
-		public LeaseRenewalTask(Lease lease) {
-			this.lease = lease;
+	@Override
+	public void barrier(String name, int nbWorker) throws MCASpaceException {
+		Barrier barrier = new Barrier(name, null);
+		barrier = (Barrier)takeEntry(barrier, null, Long.MAX_VALUE);	
+		barrier.increment();
+		writeEntry(barrier, null);
+		LogUtil.debug("[" + this.name + "] Barrier [" + name + "] waiting ...", getClass());
+		try {
+			barrier.counter = nbWorker;
+			readEntry(barrier, null, Lease.FOREVER);
+		} catch (EntryNotFoundException e) {
+			e.printStackTrace();
 		}
-
-		@Override
-		public void run() {
-			while(!interrupt){
-				try {
-					Thread.sleep(SLEEP_TIME);
-					logger.finest("LeaseRenewalTask -- Renew transaction lease");
-					lease.renew(LEASE_DURATION);
-				} catch (Exception e) {
-					interrupt = true;
-				}
-			}
-		}
-
-		@Override
-		public synchronized void interrupt() {
-			interrupt = true;
-			super.interrupt();
-		}
-
+		LogUtil.debug("[" + this.name + "] Barrier [" + name + "] OK", getClass());	
 	}
 
 	@Override
-	public <T extends Data<?>> T getData(String name, Class<T> formatClass) {
-		// TODO Auto-generated method stub
-		return null;
+	public void createBarrier(String name) throws MCASpaceException {
+		Barrier barrier = new Barrier(name, 0);
+		writeEntry(barrier, null);
+	}
+	
+	@Override
+	public void removeBarrier(String name) throws MCASpaceException {
+		Barrier barrier = new Barrier(name, null);
+		takeEntry(barrier, null);
 	}
 
+	@Override
+	public <T extends DistributedData<?>> T getData(String name) throws MCASpaceException {
+		DistributedData<?> template = new DistributedData(name);
+		try {
+			template = (T)readEntry(template, null);
+			template.setComputationCase(this);
+			return (T)template;
+		} catch (EntryNotFoundException e) {
+			return null;
+		}
+	}
+	
+
+	
 	@Override
 	public void notify(RemoteEvent event) throws UnknownEventException,
 	RemoteException {
@@ -443,6 +445,41 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			e.printStackTrace();
 		}
 	}
+		/**
+		 * 
+		 * @author cyril
+		 *
+		 */
+		class LeaseRenewalTask extends Thread{
 
+			private Lease lease;
+			private boolean interrupt;
+
+			public LeaseRenewalTask(Lease lease) {
+				this.lease = lease;
+			}
+
+			@Override
+			public void run() {
+				while(!interrupt){
+					try {
+						Thread.sleep(SLEEP_TIME);
+						logger.finest("LeaseRenewalTask -- Renew transaction lease");
+						lease.renew(LEASE_DURATION);
+					} catch (Exception e) {
+						interrupt = true;
+					}
+				}
+			}
+
+			@Override
+			public synchronized void interrupt() {
+				interrupt = true;
+				super.interrupt();
+			}
+
+		}
+
+	
 
 }
