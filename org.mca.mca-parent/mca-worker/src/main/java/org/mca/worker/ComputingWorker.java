@@ -372,7 +372,7 @@ public class ComputingWorker extends MCAComponent {
 		}
 
 		public void run() {
-			logger.finest("Worker -- MCASpaceEventListener started");
+			logger.fine("Worker -- MCASpaceEventListener started");
 			while (!interrupted) {
 				try{
 					Thread.sleep(1000);
@@ -460,7 +460,7 @@ public class ComputingWorker extends MCAComponent {
 				}
 				taskInProgress = task;
 			} catch (MCASpaceException e2) {
-				e2.printStackTrace();
+				logger.fine("Worker -- Impossible to get a new task to compute [" + computationCase.getName() + "]");	
 				try {
 					setComputationCaseFinish();
 				} catch (MCASpaceException e) {
@@ -521,7 +521,7 @@ public class ComputingWorker extends MCAComponent {
 
 
 		public void run() {
-			logger.finest("Worker -- ComputationCaseListener started");
+			logger.fine("Worker -- ComputationCaseListener started");
 			while (!interrupted) {
 				try{
 					Thread.sleep(1000);
