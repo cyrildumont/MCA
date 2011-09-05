@@ -30,6 +30,7 @@ public class DataHandler extends Storable{
 		InputStream stream = getInputStream();
 		Util.copyStream(stream, out, 1024);
 		stream.close();
+		out.close();
 		close();
 		return file;
 	}
