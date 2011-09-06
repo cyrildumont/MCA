@@ -27,7 +27,7 @@ public interface ComputationCase extends Serializable {
 
 	public void addTask(Task task) throws MCASpaceException;
 
-	public void addData(DistributedData<?> data, DataHandlerFactory factory) throws MCASpaceException;
+	public void addData(DistributedData<?> data,String name, DataHandlerFactory factory) throws MCASpaceException;
 
 	public void addDataHandler(DataHandler entry) throws MCASpaceException;
 

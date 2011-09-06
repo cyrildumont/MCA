@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 
 import org.mca.entry.DataHandler;
 import org.mca.entry.DataHandlerFactory;
@@ -35,15 +34,15 @@ public class DistributedVector<E> extends DistributedData<E> {
 	/** Constructor for JavaSpaces specification */
 	public DistributedVector() {}
 	
-	public DistributedVector(String name, DataFormat<E> format, E[] values, int partSize) {
-		super(name, format);
+	public DistributedVector(DataFormat<E> format, E[] values, int partSize) {
+		super(format);
 		this.size = values.length;
 		this.values = values;
 		this.partSize = partSize;
 	}
 	
-	public DistributedVector(String name, E[] values, int partSize) {
-		this(name, DEFAULT_VECTOR_FORMAT, values, partSize);
+	public DistributedVector(E[] values, int partSize) {
+		this(DEFAULT_VECTOR_FORMAT, values, partSize);
 	}
 	
 	public E get(int index) throws Exception{

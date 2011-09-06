@@ -55,12 +55,11 @@ public class DistributedData<E> extends Storable{
 	
 	public DistributedData() {}
 	
-	public DistributedData(String name) {
+	public DistributedData(String name){
 		this.name = name;
 	}
 	
-	public DistributedData(String name, DataFormat<E> format) {
-		this.name = name;
+	public DistributedData(DataFormat<E> format) {
 		this.format = format;
 	}
 	
@@ -68,6 +67,10 @@ public class DistributedData<E> extends Storable{
 		this.computationCase = computationCase;
 	}
 
+	public void setName(String name) {
+		this.name = name;
+	}
+	
 	/**
 	 * 
 	 * @param part

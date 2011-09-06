@@ -8,6 +8,8 @@ import java.io.OutputStream;
 import org.apache.commons.net.io.Util;
 import org.w3c.dom.Node;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 public class DataHandler extends Storable{
 
 	private static final long serialVersionUID = -2138412094431779435L;
@@ -46,10 +48,10 @@ public class DataHandler extends Storable{
 		close();
 	}
 
-	protected InputStream getInputStream(){return null;}
+	protected InputStream getInputStream(){throw new NotImplementedException();}
 
-	protected OutputStream getOutputStream(){return null;}
-
+	protected OutputStream getOutputStream(){throw new NotImplementedException();}
+	
 	protected void close(){}
 
 	@Override

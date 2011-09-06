@@ -8,7 +8,6 @@ import java.rmi.RemoteException;
 import java.util.Collection;
 
 import net.jini.core.event.EventRegistration;
-import net.jini.core.event.RemoteEventListener;
 
 import org.mca.javaspace.exceptions.MCASpaceException;
 

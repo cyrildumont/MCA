@@ -13,6 +13,7 @@ import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
 import net.jini.core.lookup.ServiceItem;
 import net.jini.core.lookup.ServiceRegistrar;
+import net.jini.lookup.JoinManager;
 
 import org.mca.agent.exception.DeployException;
 import org.mca.log.LogUtil;
@@ -25,27 +26,24 @@ public class ComputeAgentDeployer {
 	private static final String COMPONENT_NAME = "org.mca.core.deployer.agent";
 
 	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
-	
+
 	/**
 	 * 
 	 * @param file
 	 */
 	public void deploy(String file) throws DeployException{
 		ApplicationContext context = new FileSystemXmlApplicationContext("file:" + file);
-		ServiceConfigurator serviceConfigurator = context.getBean("service",ServiceConfigurator.class);
-
+		AgentDescriptor serviceConfigurator = context.getBean("service",AgentDescriptor.class);
 		deploy(serviceConfigurator);
-
-
 	}
 
 	/**
 	 * 
 	 * @param config
 	 */
-	public void deploy(ServiceConfigurator config){
+	public void deploy(AgentDescriptor config){
 		try{
-			LookupLocator[] llc = config.getLookupLocators();
+			LookupLocator lookup = config.getLookupLocator();
 			Entry[] entries = config.getEntries();
 			String sClassAgent = config.getImplClass(); 
 			Class<?> classAgent = Class.forName(sClassAgent);
@@ -56,12 +54,10 @@ public class ComputeAgentDeployer {
 				nativeAgent.setByteCode(config.getByteCode());
 			}
 			ServiceItem item = new ServiceItem(null, agent, entries);
-			for (LookupLocator lookup : llc) {
-				logger.info("deploy on [" + lookup.getHost() + ":" + lookup.getPort() + "]" );
-				ServiceRegistrar registrar = lookup.getRegistrar();
-				registrar.register(item, Long.MAX_VALUE);
-			}
-		
+			logger.info("deploy on [" + lookup.getHost() + ":" + lookup.getPort() + "]" );
+			ServiceRegistrar registrar = lookup.getRegistrar();
+			registrar.register(item, Long.MAX_VALUE);
+
 		}catch (Exception e) {
 			logger.warning(e.getClass().getName() +" : " + e.getMessage());
 			e.printStackTrace();
@@ -89,14 +85,13 @@ public class ComputeAgentDeployer {
 					new PrivilegedExceptionAction(){
 						public Object run() throws Exception {
 							ApplicationContext context = new FileSystemXmlApplicationContext("file:" + file);
-							ServiceConfigurator serviceConfigurator = context.getBean("agent",ServiceConfigurator.class);
+							AgentDescriptor serviceConfigurator = context.getBean("agent",AgentDescriptor.class);
 
 							RMISecurityManager securityManager = new RMISecurityManager();
 							System.setProperty("java.rmi.server.codebase", serviceConfigurator.getCodebaseFormate());
-							System.setProperty("java.security.policy", serviceConfigurator.getPolicy());
 							System.setSecurityManager(securityManager);
 							logger.info("Deploy " + serviceConfigurator.getName() + " Agent.");
-							
+
 							ComputeAgentDeployer deployer = new ComputeAgentDeployer();
 							deployer.deploy(serviceConfigurator);
 							logger.info(serviceConfigurator.getName() + " Agent deployed.");

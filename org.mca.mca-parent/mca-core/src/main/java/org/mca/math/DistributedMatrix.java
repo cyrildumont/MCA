@@ -54,27 +54,25 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 
 	/** Constructor for JavaSpaces specification */
 	public DistributedMatrix() {
-		super(null,null);
-
 	}
 
-	public DistributedMatrix(String name, DataFormat<E> format,
+	public DistributedMatrix(DataFormat<E> format,
 			Dimension dimension, Dimension partDimension) {
-		super(name, format);
+		super(format);
 		this.m = dimension.getHeight();
 		this.n = dimension.getWidth();
 		this.rowPartSize = partDimension.getHeight();
 		this.columnPartSize = partDimension.getWidth();
 	}
 
-	public DistributedMatrix(String name,Dimension dimension, 
+	public DistributedMatrix(Dimension dimension, 
 			Dimension partDimension) {
-		this(name,DEFAULT_MATRIX_FORMAT,dimension, partDimension);
+		this(DEFAULT_MATRIX_FORMAT,dimension, partDimension);
 	}
 
-	public DistributedMatrix(String name,E[][] values, 
+	public DistributedMatrix(E[][] values, 
 			Dimension partDimension) {
-		super(name,DEFAULT_MATRIX_FORMAT);
+		super(DEFAULT_MATRIX_FORMAT);
 		m = values.length;
 		n = values[0].length;
 		this.rowPartSize = partDimension.getHeight();
