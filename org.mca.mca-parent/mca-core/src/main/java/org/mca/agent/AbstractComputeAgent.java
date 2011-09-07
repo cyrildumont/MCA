@@ -17,12 +17,6 @@ import org.mca.log.LogUtil;
 import org.mca.result.TaskVerifier;
 import org.mca.scheduler.Task;
 
-import etm.core.configuration.EtmManager;
-import etm.core.configuration.XmlEtmConfigurator;
-import etm.core.monitor.EtmMonitor;
-import etm.core.monitor.EtmPoint;
-import etm.core.renderer.SimpleTextRenderer;
-
 /**
  * Classe abstraite définissant un ComputeAgent
  * 
@@ -33,10 +27,6 @@ import etm.core.renderer.SimpleTextRenderer;
 public abstract class AbstractComputeAgent implements ComputeAgent{
 
 	private static final long serialVersionUID = 1L;
-
-	private static final String JETM_CONFIG_FILE = System.getProperty("mca.home") + "/conf/jetm-config.xml";
-
-	private static EtmMonitor monitor;
 
 	protected ComputationCase computationCase;
 
@@ -50,16 +40,8 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 
 	protected HashMap<String, Object> results;
 	
-	private boolean benchMode;
-
 	public AbstractComputeAgent() {
-		this(true);
 	}
-	
-	public AbstractComputeAgent(boolean benchMode) {
-		this.benchMode = benchMode;
-	}
-	
 	
 	final public Object compute(Task task) 	throws ComputeAgentException{
 		try{
@@ -79,13 +61,7 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 			if (tasksToCheck.size() != 0) {
 				checkTasks();	
 			}
-			if (benchMode) setup();
 			Object result= execute();
-			if (benchMode){
-				 monitor.render(new SimpleTextRenderer());
-				tearDown();
-			}
-			
 			return result;
 		}catch(Exception e){
 			e.printStackTrace();
@@ -135,30 +111,4 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 		return file;
 	}
 
-	/*
-	 * ************ Bench Methods **************
-	 */
-	
-	protected EtmPoint start(String pointName){
-		if (!benchMode) return null;
-		return monitor.createPoint(pointName);
-	}
-	
-	protected void stop(EtmPoint point){
-		if (benchMode) point.collect();
-	}
-
-	private static void setup() {
-		XmlEtmConfigurator.configure(new File(JETM_CONFIG_FILE));
-		monitor = EtmManager.getEtmMonitor();
-		monitor.start();
-	}
-
-	private static void tearDown() {
-		monitor.stop();
-	}
-
-	/*
-	 * *********************************
-	 */
 }

@@ -13,11 +13,9 @@ import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
 import net.jini.core.lookup.ServiceItem;
 import net.jini.core.lookup.ServiceRegistrar;
-import net.jini.lookup.JoinManager;
 
 import org.mca.agent.exception.DeployException;
 import org.mca.log.LogUtil;
-import org.mca.service.ServiceConfigurator;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
