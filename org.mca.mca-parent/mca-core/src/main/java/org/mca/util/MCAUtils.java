@@ -7,10 +7,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
-import net.jini.constraint.BasicMethodConstraints;
-import net.jini.core.constraint.Integrity;
-import net.jini.core.constraint.InvocationConstraint;
-import net.jini.core.constraint.InvocationConstraints;
 import net.jini.core.constraint.MethodConstraints;
 import net.jini.export.Exporter;
 import net.jini.jeri.BasicILFactory;
@@ -78,19 +74,14 @@ public abstract class MCAUtils {
 		ServerEndpoint serviceEndpoint = null;
 		MethodConstraints serviceConstraints = null;
 
-		String ssl = System.getProperty(SSL_SYSTEM_PROPERTY);
 
-		if(ssl == null || "0".equals(ssl)){
-			serviceEndpoint = TcpServerEndpoint.getInstance(MCAUtils.getIP(),0);
-		}else{
-			serviceEndpoint = SslServerEndpoint.getInstance(MCAUtils.getIP(),0);
-//			serviceConstraints = 
-//				new BasicMethodConstraints(
-//						new InvocationConstraints(
-//								new InvocationConstraint[]{Integrity.YES}, null
-//						)
-//				);
-		}
+		serviceEndpoint = SslServerEndpoint.getInstance(MCAUtils.getIP(),0);
+		//			serviceConstraints = 
+		//				new BasicMethodConstraints(
+		//						new InvocationConstraints(
+		//								new InvocationConstraint[]{Integrity.YES}, null
+		//						)
+		//				);
 
 		BasicILFactory 	serviceILFactory =
 			new BasicILFactory(serviceConstraints, permissionClass);
