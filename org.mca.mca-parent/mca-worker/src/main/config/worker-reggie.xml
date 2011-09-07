@@ -21,7 +21,7 @@
 		<property name="serverConfigArgs" value="${mca.home}/conf/worker.config" />
 		<property name="classpath">
 			<list>
-				<value>${mca.home}/lib/reggie-2.1.1.jar</value>
+				<value>${mca.home}/lib/reggie.jar</value>
 			</list>
 		</property>
 	</bean>

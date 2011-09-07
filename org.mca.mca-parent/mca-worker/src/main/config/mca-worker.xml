@@ -8,6 +8,7 @@
 	</bean>
 	
   	<bean id="component" class="org.mca.worker.ComputingWorker">
+		<constructor-arg value="true" />
   	</bean>	
 	
 	<!-- JMX -->
