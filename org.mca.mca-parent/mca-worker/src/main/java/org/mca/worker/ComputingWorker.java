@@ -45,6 +45,7 @@ import org.mca.scheduler.Task;
 import org.mca.scheduler.TaskState;
 import org.mca.service.ServiceConfigurator;
 import org.mca.service.ServiceStarter;
+import org.mca.util.BenchUtil;
 import org.mca.util.MCAUtils;
 import org.mca.worker.exception.AgentNotFoundException;
 import org.springframework.context.ApplicationContext;
@@ -102,8 +103,11 @@ public class ComputingWorker extends MCAComponent {
 
 	public boolean signalStop = false;
 	public boolean signalFinish = false;
+	
+	private boolean benchMode;
 
-	public ComputingWorker() throws Exception {
+	public ComputingWorker(boolean benchMode) throws Exception {
+		this.benchMode = benchMode;
 		loginContext = new LoginContext("org.mca.Worker");
 		loginContext.login();
 		try {
@@ -120,7 +124,10 @@ public class ComputingWorker extends MCAComponent {
 			e.printStackTrace();
 			throw new Error();
 		}
-
+	}
+	
+	public ComputingWorker() throws Exception{
+		this(false);
 	}
 
 	/**
@@ -128,6 +135,10 @@ public class ComputingWorker extends MCAComponent {
 	 */
 	private void init() {
 		try {
+			if(benchMode){
+				BenchUtil.activateBench(true);
+				logger.fine("Bench Mode activated.");
+			}
 			String tmpDir = System.getProperty("mca.home") + "/work/" + hostname;
 			System.setProperty("mca.worker.dir", tmpDir);
 			File dirResult = new File(tmpDir + "/result");
@@ -572,4 +583,6 @@ public class ComputingWorker extends MCAComponent {
 		}
 	}
 
+
+	
 }
