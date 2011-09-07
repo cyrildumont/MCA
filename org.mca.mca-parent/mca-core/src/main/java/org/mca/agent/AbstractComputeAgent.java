@@ -17,8 +17,8 @@ import org.mca.log.LogUtil;
 import org.mca.result.TaskVerifier;
 import org.mca.scheduler.Task;
 
-import etm.core.configuration.BasicEtmConfigurator;
 import etm.core.configuration.EtmManager;
+import etm.core.configuration.XmlEtmConfigurator;
 import etm.core.monitor.EtmMonitor;
 import etm.core.monitor.EtmPoint;
 import etm.core.renderer.SimpleTextRenderer;
@@ -33,6 +33,8 @@ import etm.core.renderer.SimpleTextRenderer;
 public abstract class AbstractComputeAgent implements ComputeAgent{
 
 	private static final long serialVersionUID = 1L;
+
+	private static final String JETM_CONFIG_FILE = System.getProperty("mca.home") + "/conf/jetm-config.xml";
 
 	private static EtmMonitor monitor;
 
@@ -133,7 +135,9 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 		return file;
 	}
 
-	/* Bench Methods */
+	/*
+	 * ************ Bench Methods **************
+	 */
 	
 	protected EtmPoint start(String pointName){
 		if (!benchMode) return null;
@@ -145,7 +149,7 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 	}
 
 	private static void setup() {
-		BasicEtmConfigurator.configure();
+		XmlEtmConfigurator.configure(new File(JETM_CONFIG_FILE));
 		monitor = EtmManager.getEtmMonitor();
 		monitor.start();
 	}
@@ -155,5 +159,6 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 	}
 
 	/*
-	 * **********************************/
+	 * *********************************
+	 */
 }

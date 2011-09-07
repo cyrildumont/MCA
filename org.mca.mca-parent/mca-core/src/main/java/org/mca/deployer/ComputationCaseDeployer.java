@@ -4,6 +4,7 @@ import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -84,42 +85,11 @@ public abstract class ComputationCaseDeployer {
 	@ManagedOperation
 	public ComputationCase deploy(String hostOfSpace) throws MCASpaceException{
 		logger.info(" *************** DEPLOY COMPUTATION CASE *********************");
-		this.hostOfSpace = hostOfSpace;
-		System.setSecurityManager(new RMISecurityManager());
-		try {
-			LoginContext loginContext = new LoginContext("org.mca.Master");
-			loginContext.login();
-			Subject.doAsPrivileged(loginContext.getSubject(), 	
-					new PrivilegedExceptionAction() {
-				@Override
-				public Object run() throws Exception {
-					deploy();
-					return null;
-				}
-			}, null);
-		} catch (LoginException e) {
-			e.printStackTrace();
-			throw new MCASpaceException();
-		} catch (PrivilegedActionException e) {
-			e.printStackTrace();
-			throw new MCASpaceException();
-		}
-
-		return computationCase;
-	}
-
-	
-	protected void init(){
-		logger.fine("no initialization needed.");
-	}
-	
-	private void deploy() throws MCASpaceException{
 		init();
 		initSpace(hostOfSpace);
 		deployCase();
 		try {
 			deployProperties();
-			deployAgents();
 			deployData();
 			deployTasks();
 		} catch (Exception e) {
@@ -130,17 +100,12 @@ public abstract class ComputationCaseDeployer {
 				e1.printStackTrace();
 			}
 		}
-	}	
+		return computationCase;
+	}
 
-
-
-	private void deployAgents() {
-		ComputeAgentDeployer deployer = new ComputeAgentDeployer();
-		for (AgentDescriptor descriptor : agents) {
-			changeCodebase(descriptor.getCodebaseFormate());
-			deployer.deploy(descriptor);
-			logger.info("[" + descriptor.getName() + "] Agent deployed.");
-		}
+	
+	protected void init(){
+		logger.fine("no initialization needed.");
 	}
 
 	protected abstract void deployTasks() throws MCASpaceException;
@@ -190,7 +155,6 @@ public abstract class ComputationCaseDeployer {
 		Options options = new Options();
 		options.addOption("f", true, "descriptor file");
 		options.addOption("h", true, "host of the MCASpace");
-
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = null;
 		try {
@@ -200,16 +164,39 @@ public abstract class ComputationCaseDeployer {
 			System.exit(1);
 		}
 
-		String configFile = cmd.getOptionValue("f");
-		if (configFile == null)
-			configFile = DEFAULT_CONFIG_FILE;
+		final String configFile = 
+			cmd.getOptionValue("f") != null ? cmd.getOptionValue("f") : DEFAULT_CONFIG_FILE;
 
 
-		String hostOfSpace = cmd.getOptionValue("h");
-		if (hostOfSpace == null)
-			hostOfSpace = DEFAULT_HOST_SPACE;
+		final String hostOfSpace = 
+			cmd.getOptionValue("h") != null ? cmd.getOptionValue("h") : DEFAULT_HOST_SPACE;
+		
+		try {
+			LoginContext loginContext = new LoginContext("org.mca.Master");
+			loginContext.login();
+			Subject.doAsPrivileged(loginContext.getSubject(), 	
+					new PrivilegedExceptionAction() {
+				@Override
+				public Object run() throws Exception {
+					deploy(configFile,hostOfSpace);
+					return null;
+				}
+			}, null);
+		} catch (LoginException e) {
+			e.printStackTrace();
+		} catch (PrivilegedActionException e) {
+			e.printStackTrace();
+		}
+		
 
+
+	}
+	
+	private static void deploy(String configFile, String hostOfSpace) {
 		ApplicationContext context = new  FileSystemXmlApplicationContext("file:" + configFile);
+		
+		Map<String, AgentDescriptor> agents = context.getBeansOfType(AgentDescriptor.class);
+		deployAgents(agents.values());
 		ComputationCaseDeployer deployer = (ComputationCaseDeployer)context.getBean("deployer");
 		try {
 			deployer.deploy(hostOfSpace);
@@ -217,7 +204,15 @@ public abstract class ComputationCaseDeployer {
 			e.printStackTrace();
 			System.exit(-1);
 		}
-
+		
+	}
+	private static void deployAgents(Collection<AgentDescriptor> descriptors) {
+		ComputeAgentDeployer deployer = new ComputeAgentDeployer();
+		for (AgentDescriptor descriptor : descriptors) {
+			changeCodebase(descriptor.getCodebaseFormate());
+			deployer.deploy(descriptor);
+			logger.info("[" + descriptor.getName() + "] Agent deployed.");
+		}
 	}
 	
 	private static void changeCodebase(String codebase){

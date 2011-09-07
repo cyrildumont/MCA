@@ -24,6 +24,10 @@ public abstract class MCAComponent extends NotificationBroadcasterSupport implem
 	
 	protected JMXConnector connector;
 	
+	public void setSsl(boolean ssl) {
+		System.setProperty("org.mca.ssl", ssl ? "1" : "0");
+	}
+	
 	public MCAComponent() {
 		this.hostname = MCAUtils.getIP();
 		this.connector = MBeanUtil.createJMXConnector();
