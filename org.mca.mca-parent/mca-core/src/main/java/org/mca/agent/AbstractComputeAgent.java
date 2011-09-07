@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import net.jini.core.lookup.ServiceID;
 
@@ -28,6 +29,10 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 
 	private static final long serialVersionUID = 1L;
 
+	private static final String COMPONENT_NAME = "org.mca.agent.ComputeAgent";
+
+	protected static final Logger logger = Logger.getLogger(COMPONENT_NAME);
+	
 	protected ComputationCase computationCase;
 
 	protected Task task;
@@ -51,11 +56,11 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 			for (Property mcaProperty : props) {
 				properties.put(mcaProperty.name, mcaProperty.value);
 			}
-			LogUtil.debug("[JacobiAgent][" + computationCase.getName() + "] ", getClass());
-			LogUtil.debug("[JacobiAgent]" +
-					"[" + computationCase.getName() + "] : " + properties.size() + " properties", getClass());
+			logger.fine("AbstractComputeAgent -- Computation Case [" + computationCase.getName() + "] ");
+			logger.fine("AbstractComputeAgent -- " +
+					"[" + computationCase.getName() + "] : " + properties.size() + " properties");
 			for (Map.Entry<String, String> property : properties.entrySet()) {
-				LogUtil.debug(" \t " + property.getKey() + " = " + property.getValue(), getClass());
+				logger.fine(" \t " + property.getKey() + " = " + property.getValue());
 			}
 			preCompute();
 			if (tasksToCheck.size() != 0) {
@@ -71,7 +76,7 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 
 
 	final public void serviceIDNotify(ServiceID serviceID) {
-		LogUtil.info("Agent [ID=" + serviceID.toString() + "] is deployed", getClass());
+		logger.fine("Agent [ID=" + serviceID.toString() + "] is deployed");
 		System.exit(1);
 	}
 
@@ -103,7 +108,7 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 	 * 
 	 */
 	protected void preCompute(){
-		LogUtil.info("No precompute", getClass());
+		logger.fine("AbstractComputeAgent -- No precompute");
 	}
 
 	protected File getTempFile(String name){
