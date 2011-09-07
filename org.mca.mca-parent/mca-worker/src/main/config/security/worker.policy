@@ -45,7 +45,7 @@ grant {
 	permission java.io.FilePermission "${mca.home}/lib/*","read";
 	permission java.io.FilePermission "${mca.home}/conf/-","read";
 	permission java.io.FilePermission "${mca.home}/work","read,write";
-	permission java.io.FilePermission "${mca.home}/work/-","read,write";
+	permission java.io.FilePermission "${mca.home}/work/-","read,write,delete";
 
 	permission java.util.PropertyPermission "mca.home","read";
 	permission java.util.PropertyPermission "org.apache.commons.logging.LogFactory.HashtableImpl","read";
