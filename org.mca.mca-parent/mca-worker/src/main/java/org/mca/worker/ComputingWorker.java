@@ -481,7 +481,7 @@ public class ComputingWorker extends MCAComponent {
 			}
 			setState(ComputeWorkerState.RUNNING);	
 			try {
-				ComputeAgent agent = agentListener.getAgent(taskInProgress.computing_agent_name);
+				ComputeAgent agent = agentListener.getAgent(taskInProgress.compute_agent_url);
 				agent.setCase(computationCase);
 				logger.fine("Worker -- [" + computationCase.getName() + "] [" + taskInProgress.name + "] Computing ....");
 				taskInProgress.result = agent.compute(taskInProgress);
@@ -494,7 +494,7 @@ public class ComputingWorker extends MCAComponent {
 				taskInProgress.message = e.getMessage();
 				taskInProgress.setState(TaskState.ON_ERROR);
 			}catch (AgentNotFoundException e1) {
-				logger.warning("Agent [" + taskInProgress.computing_agent_name + "] not found");
+				logger.warning("Agent [" + taskInProgress.compute_agent_url + "] not found");
 				taskInProgress.setState(TaskState.ON_ERROR);
 				taskInProgress.message = e1.getMessage();
 			}finally{
