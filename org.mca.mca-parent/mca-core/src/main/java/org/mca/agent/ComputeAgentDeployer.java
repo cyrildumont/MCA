@@ -41,6 +41,8 @@ public class ComputeAgentDeployer {
 	 */
 	public void deploy(AgentDescriptor config){
 		try{
+			
+			System.setProperty("java.rmi.server.codebase",config.getCodebaseFormate());
 			LookupLocator lookup = config.getLookupLocator();
 			Entry[] entries = config.getEntries();
 			String sClassAgent = config.getImplClass(); 
