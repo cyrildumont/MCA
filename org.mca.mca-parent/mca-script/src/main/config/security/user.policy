@@ -1,0 +1,32 @@
+
+grant {
+
+	permission java.net.SocketPermission "*","connect,accept,resolve";
+
+	permission java.lang.RuntimePermission "accessClassInPackage.*";
+	permission java.lang.RuntimePermission "createSecurityManager" ;
+	permission java.lang.RuntimePermission "getProtectionDomain";
+	permission java.lang.RuntimePermission "modifyThreadGroup" ;
+	permission java.lang.RuntimePermission "getClassLoader";
+	permission java.lang.RuntimePermission "modifyThread";
+	permission java.lang.RuntimePermission "setContextClassLoader";
+
+	permission com.sun.jini.thread.ThreadPoolPermission "getSystemThreadPool";
+	permission com.sun.jini.thread.ThreadPoolPermission "getUserThreadPool";
+
+	permission java.security.SecurityPermission "getDomainCombiner";
+	permission java.security.SecurityPermission "createAccessControlContext";	
+
+	permission javax.security.auth.AuthPermission "getSubject";
+	permission net.jini.security.AuthenticationPermission 
+		"javax.security.auth.x500.X500Principal \"*\" javax.security.auth.x500.X500Principal \"*\" ","connect,accept";
+
+	permission net.jini.security.GrantPermission "java.security.AllPermission \"<all permissions>\", \"<all actions>\"";
+
+	permission java.util.PropertyPermission "mca.home","read";
+	permission java.io.FilePermission "${mca.home}/work/-","read,write,delete";
+	permission java.io.FilePermission "${mca.home}/work/-","read,write,delete";
+	permission java.io.FilePermission "${mca.home}/cases/-","read,write,delete";
+
+};
+
