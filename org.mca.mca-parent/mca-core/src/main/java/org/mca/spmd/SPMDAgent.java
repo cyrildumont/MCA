@@ -18,7 +18,7 @@ public abstract class SPMDAgent<T extends DistributedData<?>, P extends DataPart
 	@Override
 	final protected Object execute() throws Exception {
 		rank = (Integer)parameters[0];
-		input = computationCase.getData(SPMD.INPUT_NAME);
+		input = computationCase.<T>getData(SPMD.INPUT_NAME);
 		size = input.getNbParts();
 		part = (P)input.load(rank);
 		Object result = program();

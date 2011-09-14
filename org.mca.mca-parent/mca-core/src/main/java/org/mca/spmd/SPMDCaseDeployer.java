@@ -31,13 +31,11 @@ public abstract class SPMDCaseDeployer extends ComputationCaseDeployer {
 	
 	@Override
 	protected void deployTasks() throws MCASpaceException {
-		String computeAgentName = program.getURL();
+		String computeAgentURL = program.getURL();
 		for (int i = 1; i <= input.getNbParts(); i++) {
-			Task t = new Task();
-			t.name =  projectName + "-" + i;
-			t.state = TaskState.WAIT_FOR_COMPUTE;
+			String name =  projectName + "-" + i;
+			Task t = new Task(name, computeAgentURL);
 			t.parameters = new Object[]{i};
-			t.computing_agent_name = computeAgentName;
 			addTask(t);
 		}
 	}
