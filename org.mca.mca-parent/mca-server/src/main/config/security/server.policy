@@ -11,9 +11,9 @@ grant {
 	permission java.lang.RuntimePermission "modifyThread";
 	permission java.lang.RuntimePermission "setContextClassLoader";
 	permission java.lang.RuntimePermission "createClassLoader";
-	permission java.lang.RuntimePermission "accessClassInPackage.sun.reflect";
-	permission java.lang.RuntimePermission "accessClassInPackage.sun.security.provider";
+	permission java.lang.RuntimePermission "accessClassInPackage.*";
 	permission java.lang.RuntimePermission "setSecurityManager";	
+	permission java.lang.RuntimePermission "accessDeclaredMembers";
 
 	permission com.sun.jini.thread.ThreadPoolPermission "getSystemThreadPool";
 	permission com.sun.jini.thread.ThreadPoolPermission "getUserThreadPool";
@@ -40,6 +40,7 @@ grant {
 		"javax.security.auth.x500.X500Principal \"*\" javax.security.auth.x500.X500Principal \"*\" ","connect,accept";
 		
 	permission com.sun.jini.discovery.internal.EndpointInternalsPermission "set";
+	permission net.jini.export.ExportPermission "*";
 	
 	permission net.jini.io.context.ContextPermission "net.jini.io.context.ClientSubject.getClientSubject";
 
@@ -53,33 +54,54 @@ grant {
 
 	permission java.io.FilePermission "${mca.home}/lib","read";
 	permission java.io.FilePermission "${mca.home}/lib/*","read";
-	permission java.io.FilePermission "${mca.home}/conf/*","read";
-	permission java.io.FilePermission "${mca.home}/lib/outrigger.jar;${mca.home}/lib/sun-util.jar;${mca.home}/lib/mca-core.jar;","read";
+	permission java.io.FilePermission "${mca.home}/conf/-","read";
 	permission java.io.FilePermission "${mca.home}/data/*","read,write";
+	permission java.io.FilePermission "${mca.home}/codebase/*","read";
+	permission java.io.FilePermission "${mca.home}/codebase","read";
+	permission java.io.FilePermission "${mca.home}/work/-","read,write,delete";
+	permission java.io.FilePermission "${mca.home}/cases/-","read,write,delete";
 
 	permission javax.management.MBeanServerPermission "createMBeanServer";
 	permission javax.management.MBeanPermission "*","registerMBean";
 	permission javax.management.MBeanTrustPermission "register";
+
+	permission net.jini.discovery.DiscoveryPermission "*";
 };
 
 grant principal "server"{
+	permission com.sun.jini.reggie.RegistrarPermission "lookup";
 	permission com.sun.jini.reggie.RegistrarPermission "register";
 	permission com.sun.jini.reggie.RegistrarPermission "notify";
 	permission com.sun.jini.reggie.RegistrarPermission "addAttributes";
 	permission com.sun.jini.reggie.RegistrarPermission "renewServiceLease";	
+	permission com.sun.jini.outrigger.OutriggerPermission "*";
 };
 
 grant principal "master"{
 	permission com.sun.jini.reggie.RegistrarPermission "lookup";
 	permission org.mca.security.MCASpacePermission "addCase";
+	permission org.mca.security.MCASpacePermission "removeCase";
+	permission com.sun.jini.reggie.RegistrarPermission "register";
+	permission com.sun.jini.outrigger.OutriggerPermission "write";
+	permission com.sun.jini.outrigger.OutriggerPermission "read";
+	permission com.sun.jini.outrigger.OutriggerPermission "take";
+	permission com.sun.jini.outrigger.OutriggerPermission "getAdmin";
+	permission com.sun.jini.outrigger.OutriggerPermission "contents";
 };
 
 grant principal "worker"{
 	permission com.sun.jini.reggie.RegistrarPermission "lookup";
 	permission com.sun.jini.reggie.RegistrarPermission "notify";
+	permission com.sun.jini.reggie.RegistrarPermission "getLocator";
 	permission com.sun.jini.reggie.RegistrarPermission "renewEventLease";
 	permission org.mca.security.MCASpacePermission "register";
 	permission org.mca.security.MCASpacePermission "getCase";
+	permission com.sun.jini.outrigger.OutriggerPermission "write";
+	permission com.sun.jini.outrigger.OutriggerPermission "read";
+	permission com.sun.jini.outrigger.OutriggerPermission "take";
+	permission com.sun.jini.outrigger.OutriggerPermission "registerForAvailabilityEvent";	
+	permission com.sun.jini.outrigger.OutriggerPermission "getAdmin";
+	permission com.sun.jini.outrigger.OutriggerPermission "contents";
 };
 
 grant principal "admin"{

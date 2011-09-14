@@ -19,17 +19,24 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 public class Server extends MCAComponent {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private static final String SERVICE_REGGIE = "reggie";
 	private static final String SERVICE_TRANSACTION = "transaction";
 
 	private static final String MCASPACE_AGENT = "MCASpace";
 
 	private static final String FILE_SERVICES = System.getProperty("mca.home") + "/conf/services.xml";
+
+
+	private boolean codebase;
 	
 	private ApplicationContext context;
 	private LoginContext loginContext;
-	
+
+	public void setCodebase(boolean codebase) {
+		this.codebase = codebase;
+	}
+
 	public void start() throws Exception{
 		loginContext = new LoginContext("org.mca.Server");
 		loginContext.login();
@@ -52,20 +59,21 @@ public class Server extends MCAComponent {
 	}
 
 	private void init() {
-		 if (System.getSecurityManager() == null) {
-	            System.setSecurityManager(new RMISecurityManager());
-	        }
+		if (System.getSecurityManager() == null) {
+			System.setSecurityManager(new RMISecurityManager());
+		}
 
-	        context = new FileSystemXmlApplicationContext("file:" + FILE_SERVICES);
-	        startService(SERVICE_REGGIE);
-	        try {
-	        	LookupLocator locator = new LookupLocator(MCAUtils.getIP(),4160);
-				startAllServices();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}	
+		context = new FileSystemXmlApplicationContext("file:" + FILE_SERVICES);
+		CodebaseServer codebaseServer = context.getBean("codebase", CodebaseServer.class);
+		codebaseServer.start();
+		startService(SERVICE_REGGIE);
+		try {
+			startAllServices();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}	
 	}
-	
+
 	protected void startAllServices() {
 		startService(SERVICE_TRANSACTION);
 		startService(MCASPACE_AGENT);

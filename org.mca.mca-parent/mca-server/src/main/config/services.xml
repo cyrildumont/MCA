@@ -16,10 +16,22 @@
 		</property>
 		<property name="implClass" value="com.sun.jini.reggie.TransientRegistrarImpl" />
 		<property name="policy" value="${mca.home}/conf/security/server.policy" />
-		<property name="serverConfigArgs" value="${mca.home}/conf/transient-reggie.config" />
+		<property name="serverConfigArgs" value="${mca.home}/conf/mcaspace.config" />
 		<property name="classpath">
 			<list>
-				<value>${mca.home}/lib/reggie.jar</value>
+				<value>${mca.home}/lib/reggie-2.1.1.jar</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="codebase" class="org.mca.server.CodebaseServer">
+		<property name="port" value="8080" />
+		<property name="stoppable" value="true" />
+		<property name="verbose" value="false" />
+		<property name="trees" value="true" />
+		<property name="dirs">
+			<list>
+				<value>${mca.home}/codebase</value>
 			</list>
 		</property>
 	</bean>
@@ -33,10 +45,10 @@
 		<property name="implClass"
 			value="com.sun.jini.mahalo.TransientMahaloImpl" />
 		<property name="policy" value="${mca.home}/conf/security/server.policy" />
-		<property name="serverConfigArgs" value="${mca.home}/conf/persistent_mahalo.config" />
+		<property name="serverConfigArgs" value="${mca.home}/conf/mcaspace.config" />
 		<property name="classpath">
 			<list>
-				<value>${mca.home}/lib/mahalo.jar</value>
+				<value>${mca.home}/lib/mahalo-2.1.1.jar</value>
 			</list>
 		</property>
 		<property name="locators">
@@ -50,14 +62,43 @@
 		<property name="codebase">
 			<list>
 				<value>${mca.codebase.url}/mca-server.jar</value>
+				<value>${mca.codebase.url}/outrigger-dl.jar</value>
 			</list>
 		</property>
 		<property name="implClass" value="org.mca.server.MCASpaceServerImpl" />
 		<property name="policy" value="${mca.home}/conf/security/server.policy" />
 		<property name="serverConfigArgs" value="${mca.home}/conf/mcaspace.config" />
 		<property name="classpath">
+			<list>	
+				<value>${mca.home}/lib/mca-server-1.0.0-RELEASE.jar</value>	
+				<value>${mca.home}/lib/outrigger-2.1.1.jar</value>			
+			</list>
+		</property>
+	</bean>
+
+
+	<bean id="javaspace" class="org.mca.service.ServiceConfigurator">
+		<property name="codebase">
 			<list>
-				<value>${mca.home}/lib/mca-server.jar</value>
+				<value>${mca.codebase.url}/outrigger-dl.jar</value>
+				<value>${mca.codebase.url}/jsk-dl.jar</value>
+			</list>
+		</property>
+		<property name="implClass"
+			value="com.sun.jini.outrigger.TransientOutriggerImpl" />
+		<property name="policy" value="${mca.home}/conf/security/server.policy" />
+		<property name="serverConfigArgs" value="${mca.home}/conf/mcaspace.config" />
+		<property name="classpath">
+			<list>
+				<value>${mca.home}/lib/outrigger-2.1.1.jar</value>
+				<value>${mca.home}/lib/jsk-lib-2.1.1.jar</value>
+				<value>${mca.home}/lib/commons-logging-1.1.jar</value>
+				<value>${mca.home}/lib/mca-server-1.0.0-RELEASE.jar</value>
+			</list>
+		</property>
+		<property name="locators">
+			<list>
+				<value>localhost</value>
 			</list>
 		</property>
 	</bean>

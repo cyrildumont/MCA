@@ -27,19 +27,15 @@ import net.jini.space.MatchSet;
 
 import org.mca.javaspace.exceptions.EntryNotFoundException;
 import org.mca.javaspace.exceptions.MCASpaceException;
-import org.mca.log.LogUtil;
 
 /**
- * @author Cyril
+ * @author Cyril Dumont
  *
  */
 
 abstract class JavaSpaceParticipant implements Serializable{
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -5392183380787134791L;
+	private static final long serialVersionUID = 1L;
 
 	private static final String COMPONENT_NAME = "org.mca.JavaSpaceParticipant";
 	
@@ -51,7 +47,7 @@ abstract class JavaSpaceParticipant implements Serializable{
 	protected String host;
 		
 	public void setSpace(JavaSpace05 space) {
-		this.space = space;
+		this.space = space; 
 	}
 
 	/**
@@ -72,13 +68,13 @@ abstract class JavaSpaceParticipant implements Serializable{
 			}
 			return entries;
 		} catch (RemoteException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();
 		} catch (TransactionException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();
 		} catch (UnusableEntryException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();
 		}
 	}
@@ -94,10 +90,10 @@ abstract class JavaSpaceParticipant implements Serializable{
 		try {
 			space.write(entry, transaction, Lease.FOREVER);
 		} catch (TransactionException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();
 		} catch (RemoteException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();
 		}
 	}
@@ -118,16 +114,16 @@ abstract class JavaSpaceParticipant implements Serializable{
 			if (entry == null) throw new EntryNotFoundException(template, host);
 			return entry;
 		} catch (RemoteException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();
 		} catch (TransactionException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();
 		} catch (UnusableEntryException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();
 		} catch (InterruptedException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();
 		}
 	}
@@ -187,13 +183,13 @@ abstract class JavaSpaceParticipant implements Serializable{
 		try {
 			return space.take(templates, txn, 0, Integer.MAX_VALUE);
 		} catch (RemoteException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();
 		} catch (UnusableEntriesException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();
 		} catch (TransactionException e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();
 		}
 	}
@@ -222,7 +218,7 @@ abstract class JavaSpaceParticipant implements Serializable{
 			if (handback != null) mobject = new MarshalledObject(handback);
 			space.registerForAvailabilityEvent(tmpls, txn, visibilityOnly, proxy, leaseDuration, mobject);
 		} catch (Exception e) {
-			LogUtil.error("[" + host + "]" + e.getMessage(),getClass());
+			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();
 		}
 	}

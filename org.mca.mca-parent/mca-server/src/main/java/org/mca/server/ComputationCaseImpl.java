@@ -17,6 +17,7 @@ import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
 import net.jini.core.event.UnknownEventException;
 import net.jini.core.lease.Lease;
+import net.jini.core.lease.UnknownLeaseException;
 import net.jini.core.transaction.CannotCommitException;
 import net.jini.core.transaction.Transaction.Created;
 import net.jini.core.transaction.TransactionException;
@@ -27,6 +28,9 @@ import net.jini.export.Exporter;
 import net.jini.jeri.BasicILFactory;
 import net.jini.jeri.BasicJeriExporter;
 import net.jini.jeri.ssl.SslServerEndpoint;
+import net.jini.lease.LeaseListener;
+import net.jini.lease.LeaseRenewalEvent;
+import net.jini.lease.LeaseRenewalManager;
 import net.jini.space.AvailabilityEvent;
 import net.jini.space.JavaSpace05;
 
@@ -41,7 +45,6 @@ import org.mca.javaspace.ComputationCaseInfo;
 import org.mca.javaspace.ComputationCaseListener;
 import org.mca.javaspace.exceptions.EntryNotFoundException;
 import org.mca.javaspace.exceptions.MCASpaceException;
-import org.mca.log.LogUtil;
 import org.mca.math.DistributedData;
 import org.mca.scheduler.Task;
 import org.mca.scheduler.TaskState;
@@ -61,10 +64,12 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
 
 	private Task taskInProgress;
-	private LeaseRenewalTask leaseRenewalTask;
-
-	private static final int LEASE_DURATION = 7000;
-	private static final int SLEEP_TIME = 6000;
+	//private LeaseRenewalTask leaseRenewalTask;
+	private transient LeaseRenewalManager leaseManager;
+	
+	
+	private static final int LEASE_DURATION = 8000;
+	private static final int SLEEP_TIME = 4000;
 
 	private String name;
 	private String description;
@@ -108,13 +113,8 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	@Override
 	public void addProperty(Property property) throws MCASpaceException {
-		Property template = new Property();
-		template.name = property.name;
-		takeEntry(template,null);
-		logger.finest("MCAProperty [" + template.name + "] exists.");
 		writeEntry(property,  null);
-		logger.finest("MCAProperty [" + template.name + "] updated.");
-
+		logger.finest("Property [" + property.name + " : " + property.value + "] added.");
 	}
 
 	@Override
@@ -125,13 +125,10 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			throw new MCASpaceException("DataHandler [" + name + "] not found");
 		DownloadTask task = new DownloadTask(dh, dir);
 		task.start();
-		while (!task.isFileDownloaded()) {
-			try {
-				System.out.println("OK");
-				Thread.sleep(500);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+		try {
+			task.join();
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
 		}
 		File file = task.getFile();
 		if (file == null)
@@ -163,10 +160,12 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		Transaction transaction = task.getTransaction();
 		if (transaction != null) txn = transaction.getTransaction();
 		writeEntry(task,txn);
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] Task [" + task.name + "] added : " + task.toString());
 	}
 
 	@Override
-	public void addData(DistributedData<?> data, DataHandlerFactory factory) throws MCASpaceException {
+	public void addData(DistributedData<?> data, String name, DataHandlerFactory factory) throws MCASpaceException {
+		data.setName(name);
 		data.deploy(this, factory);
 		writeEntry(data, null);
 	}
@@ -174,6 +173,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	@Override
 	public void addDataHandler(DataHandler entry) throws MCASpaceException {
 		writeEntry(entry,null);
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] DataHandler [ name = " + entry.name +" ] added.");
 	}
 
 	@Override
@@ -181,7 +181,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		DataHandler template = new DataHandler();
 		template.name = name;
 		DataHandler handlerReturned = (DataHandler)takeEntry(template,null);
-		logger.fine("[" + this.name + "] DataHandler [ name = " + name +" ] removed.");
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] DataHandler [ name = " + name +" ] removed.");
 		return handlerReturned;
 	}
 
@@ -252,7 +252,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	private void setState(ComputationCaseState state) {
 		logger.fine(
-				"ComputationCaseImpl -- State changed : [" + this.state + "] --> [" + state + "]");
+				"ComputationCaseImpl -- State updated : [" + this.state + "] --> [" + state + "]");
 		this.state = state;
 		for (ComputationCaseListener listener : listeners) {
 			switch (state) {
@@ -280,7 +280,6 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	public void updateTask(Task task) throws MCASpaceException {
 		getTask(task.name);
 		addTask(task);
-		LogUtil.debug("[" + this.name + "] Task [" + task.name + "] updated.", getClass());
 	}
 
 	@Override
@@ -345,13 +344,13 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		try {
 			Created created = TransactionFactory.create(transactionManager, LEASE_DURATION);
 			Transaction transaction = new Transaction(created);
-			leaseRenewalTask = new LeaseRenewalTask(transaction.getLease());
-			leaseRenewalTask.start();
+			if(leaseManager == null) leaseManager = new LeaseRenewalManager();
+			leaseManager.renewFor(transaction.getLease(),
+					Long.MAX_VALUE, LEASE_DURATION, new TaskLeaseListener());
 			taskInProgress = 
 				getTask(TaskState.WAIT_FOR_COMPUTE, transaction.getTransaction());
 			if (taskInProgress == null){
-				leaseRenewalTask.interrupt();
-				leaseRenewalTask = null;
+				leaseManager.cancel(transaction.getLease());
 				return null;
 			}
 			taskInProgress.setTransaction(transaction);
@@ -393,10 +392,13 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			throw new MCASpaceException(e.getMessage());
 		}finally{
 			taskInProgress = null;
-			leaseRenewalTask.interrupt();
-			leaseRenewalTask = null;
+			try {
+				leaseManager.remove(transaction.getLease());
+			} catch (UnknownLeaseException e) {
+				e.printStackTrace();
+			}
 		}
-		logger.fine("ComputationCaseImpl -- Task [" + task.name + "] updated.");
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] Task [" + task.name + "] updated.");
 	}
 
 	@Override
@@ -405,26 +407,28 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		barrier = (Barrier)takeEntry(barrier, null, Long.MAX_VALUE);	
 		barrier.increment();
 		writeEntry(barrier, null);
-		LogUtil.debug("[" + this.name + "] Barrier [" + name + "] waiting ...", getClass());
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "] waiting ...");
 		try {
 			barrier.counter = nbWorker;
 			readEntry(barrier, null, Lease.FOREVER);
 		} catch (EntryNotFoundException e) {
 			e.printStackTrace();
 		}
-		LogUtil.debug("[" + this.name + "] Barrier [" + name + "] OK", getClass());	
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "] OK");	
 	}
 
 	@Override
 	public void createBarrier(String name) throws MCASpaceException {
 		Barrier barrier = new Barrier(name, 0);
 		writeEntry(barrier, null);
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "] created");	
 	}
 
 	@Override
 	public void removeBarrier(String name) throws MCASpaceException {
 		Barrier barrier = new Barrier(name, null);
 		takeEntry(barrier, null);
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "] removed	");	
 	}
 
 	@Override
@@ -464,6 +468,9 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		private boolean interrupt;
 
 		public LeaseRenewalTask(Lease lease) {
+			super("lease renewal task thread");
+			setDaemon(true);
+			setPriority(MAX_PRIORITY);
 			this.lease = lease;
 		}
 
@@ -475,6 +482,8 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 					logger.finest("LeaseRenewalTask -- Renew transaction lease [" + lease + "]");
 					lease.renew(LEASE_DURATION);
 				} catch (Exception e) {
+					if(e instanceof InterruptedException);
+					else e.printStackTrace();
 					interrupt = true;
 				}
 			}
@@ -482,13 +491,19 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 		@Override
 		public synchronized void interrupt() {
-			logger.finest("LeaseRenewalTask -- interrupt [" + lease + "]");
 			interrupt = true;
 			super.interrupt();
 		}
 
 	}
 
+	class TaskLeaseListener implements LeaseListener{
+		@Override
+		public void notify(LeaseRenewalEvent event) {
+			System.out.println(event);
+		}
+	}
+	
 	/**
 	 * 
 	 * @author Cyril Dumont
@@ -509,6 +524,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		@Override
 		public void run() {
 			try {
+				System.out.println("DownloadTask : " + Thread.currentThread());
 				file = dh.download(dir);
 			}catch (IOException e) {
 				e.printStackTrace();

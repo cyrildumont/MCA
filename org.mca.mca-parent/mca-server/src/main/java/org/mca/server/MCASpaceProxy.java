@@ -28,7 +28,6 @@ public class MCASpaceProxy implements MCASpace, Serializable {
 	@Override
 	public ComputationCase addCase(String name, String description)
 			throws RemoteException, MCASpaceException {
-		System.out.println(remoteRef);
 		return remoteRef.addCase(name, description);
 	}
 

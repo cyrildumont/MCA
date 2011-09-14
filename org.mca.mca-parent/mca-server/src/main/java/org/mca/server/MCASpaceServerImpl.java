@@ -69,7 +69,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 
 
 	private static final String SERVICE_JAVASPACE = "javaspace";
-	private static final String FILE_JAVASPACE = System.getProperty("mca.home") + "/conf/javaspace.xml";
+	private static final String FILE_JAVASPACE = System.getProperty("mca.home") + "/conf/services.xml";
 
 
 	public final static String COMPONENT_NAME = "org.mca.server.MCASpaceServer";
@@ -151,8 +151,10 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		DiscoveryManagement dm = new LookupLocatorDiscovery(locators);
 		mgr = new JoinManager(proxy, getAttributes(), this,dm,null, config);
 		Lookup finder = new Lookup(net.jini.core.transaction.server.TransactionManager.class);
+		do{
 		transactionManager =
 				(net.jini.core.transaction.server.TransactionManager) finder.getService("localhost");
+		}while(transactionManager == null);
 		logger.fine("MCASpaceServerImpl -- Transaction Manager : [" + transactionManager + "]");
 	}
 
