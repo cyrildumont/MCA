@@ -2,8 +2,6 @@ package org.mca.math;
 
 import java.lang.reflect.Array;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SubMatrixImpl<E> implements SubMatrix<E> {
 

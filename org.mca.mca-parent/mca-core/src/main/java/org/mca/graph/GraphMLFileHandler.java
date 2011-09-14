@@ -85,7 +85,7 @@ public class GraphMLFileHandler extends DefaultHandler{
 		currentTask = new Task();
 		currentTask.state = TaskState.valueOf(attributes.getValue("state"));
 		currentTask.name = attributes.getValue("name");
-		currentTask.computing_agent_name = attributes.getValue("computing_agent_name");
+		currentTask.compute_agent_url = attributes.getValue("compute_agent_url");
 		currentVertex.setTask(currentTask);
 		try {
 			nameLabeller.setLabel(currentVertex, currentTask.name);

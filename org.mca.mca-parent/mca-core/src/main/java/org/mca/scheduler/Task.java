@@ -32,7 +32,7 @@ public class Task extends Storable{
 	/** etat de la tache */
 	public TaskState state;
 	
-	public String computing_agent_name;
+	public String compute_agent_url;
 	
 	public String worker;
 	
@@ -46,6 +46,20 @@ public class Task extends Storable{
 	
 	private transient Transaction transaction;
 	
+	
+	//Constructor for JavaSpace Specification
+	public Task() {}
+	
+	public Task(String name){
+		this(name, "N/A");
+	}
+	
+	public Task(String name, String computeAgentURL){
+		this.name = name;
+		this.compute_agent_url = computeAgentURL;
+		this.state = TaskState.WAIT_FOR_COMPUTE;
+	}
+	
 	@Override
 	public String toString() {
 		String parentTasks = "";
@@ -56,7 +70,7 @@ public class Task extends Storable{
 			parentTasks = parentTasks.substring(0, parentTasks.length()-1);
 		}
 		return 	"[name : " + this.name + "] - " +
-				"[computing_agent_name : " + computing_agent_name + "] - " +
+				"[compute_agent_url : " + compute_agent_url + "] - " +
 				"[nbParams : " + (parameters != null ? parameters.length : 0) + "] - " +
 				"[parentTasks : " + parentTasks + "] - " +
 				"[state : " + this.state + "]" +
@@ -118,7 +132,7 @@ public class Task extends Storable{
 	public void parse(Node node) {
 		NamedNodeMap attributes = node.getAttributes();
 		name = attributes.getNamedItem("name").getNodeValue();
-		computing_agent_name = attributes.getNamedItem("computing_agent_name").getNodeValue();
+		compute_agent_url = attributes.getNamedItem("compute_agent_url").getNodeValue();
 		worker = attributes.getNamedItem("worker").getNodeValue();
 		result = attributes.getNamedItem("result").getNodeValue(); 
 		state = TaskState.valueOf(attributes.getNamedItem("state").getNodeValue());
@@ -176,7 +190,7 @@ public class Task extends Storable{
 		Document doc = parent.getOwnerDocument();
 		Element node = doc.createElement(this.getClass().getName());
 		node.setAttribute("name", this.name);
-		node.setAttribute("computing_agent_name", this.computing_agent_name);
+		node.setAttribute("compute_agent_url", this.compute_agent_url);
 		node.setAttribute("worker", this.worker);
 		node.setAttribute("result", String.valueOf(this.result));
 		node.setAttribute("state", this.state.toString());
@@ -214,13 +228,11 @@ public class Task extends Storable{
 
 
 	public int getIntParameter(int i) {
-		// TODO Auto-generated method stub
-		return 0;
+		return Integer.valueOf(String.valueOf(parameters[i]));
 	}
 
 
 	public String getStringParameter(int i) {
-		// TODO Auto-generated method stub
-		return null;
+		return String.valueOf(parameters[i]);
 	}
 }

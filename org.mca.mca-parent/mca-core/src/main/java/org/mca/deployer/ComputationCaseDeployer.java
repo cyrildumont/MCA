@@ -89,6 +89,7 @@ public abstract class ComputationCaseDeployer {
 		initSpace(hostOfSpace);
 		deployCase();
 		try {
+			
 			deployProperties();
 			deployData();
 			deployTasks();
@@ -172,7 +173,7 @@ public abstract class ComputationCaseDeployer {
 			cmd.getOptionValue("h") != null ? cmd.getOptionValue("h") : DEFAULT_HOST_SPACE;
 		
 		try {
-			LoginContext loginContext = new LoginContext("org.mca.Master");
+			LoginContext loginContext = new LoginContext("org.mca.User");
 			loginContext.login();
 			Subject.doAsPrivileged(loginContext.getSubject(), 	
 					new PrivilegedExceptionAction() {
@@ -193,6 +194,7 @@ public abstract class ComputationCaseDeployer {
 	}
 	
 	private static void deploy(String configFile, String hostOfSpace) {
+		System.setSecurityManager(new RMISecurityManager());
 		ApplicationContext context = new  FileSystemXmlApplicationContext("file:" + configFile);
 		
 		Map<String, AgentDescriptor> agents = context.getBeansOfType(AgentDescriptor.class);
@@ -209,15 +211,10 @@ public abstract class ComputationCaseDeployer {
 	private static void deployAgents(Collection<AgentDescriptor> descriptors) {
 		ComputeAgentDeployer deployer = new ComputeAgentDeployer();
 		for (AgentDescriptor descriptor : descriptors) {
-			changeCodebase(descriptor.getCodebaseFormate());
 			deployer.deploy(descriptor);
 			logger.info("[" + descriptor.getName() + "] Agent deployed.");
 		}
 	}
-	
-	private static void changeCodebase(String codebase){
-		System.setProperty("java.rmi.server.codebase",codebase);
-		System.setSecurityManager(new RMISecurityManager());
-	}
+
 
 }

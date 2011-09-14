@@ -140,7 +140,7 @@ public class GraphMLFile implements GraphFile{
 	private void saveTask(Task task, Element data) {
 		Element eTask = document.createElement("mca:task");
 		eTask.setAttribute("name", task.name);
-		eTask.setAttribute("computing_agent_name",task.computing_agent_name);
+		eTask.setAttribute("compute_agent_url",task.compute_agent_url);
 		eTask.setAttribute("state",task.state.toString());
 		Object[] parameters = task.parameters;
 		if (parameters != null ) {

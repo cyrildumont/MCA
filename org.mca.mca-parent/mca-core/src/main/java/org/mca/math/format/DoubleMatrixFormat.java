@@ -54,7 +54,7 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 			}
 			pw.flush();
 		} catch (Exception e) {
-			System.out.println("[row : " + i + "][column : " + j + "] --> [" + matrix[i][j] + "]");
+			e.printStackTrace();
 			throw new FormatException();
 		}finally{
 			pw.close();
