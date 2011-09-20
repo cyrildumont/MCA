@@ -14,7 +14,6 @@ import net.jini.core.lookup.ServiceID;
 
 import org.mca.entry.Property;
 import org.mca.javaspace.ComputationCase;
-import org.mca.log.LogUtil;
 import org.mca.result.TaskVerifier;
 import org.mca.scheduler.Task;
 

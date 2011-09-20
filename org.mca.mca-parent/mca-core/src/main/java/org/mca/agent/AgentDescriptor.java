@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -22,7 +23,7 @@ import org.mca.entry.EntryFactory;
  * @author Cyril
  *
  */
-public class AgentDescriptor {
+public class AgentDescriptor implements Serializable{
 
 
 	private static final String JINI_LOCATOR_PREFIX = "jini://";
@@ -41,6 +42,8 @@ public class AgentDescriptor {
 
 	private String byteCodeFile;
 
+	private Entry nameEntry;
+	
 	public AgentDescriptor() {
 		locator = "localhost";
 		entries = new ArrayList<Entry>();
@@ -117,7 +120,10 @@ public class AgentDescriptor {
 	 * @return
 	 */
 	public Entry[] getEntries(){
-		return entries.toArray(new Entry[entries.size()]);
+		Entry[] result = new Entry[entries.size() + 1];
+		entries.toArray(result);
+		result[result.length - 1] = nameEntry;
+		return result;
 	}
 
 	/**
@@ -158,8 +164,7 @@ public class AgentDescriptor {
 		this.name = name;
 		Hashtable<String, String> propertiesTable = new Hashtable<String, String>();
 		propertiesTable.put("name", name);
-		Entry entry = EntryFactory.createEntry("net.jini.lookup.entry.Name", propertiesTable);
-		entries.add(entry);
+		nameEntry = EntryFactory.createEntry("net.jini.lookup.entry.Name", propertiesTable);
 	}
 
 	public byte[] getByteCode() {

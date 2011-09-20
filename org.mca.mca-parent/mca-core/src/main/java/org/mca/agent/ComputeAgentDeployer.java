@@ -1,5 +1,6 @@
 package org.mca.agent;
 
+import java.io.Serializable;
 import java.rmi.RMISecurityManager;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -15,11 +16,12 @@ import net.jini.core.lookup.ServiceItem;
 import net.jini.core.lookup.ServiceRegistrar;
 
 import org.mca.agent.exception.DeployException;
-import org.mca.log.LogUtil;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
-public class ComputeAgentDeployer {
+public class ComputeAgentDeployer implements Serializable{
+
+	private static final long serialVersionUID = 1L;
 
 	private static final String COMPONENT_NAME = "org.mca.core.deployer.agent";
 
@@ -39,17 +41,31 @@ public class ComputeAgentDeployer {
 	 * 
 	 * @param config
 	 */
-	public void deploy(AgentDescriptor config){
+	public void deploy(AgentDescriptor config) throws DeployException{
 		try{
-			
+			String sClassAgent = config.getImplClass(); 
+			Class<?> classAgent = Class.forName(sClassAgent);
+			ComputeAgent agent = (AbstractComputeAgent)classAgent.newInstance();
+			deploy(config, agent);
+		}catch (Exception e) {
+			logger.warning(e.getClass().getName() +" : " + e.getMessage());
+			e.printStackTrace();
+			throw new DeployException();
+		} 
+	}
+
+	/**
+	 * 
+	 * @param config
+	 * @param agent
+	 */
+	public void deploy(AgentDescriptor config, ComputeAgent agent) throws DeployException{
+		try{
 			System.setProperty("java.rmi.server.codebase",config.getCodebaseFormate());
 			LookupLocator lookup = config.getLookupLocator();
 			Entry[] entries = config.getEntries();
-			String sClassAgent = config.getImplClass(); 
-			Class<?> classAgent = Class.forName(sClassAgent);
-			AbstractComputeAgent agent = (AbstractComputeAgent)classAgent.newInstance();
 			if (agent instanceof NativeComputeAgent) {
-				LogUtil.debug("Deploy ComputeNativeAgent ...", ComputeAgentDeployer.class);
+				logger.info("Deploy ComputeNativeAgent ...");
 				NativeComputeAgent nativeAgent = (NativeComputeAgent) agent;
 				nativeAgent.setByteCode(config.getByteCode());
 			}
@@ -61,6 +77,7 @@ public class ComputeAgentDeployer {
 		}catch (Exception e) {
 			logger.warning(e.getClass().getName() +" : " + e.getMessage());
 			e.printStackTrace();
+			throw new DeployException();
 		} 
 	}
 
