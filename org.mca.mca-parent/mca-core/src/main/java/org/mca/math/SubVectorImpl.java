@@ -1,29 +1,44 @@
 package org.mca.math;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 public class SubVectorImpl<E> implements SubVector<E> {
 
-	private E[] values;
+	private List<E> values;
 
 	public SubVectorImpl(E[] values) {
+		this.values = Arrays.asList(values);
+	}
+	
+	public SubVectorImpl(List<E> values) {
 		this.values = values;
+	}
+	
+	public SubVectorImpl() {
+		this.values = new ArrayList<E>();
 	}
 
 	@Override
 	public E get(int index) throws RemoteException {
-		return values[index];
+		return values.get(index);
 	}
 
 	@Override
 	public void set(int index, E value) throws RemoteException {
-		values[index] = value;
+		values.set(index, value);
 	}
 
+	public void add(E value) throws RemoteException {
+		values.add(value);
+	}
+	
 	@Override
 	public int size() throws RemoteException {
-		return values.length;
+		return values.size();
 	}
 
 	@Override
@@ -48,7 +63,7 @@ public class SubVectorImpl<E> implements SubVector<E> {
 
 		@Override
 		public boolean hasNext() {
-			if (count < values.length){
+			if (count < values.size()){
 				return true;
 			}  
 			return false;
@@ -56,9 +71,9 @@ public class SubVectorImpl<E> implements SubVector<E> {
 
 		@Override
 		public E next() {
-			if (count == values.length)
+			if (count == values.size())
 				throw new NoSuchElementException();
-			return values[count++];
+			return values.get(count++);
 		}
 
 	}

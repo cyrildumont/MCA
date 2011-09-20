@@ -10,12 +10,12 @@ import org.mca.entry.DataHandler;
 import org.mca.entry.DataHandlerFactory;
 import org.mca.entry.Property;
 import org.mca.javaspace.exceptions.MCASpaceException;
+import org.mca.listener.TaskListener;
 import org.mca.math.DistributedData;
 import org.mca.scheduler.Task;
 import org.mca.scheduler.TaskState;
 
 public interface ComputationCase extends Serializable {
-
 
 	public void addProperty(Property property) throws MCASpaceException;
 
@@ -66,5 +66,7 @@ public interface ComputationCase extends Serializable {
 	public void createBarrier(String name) throws MCASpaceException;
 	
 	public void removeBarrier(String name) throws MCASpaceException;
+	
+	public void registerForTasks(Collection<Task> pendingTasks, TaskListener listener) throws MCASpaceException;
 	
 }

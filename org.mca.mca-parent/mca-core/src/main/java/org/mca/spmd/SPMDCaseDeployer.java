@@ -6,7 +6,6 @@ import org.mca.entry.DataHandlerFactory;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.math.DistributedData;
 import org.mca.scheduler.Task;
-import org.mca.scheduler.TaskState;
 
 public abstract class SPMDCaseDeployer extends ComputationCaseDeployer {
 	
@@ -25,8 +24,8 @@ public abstract class SPMDCaseDeployer extends ComputationCaseDeployer {
 	}
 	
 	@Override
-	protected void init() {
-		input = getInput();
+	protected void deployAgents() throws MCASpaceException{
+		deployAgent(program);
 	}
 	
 	@Override
@@ -42,6 +41,7 @@ public abstract class SPMDCaseDeployer extends ComputationCaseDeployer {
 
 	@Override
 	protected void deployData() throws MCASpaceException {
+		input = getInput();
 		if (input != null)
 		computationCase.addData(input, SPMD.INPUT_NAME, dataHandlerFactory);
 	}

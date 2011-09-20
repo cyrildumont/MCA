@@ -8,6 +8,8 @@ public interface SubVector<E> extends DataPart<E>,Iterable<E>{
 	
 	public void set(int index, E value) throws RemoteException;
 	
+	public void add(E value) throws RemoteException;
+	
 	public int size() throws RemoteException;
 	
 }

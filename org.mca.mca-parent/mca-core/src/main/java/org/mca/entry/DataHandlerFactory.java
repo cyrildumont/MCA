@@ -1,8 +1,9 @@
 package org.mca.entry;
 
 import java.io.File;
+import java.io.Serializable;
 
-public interface DataHandlerFactory {
+public interface DataHandlerFactory extends Serializable{
 
 	public DataHandler getDataHandler(File file);
 	

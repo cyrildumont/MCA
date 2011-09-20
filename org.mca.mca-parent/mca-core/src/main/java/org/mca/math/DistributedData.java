@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.rmi.Remote;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
@@ -23,7 +24,6 @@ import org.mca.entry.DataHandlerFactory;
 import org.mca.entry.Storable;
 import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.exceptions.MCASpaceException;
-import org.mca.log.LogUtil;
 import org.mca.math.format.DataFormat;
 import org.mca.util.MCAUtils;
 import org.w3c.dom.Document;
@@ -38,6 +38,10 @@ public class DistributedData<E> extends Storable{
 
 	private static final long serialVersionUID = 1L;
 
+	private static final String COMPONENT_NAME = "org.mca.data.DistributedData";
+
+	protected static final Logger logger = Logger.getLogger(COMPONENT_NAME);
+	
 	protected int localPart;
 	
 	protected File inputlocalFile;
@@ -71,6 +75,10 @@ public class DistributedData<E> extends Storable{
 		this.name = name;
 	}
 	
+	public String getName() {
+		return name;
+	}
+	
 	/**
 	 * 
 	 * @param part
@@ -78,7 +86,7 @@ public class DistributedData<E> extends Storable{
 	 * @throws Exception
 	 */
 	public DataPart<E> load(int part) throws Exception{
-		LogUtil.debug("Loading part [" + part + "] ...", getClass());
+		logger.fine("[" + name + "] - loading part [" + part + "] ...");
 		localPart = part;
 		String localPartName = name + "-" + part;
 		inputlocalFile = download(localPartName);
@@ -92,7 +100,7 @@ public class DistributedData<E> extends Storable{
 		addPart(part, data);
 		return data;
 	}
-	
+
 	/**
 	 * 
 	 * @param part
@@ -101,7 +109,7 @@ public class DistributedData<E> extends Storable{
 	public void unload() throws Exception{
 		if (localPart == 0) 
 			throw new MCASpaceException("No part load on local");
-		LogUtil.debug("Unloading part [" + localPart + "] ...", getClass());
+		logger.fine("[" + name + "] - unloading part [" + localPart + "] ...");
 		localSave();
 		String localPartName = name + "-" + localPart;
 		upload(localPartName);
@@ -149,7 +157,7 @@ public class DistributedData<E> extends Storable{
 
 	
 	public void update() throws Exception {
-		LogUtil.debug("Update local part [" + localPart + "]...", getClass());
+		logger.fine("[" + name + "] - update local part [" + localPart + "]...");
 				
 		for(int part = 1; part <= getNbParts(); part++)	{
 			if (localPart != part) {
@@ -162,7 +170,7 @@ public class DistributedData<E> extends Storable{
 				ServiceTemplate template = new ServiceTemplate(null, null,entries);
 				DataPart<E> dataPart = (DataPart<E>)registrar.lookup(template);
 				dataParts.put(part, dataPart);
-				LogUtil.debug("Part [" + part + "] updated --> " + dataPart, getClass());
+				logger.fine("[" + name + "] - part [" + part + "] updated --> " + dataPart);
 			}
 		}
 	}
@@ -173,14 +181,14 @@ public class DistributedData<E> extends Storable{
 	}
 	
 	private File download(String name) throws MCASpaceException{
-		LogUtil.debug("Download file [" + name + "]  ...", getClass());
+		logger.fine("[" + name + "] - download file [" + name + "]  ...");
 		File file = computationCase.download(name, System.getProperty("temp.worker.download"));
-		LogUtil.debug("File [" + name + "]  downloaded", getClass());
+		logger.fine("[" + name + "] - file [" + name + "]  downloaded");
 		return file;
 	}
 	
 	private File upload(String name) throws Exception{
-		LogUtil.debug("Upload file [" + name + "]  ...", getClass());
+		logger.fine("[" + name + "] - upload file [" + name + "]  ...");
 		InputStream input = new FileInputStream(outputlocalFile);
 		computationCase.upload(name, input);
 		return outputlocalFile;
@@ -271,5 +279,8 @@ public class DistributedData<E> extends Storable{
 	protected void deployPart(int i, ComputationCase cc,
 			DataHandlerFactory factory) throws MCASpaceException{throw new NotImplementedException();};
 
-	
+	@Override
+	public String toString() {
+		return "DistributedData [name:" + name + "]";
+	}
 }

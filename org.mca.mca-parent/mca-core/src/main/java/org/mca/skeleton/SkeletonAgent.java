@@ -8,7 +8,6 @@ public abstract class SkeletonAgent extends AbstractComputeAgent {
 	
 	protected int rank;
 	
-	
 	@Override 
 	protected final Object execute() throws Exception {
 		rank = task.getIntParameter(0);

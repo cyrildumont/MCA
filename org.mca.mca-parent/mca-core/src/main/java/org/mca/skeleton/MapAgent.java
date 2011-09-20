@@ -1,6 +1,9 @@
 package org.mca.skeleton;
 
+import java.util.List;
+
 import org.mca.math.DistributedVector;
+import org.mca.math.Element;
 import org.mca.math.SubVector;
 
 
@@ -15,30 +18,31 @@ public class MapAgent<T,S> extends SkeletonAgent {
 	
 	private Function<T,S> f;
 	
-	private MapConfig config;
+	private String input;
 	
-	private DistributedVector<T> input;
-	
-	private DistributedVector<S> output;
+	private String output;
 	
 	private SubVector<T> inputPart;
 	private SubVector<S> outputPart;
 	
-	public MapAgent(MapConfig config){
-		this.config = config;
-	}
 	
+	public MapAgent(Function<T, S> f, String input, String output) {
+		this.f = f;
+		this.input = input;
+		this.output = output;
+	}
+
 	@Override
 	protected Object executeSkel() throws Exception {
-		input = computationCase.<DistributedVector<T>>getData(config.getInput());
-		inputPart = (SubVector<T>)input.load(rank);
-		T[] values = (T[])inputPart.getValues();
-		output = computationCase.<DistributedVector<S>>getData(config.getOutput());
-		outputPart = (SubVector<S>)output.load(rank);
-		for(int i=0;i < values.length;i++){
-			outputPart.set(i,f.execute(values[i]));
+		DistributedVector<T> inputvector = computationCase.<DistributedVector<T>>getData(input);
+		inputPart = (SubVector<T>)inputvector.load(rank);
+		List<T> values = (List<T>)inputPart.getValues();
+		DistributedVector<S> outputVector = computationCase.<DistributedVector<S>>getData(output);
+		outputPart = (SubVector<S>)outputVector.load(rank);
+		for(int i=0;i < values.size();i++){
+			outputPart.add(f.execute(values.get(i)));
 		}
-		output.unload();
+		outputVector.unload();
 		return null;
 	}
 }

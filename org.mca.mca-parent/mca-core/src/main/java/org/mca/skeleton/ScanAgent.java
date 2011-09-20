@@ -1,16 +1,12 @@
 package org.mca.skeleton;
 
-import org.mca.agent.AbstractComputeAgent;
-import org.mca.math.SubVector;
 import org.mca.math.DistributedVector;
+import org.mca.math.SubVector;
 
 
-public class ScanAgent<T> extends AbstractComputeAgent {
+public class ScanAgent<T> extends SkeletonAgent {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -959548414464618085L;
+	private static final long serialVersionUID = 1L;
 	
 	private BinOperator<T> operator;
 	
@@ -19,7 +15,7 @@ public class ScanAgent<T> extends AbstractComputeAgent {
 	}
 	
 	@Override
-	protected Object execute() throws Exception {
+	protected Object executeSkel() throws Exception {
 		int rank = task.getIntParameter(0);
 		String inputName = task.getStringParameter(1);
 		String outputName = task.getStringParameter(2);
