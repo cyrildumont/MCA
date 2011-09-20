@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.rmi.RemoteException;
+import java.rmi.server.ExportException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -45,6 +46,7 @@ import org.mca.javaspace.ComputationCaseInfo;
 import org.mca.javaspace.ComputationCaseListener;
 import org.mca.javaspace.exceptions.EntryNotFoundException;
 import org.mca.javaspace.exceptions.MCASpaceException;
+import org.mca.listener.TaskListener;
 import org.mca.math.DistributedData;
 import org.mca.scheduler.Task;
 import org.mca.scheduler.TaskState;
@@ -54,10 +56,7 @@ import org.mca.util.MCAUtils;
 
 class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCase, RemoteEventListener{ 
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -3127097490816772998L;
+	private static final long serialVersionUID = 1L;
 
 	private static final String COMPONENT_NAME = "org.mca.ComputationCase";
 
@@ -168,6 +167,8 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		data.setName(name);
 		data.deploy(this, factory);
 		writeEntry(data, null);
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] DistributedData [name = " + name +"]" +
+				"[class=" + data.getClass().getName() + "] added.");
 	}
 
 	@Override
@@ -443,8 +444,6 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		}
 	}
 
-
-
 	@Override
 	public void notify(RemoteEvent event) throws UnknownEventException,
 	RemoteException {
@@ -457,9 +456,26 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			e.printStackTrace();
 		}
 	}
+	
+	@Override
+	public void registerForTasks(Collection<Task> pendingTasks,
+			TaskListener listener) throws MCASpaceException {
+		Exporter exporter = 
+			new BasicJeriExporter(SslServerEndpoint.getInstance(MCAUtils.getIP(),0), new BasicILFactory());
+		try {
+			RemoteEventListener proxy = (RemoteEventListener)exporter.export(listener);
+			space.registerForAvailabilityEvent(pendingTasks, null, true, proxy, Lease.ANY,null);
+		} catch (Exception e) {
+			logger.warning("ComputationCaseImpl -- " + e.getMessage());	
+			e.printStackTrace();
+			throw new MCASpaceException();	
+		}
+	}
+	
+	
 	/**
 	 * 
-	 * @author cyril
+	 * @author Cyril Dumont
 	 *
 	 */
 	class LeaseRenewalTask extends Thread{
@@ -524,7 +540,6 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		@Override
 		public void run() {
 			try {
-				System.out.println("DownloadTask : " + Thread.currentThread());
 				file = dh.download(dir);
 			}catch (IOException e) {
 				e.printStackTrace();

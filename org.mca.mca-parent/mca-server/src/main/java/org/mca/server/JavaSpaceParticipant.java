@@ -113,17 +113,9 @@ abstract class JavaSpaceParticipant implements Serializable{
 			Entry entry = space.read(template, txn, timeToWait);
 			if (entry == null) throw new EntryNotFoundException(template, host);
 			return entry;
-		} catch (RemoteException e) {
+		} catch (Exception e) {
 			logger.warning("[" + host + "]" + e.getMessage());
-			throw new MCASpaceException();
-		} catch (TransactionException e) {
-			logger.warning("[" + host + "]" + e.getMessage());
-			throw new MCASpaceException();
-		} catch (UnusableEntryException e) {
-			logger.warning("[" + host + "]" + e.getMessage());
-			throw new MCASpaceException();
-		} catch (InterruptedException e) {
-			logger.warning("[" + host + "]" + e.getMessage());
+			e.printStackTrace();
 			throw new MCASpaceException();
 		}
 	}
