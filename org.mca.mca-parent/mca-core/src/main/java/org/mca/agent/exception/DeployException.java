@@ -1,5 +1,7 @@
 package org.mca.agent.exception;
 
-public class DeployException extends Exception {
+import org.mca.javaspace.exceptions.MCASpaceException;
+
+public class DeployException extends MCASpaceException {
 
 }
