@@ -24,6 +24,9 @@ grant {
 	permission net.jini.security.GrantPermission "java.security.AllPermission \"<all permissions>\", \"<all actions>\"";
 
 	permission java.util.PropertyPermission "mca.home","read";
+	permission java.util.PropertyPermission "org.apache.commons.logging.LogFactory.HashtableImpl","read";
+	permission java.util.PropertyPermission "java.rmi.server.codebase","read,write";
+
 	permission java.io.FilePermission "${mca.home}/work/-","read,write,delete";
 	permission java.io.FilePermission "${mca.home}/work/-","read,write,delete";
 	permission java.io.FilePermission "${mca.home}/cases/-","read,write,delete";
