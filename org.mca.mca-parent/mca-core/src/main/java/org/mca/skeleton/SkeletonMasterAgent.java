@@ -44,7 +44,7 @@ public abstract class SkeletonMasterAgent extends MasterAgent{
 			t.compute_agent_url = url;
 			t.parameters=new Object[]{i} ;
 			computationCase.addTask(t);
-			addPendingResult(task.name);
+			addPendingResult(t.name);
 		}
 		waitResults();
 		return output;
@@ -69,7 +69,7 @@ public abstract class SkeletonMasterAgent extends MasterAgent{
 			t.compute_agent_url = url;
 			t.parameters=new Object[]{i} ;
 			computationCase.addTask(t);
-			addPendingResult(task.name);
+			addPendingResult(t.name);
 		}
 		waitResults();
 		return output;
@@ -98,7 +98,7 @@ public abstract class SkeletonMasterAgent extends MasterAgent{
 			t.compute_agent_url = url;
 			t.parameters=new Object[]{i} ;
 			computationCase.addTask(t);
-			addPendingResult(task.name);
+			addPendingResult(t.name);
 		}	
 		waitResults();
 		return output;
