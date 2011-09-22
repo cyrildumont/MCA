@@ -6,6 +6,7 @@ public class ReduceAgent<T> extends SkeletonAgent {
 
 	private BinOperator<T> operator;
 		
+	
 	@Override
 	protected Object executeSkel() throws Exception {
 		// TODO Auto-generated method stub

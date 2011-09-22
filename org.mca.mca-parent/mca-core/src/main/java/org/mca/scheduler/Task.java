@@ -51,7 +51,7 @@ public class Task extends Storable{
 	public Task() {}
 	
 	public Task(String name){
-		this(name, "N/A");
+		this(name, null);
 	}
 	
 	public Task(String name, String computeAgentURL){

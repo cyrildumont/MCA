@@ -34,7 +34,6 @@ public class MapIdxAgent<Y,Z> extends SkeletonAgent {
 
 	@Override
 	protected Object executeSkel() throws Exception {
-		System.out.println("[MapIdxAgent] [ouput:" + output + "]");
 		DistributedVector<Y> inputvector = computationCase.<DistributedVector<Y>>getData(input);
 		inputPart = (SubVector<Y>)inputvector.load(rank);
 		int index = (rank - 1) * inputvector.getPartSize() ;
