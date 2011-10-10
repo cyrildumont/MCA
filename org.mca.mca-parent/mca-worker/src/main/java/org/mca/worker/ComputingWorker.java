@@ -435,16 +435,16 @@ public class ComputingWorker extends MCAComponent {
 			try {
 				interrupted = false;
 				while(!interrupted){
-					executeTask();
 					try {
+						executeTask();
+					} catch (Exception e) {
 						sleep(READ_TASK_INTERVAL);
-					} catch (InterruptedException e) {
-						interrupted= true;
 					}
 				}
 			}catch (Exception e) {
 				e.printStackTrace();
 				logger.warning("Worker -- error during TaskExecutor execution : " + e.getMessage() );
+				logger.throwing("TaskExecutor", "run", e);
 				interrupt();
 			}
 
@@ -461,13 +461,13 @@ public class ComputingWorker extends MCAComponent {
 		 * @throws MCASpaceException
 		 * @throws RemoteException
 		 */
-		private void executeTask(){
+		private void executeTask() throws Exception{
 			logger.finest("Worker -- check for task to compute: [" + computationCase.getName() + "]");	
 			try {
-				Task task = computationCase.getTaskToCompute(hostname);
+				Task<?> task = computationCase.getTaskToCompute(hostname);
 				if (task == null){
 					logger.finest("Worker -- No task to compute: [" + computationCase.getName() + "]");	
-					return;
+					throw new Exception();
 				}
 				taskInProgress = task;
 			} catch (MCASpaceException e2) {
@@ -509,6 +509,7 @@ public class ComputingWorker extends MCAComponent {
 					}
 				}catch (MCASpaceException e) {
 					logger.warning("Worker -- Error during update of  the task in progress :" + e.getMessage());
+					logger.throwing("TaskExecutor", "executeTask", e);
 				}
 			}
 		}
