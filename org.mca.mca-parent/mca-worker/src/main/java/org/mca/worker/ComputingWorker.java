@@ -113,7 +113,7 @@ public class ComputingWorker extends MCAComponent {
 		try {
 			Subject.doAsPrivileged(
 					loginContext.getSubject(),
-					new PrivilegedExceptionAction(){
+					new PrivilegedExceptionAction<Object>(){
 						public Object run() throws Exception {
 							init();
 							return null;
@@ -428,10 +428,10 @@ public class ComputingWorker extends MCAComponent {
 		public TaskExecutor() {
 			super("taskexecutor thread");
 			setDaemon(true);
-			logger.fine("Worker -- TaskExecutor started");
 		}
 
 		public synchronized void run() {
+			logger.fine("Worker -- TaskExecutor started");
 			try {
 				interrupted = false;
 				while(!interrupted){
