@@ -1,6 +1,7 @@
 package org.mca.agent;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.rmi.RMISecurityManager;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -45,7 +46,7 @@ public class ComputeAgentDeployer implements Serializable{
 		try{
 			String sClassAgent = config.getImplClass(); 
 			Class<?> classAgent = Class.forName(sClassAgent);
-			ComputeAgent agent = (AbstractComputeAgent)classAgent.newInstance();
+			ComputeAgent<?> agent = (ComputeAgent<?>)classAgent.newInstance();
 			deploy(config, agent);
 		}catch (Exception e) {
 			logger.warning(e.getClass().getName() +" : " + e.getMessage());
@@ -56,10 +57,31 @@ public class ComputeAgentDeployer implements Serializable{
 
 	/**
 	 * 
+	 * @param descriptor
+	 * @param agentParams
+	 */
+	public void deploy(AgentDescriptor descriptor, Object[] agentParams) throws DeployException{
+		try{
+			String sClassAgent = descriptor.getImplClass(); 
+			Class<?> classAgent = Class.forName(sClassAgent);
+			Class<?>[] paramsClass = new Class<?>[agentParams.length];
+			for (int i = 0; i < agentParams.length; i++) paramsClass[i] = agentParams[i].getClass();
+			Constructor<?> constructor = classAgent.getConstructor(paramsClass); 
+			ComputeAgent<?> agent = (ComputeAgent<?>)constructor.newInstance(agentParams);
+			deploy(descriptor, agent);
+		}catch (Exception e) {
+			logger.warning(e.getClass().getName() +" : " + e.getMessage());
+			e.printStackTrace();
+			throw new DeployException();
+		} 
+	}
+	
+	/**
+	 * 
 	 * @param config
 	 * @param agent
 	 */
-	public void deploy(AgentDescriptor config, ComputeAgent agent) throws DeployException{
+	public void deploy(AgentDescriptor config, ComputeAgent<?> agent) throws DeployException{
 		try{
 			System.setProperty("java.rmi.server.codebase",config.getCodebaseFormate());
 			LookupLocator lookup = config.getLookupLocator();
@@ -99,7 +121,7 @@ public class ComputeAgentDeployer implements Serializable{
 		try {
 			Subject.doAsPrivileged(
 					loginContext.getSubject(),
-					new PrivilegedExceptionAction(){
+					new PrivilegedExceptionAction<Object>(){
 						public Object run() throws Exception {
 							ApplicationContext context = new FileSystemXmlApplicationContext("file:" + file);
 							AgentDescriptor serviceConfigurator = context.getBean("agent",AgentDescriptor.class);

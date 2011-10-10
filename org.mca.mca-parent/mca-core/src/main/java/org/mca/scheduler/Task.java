@@ -18,7 +18,7 @@ import org.w3c.dom.NodeList;
  * @version 1.0
  *
  */
-public class Task extends Storable{
+public class Task<R> extends Storable{
 
 	/**
 	 * 
@@ -36,7 +36,7 @@ public class Task extends Storable{
 	
 	public String worker;
 	
-	public Object result;
+	public R result;
 	
 	public ArrayList<String> parentTasks;
 	
@@ -99,7 +99,7 @@ public class Task extends Storable{
 	}
 
 
-	public void setResult(Object result) {
+	public void setResult(R result) {
 		this.result = result;
 	}
 
@@ -134,7 +134,7 @@ public class Task extends Storable{
 		name = attributes.getNamedItem("name").getNodeValue();
 		compute_agent_url = attributes.getNamedItem("compute_agent_url").getNodeValue();
 		worker = attributes.getNamedItem("worker").getNodeValue();
-		result = attributes.getNamedItem("result").getNodeValue(); 
+		//result = attributes.getNamedItem("result").getNodeValue(); 
 		state = TaskState.valueOf(attributes.getNamedItem("state").getNodeValue());
 		message = attributes.getNamedItem("message").getNodeValue();
 		dataHandlerName = attributes.getNamedItem("dataHandlerName").getNodeValue(); 
@@ -230,7 +230,10 @@ public class Task extends Storable{
 	public int getIntParameter(int i) {
 		return Integer.valueOf(String.valueOf(parameters[i]));
 	}
-
+	
+	public double getDoubleParameter(int i) {
+		return Double.valueOf(String.valueOf(parameters[i]));
+	}
 
 	public String getStringParameter(int i) {
 		return String.valueOf(parameters[i]);

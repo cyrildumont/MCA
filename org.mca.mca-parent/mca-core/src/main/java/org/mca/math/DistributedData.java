@@ -55,8 +55,7 @@ public class DistributedData<E> extends Storable{
 	protected ComputationCase computationCase;
 	
 	protected Map<Integer, DataPart<E>> dataParts;
-	
-	
+
 	public DistributedData() {}
 	
 	public DistributedData(String name){

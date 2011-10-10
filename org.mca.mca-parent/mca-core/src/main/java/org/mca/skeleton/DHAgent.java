@@ -1,15 +1,18 @@
 package org.mca.skeleton;
 
-public class DHAgent<T> extends SkeletonAgent {
+public class DHAgent<X> extends SkeletonAgent {
 
 	private static final long serialVersionUID = 1L;
 
-	private BinOperator<T> oplus;
+	private BinOperator<X> oplus;
 	
-	private BinOperator<T> otimes;
+	private BinOperator<X> otimes;
 	
-	public DHAgent() {
-		// TODO Auto-generated constructor stub
+	private String input;
+	
+	private String output;
+	
+	public DHAgent(BinOperator<X> oplus, BinOperator<X> otimes, String input, String output) {
 	}
 	
 	@Override

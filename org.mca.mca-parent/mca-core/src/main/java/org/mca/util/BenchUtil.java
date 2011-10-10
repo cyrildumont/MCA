@@ -14,20 +14,24 @@ public abstract class BenchUtil {
 	private static boolean benchMode = false;
 
 	public static void activateBench(boolean activate){
-		benchMode = activate;
-		if(benchMode) setup();
+		activateBench(activate,JETM_CONFIG_FILE);
 	}
+	
+	public static void activateBench(boolean activate, String configFile){
+		benchMode = activate;
+		if(benchMode) setup(configFile);
+	}	
 	
 	private static final String JETM_CONFIG_FILE = 
 		System.getProperty("mca.home") + "/conf/jetm-config.xml";
 	
-	private static void setup() {
-		XmlEtmConfigurator.configure(new File(JETM_CONFIG_FILE));
+	private static void setup(String configFile) {
+		XmlEtmConfigurator.configure(new File(configFile));
 		monitor = EtmManager.getEtmMonitor();
 		monitor.start();
 	}
 
-	private static void tearDown() {
+	public static void stopBenchMode() {
 		monitor.stop();
 	}
 	

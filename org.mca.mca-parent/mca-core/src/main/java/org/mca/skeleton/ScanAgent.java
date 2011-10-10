@@ -1,34 +1,36 @@
 package org.mca.skeleton;
 
+import java.util.List;
+
 import org.mca.math.DistributedVector;
 import org.mca.math.SubVector;
 
 
-public class ScanAgent<T> extends SkeletonAgent {
+public class ScanAgent<X> extends SkeletonAgent {
 
 	private static final long serialVersionUID = 1L;
 	
-	private BinOperator<T> operator;
+	private BinOperator<X> operator;
 	
-	public ScanAgent(BinOperator<T> operator){
+	private String input;
+	
+	private String output;
+	
+	public ScanAgent(BinOperator<X> operator, String input, String output){
 		this.operator = operator;
 	}
 	
 	@Override
 	protected Object executeSkel() throws Exception {
-		int rank = task.getIntParameter(0);
-		String inputName = task.getStringParameter(1);
-		String outputName = task.getStringParameter(2);
-		DistributedVector<T> input = 
-			computationCase.getData(inputName) ;
-		DistributedVector<T> output = 
-			computationCase.getData(outputName) ;
-		SubVector<T> localInput = (SubVector<T>)input.load(rank);
-		SubVector<T> localOutput = (SubVector<T>)output.load(rank);
-		T temp = null;
-		for(int i=0;i < localInput.size();i++){
-			T value = operator.execute(temp , localInput.get(i));
-			localOutput.set(i, temp);
+		DistributedVector<X> inputvector = computationCase.<DistributedVector<X>>getData(input);
+		SubVector<X> inputPart = (SubVector<X>)inputvector.load(rank);
+		List<X> values = (List<X>)inputPart.getValues();
+		DistributedVector<X> outputVector = computationCase.<DistributedVector<X>>getData(output);
+		SubVector<X> outputPart = (SubVector<X>)outputVector.load(rank);
+		X temp = null;
+		for(int i=0;i < inputPart.size();i++){
+			X value = operator.execute(temp , inputPart.get(i));
+			outputPart.set(i, temp);
 		}
 		return temp;
 	}

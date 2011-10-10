@@ -69,4 +69,11 @@ public interface ComputationCase extends Serializable {
 	
 	public void registerForTasks(Collection<Task> pendingTasks, TaskListener listener) throws MCASpaceException;
 	
+	/**
+	 * Recover one result 
+	 * state of the corresponding task : COMPUTED --> RECOVERED 
+	 * @throws MCASpaceException
+	 */
+	public <R> R recoverResult() throws MCASpaceException;
+	
 }

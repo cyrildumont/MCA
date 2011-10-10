@@ -5,11 +5,17 @@ import java.rmi.RemoteException;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import javax.validation.constraints.NotNull;
 
 import net.jini.core.discovery.LookupLocator;
 import net.jini.core.lookup.ServiceRegistrar;
@@ -47,8 +53,10 @@ public abstract class ComputationCaseDeployer {
 
 	private MCASpace space;
 
+	@NotNull
 	protected String projectName;
 
+	@NotNull
 	private String description;
 
 	protected ComputationCase computationCase;
@@ -106,7 +114,7 @@ public abstract class ComputationCaseDeployer {
 	protected abstract void deployTasks() throws MCASpaceException;
 	protected abstract void deployData() throws MCASpaceException;
 
-	protected void addTask(Task task) throws MCASpaceException {
+	protected void addTask(Task<?> task) throws MCASpaceException {
 		computationCase.addTask(task);
 	}
 
@@ -115,8 +123,13 @@ public abstract class ComputationCaseDeployer {
 		logger.info("[" + descriptor.getName() + "] Agent deployed.");
 	}
 	
-	protected void deployAgent(AgentDescriptor descriptor, ComputeAgent agent) throws MCASpaceException {
+	protected void deployAgent(AgentDescriptor descriptor, ComputeAgent<?> agent) throws MCASpaceException {
 		agentDeployer.deploy(descriptor, agent);
+		logger.info("[" + descriptor.getName() + "] Agent deployed.");
+	}
+	
+	protected void deployAgent(AgentDescriptor descriptor, Object[] agentParams) throws MCASpaceException {
+		agentDeployer.deploy(descriptor, agentParams);
 		logger.info("[" + descriptor.getName() + "] Agent deployed.");
 	}
 
@@ -184,7 +197,7 @@ public abstract class ComputationCaseDeployer {
 					LoginContext loginContext = new LoginContext("org.mca.User");
 					loginContext.login();
 					Subject.doAsPrivileged(loginContext.getSubject(), 	
-							new PrivilegedExceptionAction() {
+							new PrivilegedExceptionAction<Object>() {
 						@Override
 						public Object run() throws Exception {
 							deploy(configFile,hostOfSpace);
@@ -205,7 +218,16 @@ public abstract class ComputationCaseDeployer {
 		System.setSecurityManager(new RMISecurityManager());
 		ApplicationContext context = new  FileSystemXmlApplicationContext("file:" + configFile);
 		ComputationCaseDeployer deployer = (ComputationCaseDeployer)context.getBean("deployer");
-
+		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+		Validator validator = factory.getValidator();
+		Set<ConstraintViolation<ComputationCaseDeployer>> constraintViolations = validator.validate(deployer);
+		
+		if (!constraintViolations.isEmpty()) {
+			for (ConstraintViolation<ComputationCaseDeployer> cv : constraintViolations) {
+				System.err.println("la propriété [" + cv.getPropertyPath() + "] " + cv.getMessage());
+			}
+			System.exit(-1);
+		}
 		try {
 			deployer.deploy(hostOfSpace);
 		} catch (MCASpaceException e) {

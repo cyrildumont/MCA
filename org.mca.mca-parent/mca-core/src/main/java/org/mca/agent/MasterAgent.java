@@ -35,7 +35,7 @@ public abstract class MasterAgent extends AbstractComputeAgent{
 				e.printStackTrace();
 			}
 		}
-		pendingResults = null;
+		pendingResults.clear();
 		return retrievedResults;
 	}
 	
@@ -46,6 +46,9 @@ public abstract class MasterAgent extends AbstractComputeAgent{
 		pendingResults.add(task);
 	}
 	
+	protected void addTask(Task task) throws MCASpaceException{
+		computationCase.addTask(task);
+	}
 	
 	class ResultListener extends TaskListener{
 		@Override

@@ -8,9 +8,9 @@ import org.mca.scheduler.Task;
  * @author Cyril Dumont
  *
  */
-public interface ComputeAgent extends MobileAgent {
+public interface ComputeAgent<R> extends MobileAgent {
 	
-	public Object compute(Task task) throws ComputeAgentException;
+	public R compute(Task<R> task) throws ComputeAgentException;
 	
 	public void setCase(ComputationCase computationCase);
 

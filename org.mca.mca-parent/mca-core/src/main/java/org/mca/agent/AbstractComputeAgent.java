@@ -4,7 +4,6 @@
 package org.mca.agent;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,17 +13,16 @@ import net.jini.core.lookup.ServiceID;
 
 import org.mca.entry.Property;
 import org.mca.javaspace.ComputationCase;
-import org.mca.result.TaskVerifier;
 import org.mca.scheduler.Task;
 
 /**
- * Classe abstraite définissant un ComputeAgent
+ * abstract class define a ComputeAgent
  * 
- * @author Cyril
+ * @author Cyril Dumont
  * 
  *
  */
-public abstract class AbstractComputeAgent implements ComputeAgent{
+public abstract class AbstractComputeAgent<R> implements ComputeAgent<R>{
 
 	private static final long serialVersionUID = 1L;
 
@@ -34,20 +32,16 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 	
 	protected ComputationCase computationCase;
 
-	protected Task task;
+	protected Task<R> task;
 
 	protected Map<String, String> properties = new HashMap<String, String>();
 
 	protected Object[] parameters;
-
-	private ArrayList<Task> tasksToCheck = new ArrayList<Task>();
-
-	protected HashMap<String, Object> results;
 	
 	public AbstractComputeAgent() {
 	}
 	
-	final public Object compute(Task task) 	throws ComputeAgentException{
+	final public R compute(Task<R> task) 	throws ComputeAgentException{
 		try{
 			this.task = task;
 			this.parameters = task.parameters;
@@ -62,10 +56,7 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 				logger.fine(" \t " + property.getKey() + " = " + property.getValue());
 			}
 			preCompute();
-			if (tasksToCheck.size() != 0) {
-				checkTasks();	
-			}
-			Object result= execute();
+			R result= execute();
 			return result;
 		}catch(Exception e){
 			e.printStackTrace();
@@ -83,31 +74,13 @@ public abstract class AbstractComputeAgent implements ComputeAgent{
 		this.computationCase = computationCase;
 	}
 
-	final protected void addTaskToCheck(Task task){
-		tasksToCheck.add(task);
-	}
-
-	protected abstract Object execute() throws Exception;
-
-	final private void checkTasks() throws WaitForAnotherTaskException{
-		TaskVerifier tv = new TaskVerifier(computationCase, tasksToCheck);
-		results = tv.checkResults();
-	}
-
-	/**
-	 * 
-	 * @param taskname
-	 * @return
-	 */
-	final protected Object getResult(String taskname){
-		return results.get(taskname);
-	}
+	protected abstract R execute() throws Exception;
 
 	/**
 	 * 
 	 */
 	protected void preCompute(){
-		logger.fine("AbstractComputeAgent -- No precompute");
+		logger.fine("AbstractComputeAgent -- no precompute defined");
 	}
 
 	protected File getTempFile(String name){
