@@ -5,19 +5,18 @@
 
 	<id>distrib-assembly</id>
 	<formats>
-		<format>dir</format>
+		<format>tar.gz</format>
 		<format>zip</format>
 	</formats>
-	<includeBaseDirectory>false</includeBaseDirectory>
+	<includeBaseDirectory>true</includeBaseDirectory>
 	<dependencySets>
-		<!--<dependencySet>
+		<dependencySet>
 			<outputDirectory>/codebase</outputDirectory>
 			<includes>
 				<include>org.apache.river:*-dl</include>
 			</includes>
 			<outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
 		</dependencySet>
-		-->
 		<dependencySet>
 			<outputDirectory>/lib</outputDirectory>
 			<excludes>
@@ -42,7 +41,14 @@
 			<source>src/ignore.me</source>
 			<outputDirectory>/data</outputDirectory>
 		</file>
-	
+		<file>
+			<source>src/ignore.me</source>
+			<outputDirectory>/work</outputDirectory>
+		</file>
+		<file>
+			<source>src/ignore.me</source>
+			<outputDirectory>/cases</outputDirectory>
+		</file>
 	</files>
 	<moduleSets>
 		<moduleSet>
@@ -93,6 +99,17 @@
 					</fileSet>
 				</fileSets>
 			</sources>
+		</moduleSet>
+		<moduleSet>
+			<useAllReactorProjects>true</useAllReactorProjects>
+			<includes>
+				<include>org.mca:mca-server</include>
+			</includes>
+			<binaries>
+				<outputDirectory>/codebase</outputDirectory>
+				<unpack>false</unpack>
+				<outputFileNameMapping>mca-server.jar</outputFileNameMapping>
+			</binaries>
 		</moduleSet>
 		<moduleSet>
 			<useAllReactorProjects>true</useAllReactorProjects>
