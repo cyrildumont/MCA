@@ -71,6 +71,7 @@ public class AgentListener  {
 				String dir = System.getProperty(ComputingWorker.TEMP_WORKER);
 				((NativeComputeAgent) agent).downloadByteCode(dir);
 			}
+			agents.put(name, agent);
 			return agent;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -84,7 +85,7 @@ public class AgentListener  {
 	 * @param agent
 	 * @throws Exception
 	 */
-	public void verifyComputeAgent(ComputeAgent agent) throws Exception{
+	private void verifyComputeAgent(ComputeAgent agent) throws Exception{
 		CodeSource source = agent.getClass().getProtectionDomain().getCodeSource();
 		URL url = source.getLocation();
 		logger.fine("AgentListener -- download ComputeAgent bytecode on " + url);
