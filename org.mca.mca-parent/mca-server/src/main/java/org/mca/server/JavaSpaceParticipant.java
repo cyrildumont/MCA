@@ -38,14 +38,14 @@ abstract class JavaSpaceParticipant implements Serializable{
 	private static final long serialVersionUID = 1L;
 
 	private static final String COMPONENT_NAME = "org.mca.JavaSpaceParticipant";
-	
+
 	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
-	
+
 	/**  */
 	protected JavaSpace05 space;
 
 	protected String host;
-		
+
 	public void setSpace(JavaSpace05 space) {
 		this.space = space; 
 	}
@@ -108,7 +108,7 @@ abstract class JavaSpaceParticipant implements Serializable{
 	 * @throws MCASpaceException
 	 */
 	protected Entry readEntry(Entry template, Transaction txn, long timeToWait) 
-			throws EntryNotFoundException, MCASpaceException {
+	throws EntryNotFoundException, MCASpaceException {
 		try {
 			Entry entry = space.read(template, txn, timeToWait);
 			if (entry == null) throw new EntryNotFoundException(template, host);
@@ -126,12 +126,12 @@ abstract class JavaSpaceParticipant implements Serializable{
 	 * @return
 	 */
 	protected Entry readEntry(Entry template, Transaction txn) 
-			throws EntryNotFoundException, MCASpaceException {
+	throws EntryNotFoundException, MCASpaceException {
 		return readEntry(template, txn, JavaSpace05.NO_WAIT);
 	}
 
-	
-	
+
+
 	/**
 	 * 
 	 * @param template
@@ -142,14 +142,14 @@ abstract class JavaSpaceParticipant implements Serializable{
 	 * @throws EntryNotFoundException
 	 */
 	protected Entry takeEntry(Entry template, Transaction txn, Long timeout) 		
-			throws MCASpaceException  {
+	throws MCASpaceException  {
 		try {
 
 			Entry entry = space.take(template, txn, timeout);
 			return entry;
 		} catch (Exception e) {
 			logger.warning("JavaSpacePerticipant - take entry error :" + e.getMessage());
-			e.printStackTrace();
+			logger.throwing("JavaSpacePerticipant", "takeEntry", e);
 			throw new MCASpaceException();
 		}
 	}
@@ -160,7 +160,7 @@ abstract class JavaSpaceParticipant implements Serializable{
 	 * @throws EntryNotFoundException 
 	 */
 	protected Entry takeEntry(Entry template, Transaction txn) 
-		throws MCASpaceException {
+	throws MCASpaceException {
 		return takeEntry(template, txn, JavaSpace05.NO_WAIT);
 	}
 
@@ -185,8 +185,8 @@ abstract class JavaSpaceParticipant implements Serializable{
 			throw new MCASpaceException();
 		}
 	}
-	
-	
+
+
 	/**
 	 * 
 	 * @param tmpls

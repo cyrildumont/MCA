@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.rmi.RemoteException;
-import java.rmi.server.ExportException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -65,8 +64,8 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	private Task taskInProgress;
 	//private LeaseRenewalTask leaseRenewalTask;
 	private transient LeaseRenewalManager leaseManager;
-	
-	
+
+
 	private static final int LEASE_DURATION = 8000;
 	private static final int SLEEP_TIME = 4000;
 
@@ -456,7 +455,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			e.printStackTrace();
 		}
 	}
-	
+
 	@Override
 	public void registerForTasks(Collection<Task> pendingTasks,
 			TaskListener listener) throws MCASpaceException {
@@ -465,14 +464,32 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		try {
 			RemoteEventListener proxy = (RemoteEventListener)exporter.export(listener);
 			space.registerForAvailabilityEvent(pendingTasks, null, true, proxy, Lease.ANY,null);
+			logger.fine("ComputationCaseImpl -- Registered to listen tasks activity [" + listener + "]");	
 		} catch (Exception e) {
 			logger.warning("ComputationCaseImpl -- " + e.getMessage());	
 			e.printStackTrace();
 			throw new MCASpaceException();	
 		}
 	}
-	
-	
+
+
+	@Override
+	public <R> R recoverResult() throws MCASpaceException {
+		try{
+			Task<R> task = new Task<R>();
+			task.state = TaskState.COMPUTED;
+			task = (Task<R>)takeEntry(task, null,Long.MAX_VALUE);
+			task.state = TaskState.RECOVERED;
+			writeEntry(task, null);
+			return task.result;
+		} catch (Exception e) {
+			logger.warning("ComputationCaseImpl -- " + e.getMessage());	
+			logger.throwing("ComputationCaseImpl", "recoverResult", e);
+			throw new MCASpaceException();	
+		}
+	}
+
+
 	/**
 	 * 
 	 * @author Cyril Dumont
@@ -519,7 +536,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			System.out.println(event);
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @author Cyril Dumont
