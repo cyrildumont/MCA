@@ -94,6 +94,13 @@ public interface ComputationCase extends Serializable {
 	public <R> R recoverResult() throws MCASpaceException;
 
 	/**
+	 * Recover at most maxResults result 
+	 * state of corresponding tasks : COMPUTED --> RECOVERED 
+	 * @throws MCASpaceException
+	 */
+	public <R> Collection<R> recoverResults(int maxResults) throws MCASpaceException;
+	
+	/**
 	 * return a task corresponded to the template
 	 * 
 	 * @param template
