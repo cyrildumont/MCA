@@ -158,9 +158,17 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	@Override
 	public void addTask(Task task) throws MCASpaceException {
-		writeEntry(task,currentTransaction != null ? currentTransaction.getTransaction() : null);
-		logger.fine("ComputationCaseImpl -- [" + this.name + "] Task [" + task.name + "] added : " + task.toString());
+		writeEntry(task,null);
+		logger.fine("ComputationCaseImpl -- [" + this.name + "]" +
+				"Task [" + task.name + "] added : " + task.toString());
 	}
+	
+	@Override
+	public void updateTask(Task task) throws MCASpaceException {
+		getTask(task.name);
+		addTask(task);
+	}
+
 
 	@Override
 	public void addData(DistributedData<?> data, String name, DataHandlerFactory factory) throws MCASpaceException {
@@ -275,12 +283,6 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	@Override
 	public String getDescription() {
 		return this.description;
-	}
-
-	@Override
-	public void updateTask(Task task) throws MCASpaceException {
-		getTask(task.name);
-		addTask(task);
 	}
 
 	@Override
@@ -519,6 +521,30 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		} catch (Exception e) {
 			logger.warning("ComputationCaseImpl -- " + e.getMessage());	
 			logger.throwing("ComputationCaseImpl", "recoverResult", e);
+			throw new MCASpaceException();	
+		}
+	}
+	
+	@Override
+	public <R> Collection<R> recoverResults(int maxResults)
+			throws MCASpaceException {
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] waiting for at most " + maxResults + " result ...");	
+		try{
+			Task<R> template = new Task<R>();
+			template.state = TaskState.COMPUTED;
+			Collection<Task<R>> tasks = 
+				(Collection<Task<R>>)takeEntries(Collections.singletonList(template), null, maxResults);
+			logger.fine("ComputationCaseImpl -- [" + this.name + "] " + tasks.size() + " results recovered");	
+			Collection<R> results = new ArrayList<R>();
+			for (Task<R> task : tasks) {
+				results.add(task.result);
+				task.state = TaskState.RECOVERED;	
+			}
+			writeEntries(new ArrayList<Entry>(tasks), null);			
+			return results;
+		} catch (Exception e) {
+			logger.warning("ComputationCaseImpl -- " + e.getMessage());	
+			logger.throwing("ComputationCaseImpl", "recoversResult", e);
 			throw new MCASpaceException();	
 		}
 	}
