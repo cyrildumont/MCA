@@ -39,6 +39,7 @@ start(){
 
 stop(){ 
 	echo -n "Stopping MCAWorker daemon: " 
+	cd $MCA_HOME/bin
 	./jsvc -stop -pidfile $PIDFILE $MCA_MAIN
 	RETVAL=$? 
 	[ $RETVAL = 0 ] && echo "success" || echo "failure" 
