@@ -10,6 +10,7 @@ import java.util.Collection;
 import net.jini.core.event.EventRegistration;
 
 import org.mca.javaspace.exceptions.MCASpaceException;
+import org.mca.scheduler.RecoveryTaskStrategy;
 
 /**
  * Interface of a MCASpace service
@@ -27,6 +28,9 @@ public interface MCASpace extends Remote {
 	
 	
 	public ComputationCase addCase(String name, String description) throws RemoteException,MCASpaceException;
+	
+	public ComputationCase addCase(String name, String description, RecoveryTaskStrategy strategy)
+	throws RemoteException, MCASpaceException;
 	
 	public ComputationCase getCase(String name) throws RemoteException, MCASpaceException;
 	

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 
 import org.mca.entry.ComputationCaseState;
 import org.mca.entry.DataHandler;
@@ -47,17 +48,33 @@ public interface ComputationCase extends Serializable {
 
 	public String getDescription();
 
-	public void updateTask(Task taskInProgress) throws MCASpaceException;
+	public void updateTask(Task task) throws MCASpaceException;
 
-	public Task getTask(TaskState waitForCompute) throws MCASpaceException;
+	public Task getTask(TaskState state) throws MCASpaceException;
+	
+	public Collection<Task<?>> getTasks(TaskState state, int maxTasks) throws MCASpaceException;
 	
 	public Task getTask(String name) throws MCASpaceException;
 
 	void join(ComputationCaseListener listener) throws MCASpaceException;
 
-	public Task getTaskToCompute(String hostname) throws MCASpaceException;
-
-	public void updateTaskComputed(Task task) throws MCASpaceException;
+	/**
+	 * take WAIT_FOR_COMPUTE state tasks (maximum maxTasks) 
+	 * 
+	 * @param hostname
+	 * @param maxTasks
+	 * @return
+	 * @throws MCASpaceException
+	 */
+	public Collection<? extends Task<?>> getTaskToCompute(String hostname, int maxTasks) throws MCASpaceException;
+	
+	/**
+	 * update a collection of task
+	 * 
+	 * @param task
+	 * @throws MCASpaceException
+	 */
+	public void updateTaskComputed(List<Task<?>> task) throws MCASpaceException;
 	
 	public <T extends DistributedData<?>> T getData(String name) throws MCASpaceException;
 
@@ -75,5 +92,23 @@ public interface ComputationCase extends Serializable {
 	 * @throws MCASpaceException
 	 */
 	public <R> R recoverResult() throws MCASpaceException;
+
+	/**
+	 * return a task corresponded to the template
+	 * 
+	 * @param template
+	 * @param transaction 
+	 * @return
+	 */
+	public Task<?> getTask(Task<?> template)throws MCASpaceException;
 	
+	/**
+	 * 
+	 * @param template
+	 * @param maxTasks
+	 * @return
+	 * @throws MCASpaceException
+	 */
+	public Collection<Task<?>> getTasks(Task<?> template, int maxTasks) throws MCASpaceException;
+	 
 }

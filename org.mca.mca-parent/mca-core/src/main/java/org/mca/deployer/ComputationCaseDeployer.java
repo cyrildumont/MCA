@@ -5,16 +5,11 @@ import java.rmi.RemoteException;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import javax.validation.constraints.NotNull;
 
 import net.jini.core.discovery.LookupLocator;
@@ -34,6 +29,7 @@ import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.MCASpace;
 import org.mca.javaspace.exceptions.CaseNotFoundException;
 import org.mca.javaspace.exceptions.MCASpaceException;
+import org.mca.scheduler.RecoveryTaskStrategy;
 import org.mca.scheduler.Task;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
@@ -62,6 +58,8 @@ public abstract class ComputationCaseDeployer {
 	protected ComputationCase computationCase;
 
 	protected ComputeAgentDeployer agentDeployer;
+
+	protected RecoveryTaskStrategy strategy;
 
 	public ComputationCaseDeployer() {
 		agentDeployer = new ComputeAgentDeployer();
@@ -93,13 +91,15 @@ public abstract class ComputationCaseDeployer {
 		logger.info(" *************** DEPLOY COMPUTATION CASE *********************");
 		deployAgents();
 		initSpace(hostOfSpace);
+		this.strategy = getStrategy();
 		deployCase();
 		try {
 			deployProperties();
 			deployData();
 			deployTasks();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.warning("Error during computation case deploiement on [" + hostOfSpace + "]");
+			logger.throwing("ComputationCaseDeployer", "deploy", e);
 			try {
 				space.removeCase(projectName);
 			} catch (RemoteException e1) {
@@ -109,6 +109,8 @@ public abstract class ComputationCaseDeployer {
 		return computationCase;
 	}
 
+
+	protected abstract RecoveryTaskStrategy getStrategy();
 
 	protected abstract void deployAgents() throws MCASpaceException;
 	protected abstract void deployTasks() throws MCASpaceException;
@@ -135,7 +137,10 @@ public abstract class ComputationCaseDeployer {
 
 	private void deployCase() throws MCASpaceException {
 		try {
-			computationCase = space.addCase(projectName, description);
+			if(strategy != null)
+				computationCase = space.addCase(projectName, description, strategy);
+			else
+				computationCase = space.addCase(projectName, description);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 			throw new MCASpaceException();
@@ -148,7 +153,7 @@ public abstract class ComputationCaseDeployer {
 	private void deployProperties() {
 		logger.info(" *************** Deploy Properties *********************");
 		if (properties == null || properties.size() == 0) {
-			logger.info("[" + projectName + "] -- No preperty to deploy" );
+			logger.info("[" + projectName + "] -- No property to deploy" );
 			return;
 		}
 		try {
@@ -209,25 +214,22 @@ public abstract class ComputationCaseDeployer {
 				} catch (PrivilegedActionException e) {
 					e.printStackTrace();
 				}
-
-
-
 	}
 
 	private static void deploy(String configFile, String hostOfSpace) {
 		System.setSecurityManager(new RMISecurityManager());
 		ApplicationContext context = new  FileSystemXmlApplicationContext("file:" + configFile);
 		ComputationCaseDeployer deployer = (ComputationCaseDeployer)context.getBean("deployer");
-		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-		Validator validator = factory.getValidator();
-		Set<ConstraintViolation<ComputationCaseDeployer>> constraintViolations = validator.validate(deployer);
-		
-		if (!constraintViolations.isEmpty()) {
-			for (ConstraintViolation<ComputationCaseDeployer> cv : constraintViolations) {
-				System.err.println("la propriété [" + cv.getPropertyPath() + "] " + cv.getMessage());
-			}
-			System.exit(-1);
-		}
+//		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+//		Validator validator = factory.getValidator();
+//		Set<ConstraintViolation<ComputationCaseDeployer>> constraintViolations = validator.validate(deployer);
+//		
+//		if (!constraintViolations.isEmpty()) {
+//			for (ConstraintViolation<ComputationCaseDeployer> cv : constraintViolations) {
+//				logger.warning("la propriété [" + cv.getPropertyPath() + "] " + cv.getMessage());
+//			}
+//			System.exit(-1);
+//		}
 		try {
 			deployer.deploy(hostOfSpace);
 		} catch (MCASpaceException e) {

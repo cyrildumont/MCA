@@ -1,11 +1,8 @@
 package org.mca.masterworker;
 
-import java.util.LinkedList;
-import java.util.Queue;
-
 import org.mca.agent.AbstractComputeAgent;
 import org.mca.javaspace.exceptions.MCASpaceException;
-import org.mca.scheduler.Task;
+import static org.mca.masterworker.MWConstants.*;
 
 /**
  * Abstract class for Master agent to a Master-Worker computation case
@@ -17,10 +14,8 @@ public abstract class MasterAgent<R> extends AbstractComputeAgent<Object> {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final int ADD_TASK_INTERVAL = 1000;
-
 	/**
-	 * 
+	 * abstract class represents a thread that collects worker tasks results 
 	 * 
 	 * @author Cyril
 	 *
@@ -35,7 +30,7 @@ public abstract class MasterAgent<R> extends AbstractComputeAgent<Object> {
 		public void run() {
 			while(!caseFinish){
 				try {
-					R result = computationCase.recoverResult();
+					R result = (R)computationCase.recoverResult();
 					nbRecoveredResult++;
 					if(performResult(result)) finalizeCase();
 				} catch (Exception e) {
@@ -53,45 +48,7 @@ public abstract class MasterAgent<R> extends AbstractComputeAgent<Object> {
 	}
 
 
-	/**
-	 * 
-	 * @author Cyril Dumont
-	 *
-	 */
-	private class TaskDeployer extends Thread{
-
-		private boolean interrupt = false;
-
-		public TaskDeployer() {
-			super("task deployer thread");
-		}
-
-		@Override
-		public void run() {
-			while(!interrupt){
-				try {
-					Task<R> task = taskToAddQueue.poll();
-					if (task != null ) computationCase.addTask(task);
-					Thread.sleep(ADD_TASK_INTERVAL);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} catch (MCASpaceException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-
-		@Override
-		public void interrupt() {
-			interrupt = true;
-			super.interrupt();
-		}
-	}
-
 	private ResultCollector resultCollector;
-	private TaskDeployer taskDeployer;
-
-	private Queue<Task<R>> taskToAddQueue = new LinkedList<Task<R>>();
 
 	protected int nbAddedTasks;
 
@@ -103,22 +60,24 @@ public abstract class MasterAgent<R> extends AbstractComputeAgent<Object> {
 		this.workerAgentUrl = workerAgentUrl;
 	}
 
-	public void addTask(Task<R> task) throws MCASpaceException{
+	/**
+	 * 
+	 * @param parameters
+	 * @throws MCASpaceException
+	 */
+	public void addWorkerTask(Object[] parameters) throws MCASpaceException{
+		WorkerTask<Boolean> task = new WorkerTask<Boolean>(WORKER_TASK_NAME + ++nbAddedTasks);
+		task.parameters = parameters;
 		task.compute_agent_url = workerAgentUrl;
 		computationCase.addTask(task);
-		//taskToAddQueue.add(task);
 	}
 
 	private boolean caseFinish;
 
 	@Override
 	final protected Object execute() throws Exception {
-		ThreadGroup tg = new ThreadGroup("master agent thread group");
-		
 		resultCollector = new ResultCollector();
 		resultCollector.start();
-//		taskDeployer = new TaskDeployer();
-//		taskDeployer.start();
 		startMasterProcess();
 		while(!caseFinish){
 			Thread.sleep(1000);
@@ -128,10 +87,8 @@ public abstract class MasterAgent<R> extends AbstractComputeAgent<Object> {
 
 
 	private void finalizeCase() throws Exception {
-		caseFinish = true;
-		resultCollector.interrupt();
-		taskDeployer.interrupt();
 		computationCase.finish();
+		caseFinish = true;
 		performPostTreatment();
 	}
 
