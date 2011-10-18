@@ -10,14 +10,35 @@ import net.jini.core.event.EventRegistration;
 import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.MCASpaceEventListener;
 import org.mca.javaspace.exceptions.MCASpaceException;
+import org.mca.scheduler.RecoveryTaskStrategy;
 
 import com.sun.jini.start.ServiceProxyAccessor;
 
 public interface MCASpaceServer extends ServiceProxyAccessor, Serializable, Remote {
 
+	/**
+	 * 
+	 * @param name
+	 * @param description
+	 * @return
+	 * @throws RemoteException
+	 * @throws MCASpaceException
+	 */
 	public ComputationCase addCase(String name, String description)
 	throws RemoteException, MCASpaceException;
 
+	/**
+	 * 
+	 * @param name
+	 * @param description
+	 * @param strategy
+	 * @return
+	 * @throws RemoteException
+	 * @throws MCASpaceException
+	 */
+	public ComputationCase addCase(String name, String description, RecoveryTaskStrategy strategy)
+	throws RemoteException, MCASpaceException;
+	
 	/**
 	 * 
 	 */

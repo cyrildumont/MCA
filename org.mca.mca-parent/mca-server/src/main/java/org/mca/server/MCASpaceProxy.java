@@ -10,6 +10,7 @@ import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.MCASpace;
 import org.mca.javaspace.MCASpaceEventListener;
 import org.mca.javaspace.exceptions.MCASpaceException;
+import org.mca.scheduler.RecoveryTaskStrategy;
 
 
 public class MCASpaceProxy implements MCASpace, Serializable {
@@ -31,6 +32,11 @@ public class MCASpaceProxy implements MCASpace, Serializable {
 		return remoteRef.addCase(name, description);
 	}
 
+	@Override
+	public ComputationCase addCase(String name, String description, RecoveryTaskStrategy strategy)
+	throws RemoteException, MCASpaceException{
+		return remoteRef.addCase(name, description, strategy);
+	}
 	@Override
 	public ComputationCase getCase(String name) throws RemoteException,
 			MCASpaceException {

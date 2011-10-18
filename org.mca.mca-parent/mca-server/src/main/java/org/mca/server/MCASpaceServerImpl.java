@@ -7,6 +7,9 @@ import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import javax.security.auth.Subject;
@@ -49,6 +52,7 @@ import org.mca.javaspace.MCASpaceEvent;
 import org.mca.javaspace.MCASpaceEventListener;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.lookup.Lookup;
+import org.mca.scheduler.RecoveryTaskStrategy;
 import org.mca.service.ServiceConfigurator;
 import org.mca.service.ServiceStarter;
 import org.mca.util.MCAUtils;
@@ -94,6 +98,8 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 
 	private TransactionManager transactionManager;
 
+	private Map<String, ComputationCase> cases;
+
 	public MCASpaceServerImpl(String[] configArgs, LifeCycle lifeCycle) 
 	throws IOException,ConfigurationException, LoginException
 	{
@@ -112,7 +118,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 				try {
 					Subject.doAsPrivileged(
 							loginContext.getSubject(),
-							new PrivilegedExceptionAction(){
+							new PrivilegedExceptionAction<Object>(){
 								public Object run() throws Exception {
 									init(config);
 									return null;
@@ -138,6 +144,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	 * @throws IOException
 	 */
 	public void init(Configuration config) throws ConfigurationException, IOException {
+		cases = new HashMap<String, ComputationCase>();
 		listeners = new EventListenerList();
 		final Exporter basicExporter = 
 			new BasicJeriExporter(TcpServerEndpoint.getInstance(0),
@@ -152,7 +159,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		mgr = new JoinManager(proxy, getAttributes(), this,dm,null, config);
 		Lookup finder = new Lookup(net.jini.core.transaction.server.TransactionManager.class);
 		do{
-		transactionManager =
+			transactionManager =
 				(net.jini.core.transaction.server.TransactionManager) finder.getService("localhost");
 		}while(transactionManager == null);
 		logger.fine("MCASpaceServerImpl -- Transaction Manager : [" + transactionManager + "]");
@@ -178,6 +185,19 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	@Override
 	public ComputationCase addCase(String name, String description) throws RemoteException,MCASpaceException {
 		logger.fine("MCASpaceServerImpl -- addCase [" + name +", " + description + "]");
+		RecoveryTaskStrategy strategy = null;
+		return addCase(name, description, strategy);
+	}
+
+	/**
+	 * @param name
+	 * @param description
+	 * @return
+	 * @throws MCASpaceException
+	 * @throws RemoteException
+	 */
+	private JavaSpace05 createJavaSpace(String name, String description)
+	throws MCASpaceException, RemoteException {
 		try {
 			if (findSpace(name) != null) 
 				throw new MCASpaceException("[" + name + "] computation case with the same name exists.");
@@ -208,15 +228,22 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		} catch (TransactionException e) {
 			e.printStackTrace();
 		}
-
 		logger.fine("MCASpaceServerImpl -- JavaSpace [" + name + "] started.");
+		return space;
+	}
 
-		ComputationCase computationCase = new ComputationCaseImpl(space, transactionManager);
+	@Override
+	public ComputationCase addCase(String name, String description,
+			RecoveryTaskStrategy strategy) throws RemoteException,
+			MCASpaceException {
+		JavaSpace05 space = createJavaSpace(name, description);
+		ComputationCase computationCase = new ComputationCaseImpl(strategy, space, transactionManager);
+		cases.put(name, computationCase);
 		logger.fine("MCASpaceServerImpl -- Case [" + name + "] added.");
 		fireNotify(MCASpace.ADD_CASE, computationCase);
 		return computationCase;
-
 	}
+
 
 	/**
 	 * 
@@ -228,7 +255,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		try {
 			space = findSpace(name);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.throwing("ComputationCaseImpl", "removeCase", e);
 			throw new MCASpaceException();
 		}
 		if(space == null)
@@ -236,6 +263,9 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		Administrable admin = (Administrable)space;
 		DestroyAdmin dadmin = (DestroyAdmin)admin.getAdmin();
 		dadmin.destroy();
+		ComputationCase cc = cases.get(name);
+		cases.remove(cc);
+		logger.fine("MCASpaceServerImpl -- Case [" + name + "] removed.");
 		fireNotify(MCASpace.REMOVE_CASE,null);
 	}
 
@@ -246,11 +276,11 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	@Override
 	public Collection<ComputationCase> getCases() throws RemoteException{
 		Collection<ComputationCase> cases = new ArrayList<ComputationCase>();
-//		for (Map.Entry<String, JavaSpace05> entry : this.cases.entrySet()) {
-//			JavaSpace05 space = entry.getValue();
-//			ComputationCase c = new ComputationCaseImpl(space,transactionManager);	
-//			cases.add(c);
-//		}
+		//		for (Map.Entry<String, JavaSpace05> entry : this.cases.entrySet()) {
+		//			JavaSpace05 space = entry.getValue();
+		//			ComputationCase c = new ComputationCaseImpl(space,transactionManager);	
+		//			cases.add(c);
+		//		}
 		return cases;
 	}
 
@@ -260,16 +290,10 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	 */
 	@Override
 	public ComputationCase getCase(String name) throws RemoteException,MCASpaceException{
-		JavaSpace05 space = null;
-		try {
-			space = findSpace(name);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new MCASpaceException();
-		}
-		if(space == null)
+		ComputationCase cc = cases.get(name);
+		if(cc == null)
 			throw new MCASpaceException("[" + name + "] computation Case not exists.");
-		return new ComputationCaseImpl(space, transactionManager);
+		return cc;
 	}
 
 	/**
@@ -302,18 +326,17 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		JavaSpace05 space = (JavaSpace05)registrar.lookup(template);
 		return space;
 	}
-	
+
 	@Override
 	public ComputationCase getCase() throws RemoteException,MCASpaceException{
-		JavaSpace05 server = null;
-		try {
-			server = findSpace();
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new MCASpaceException();
-		} 
-		if(server == null) return null;
-		return new ComputationCaseImpl(server,transactionManager);
+		if (cases.isEmpty()) {
+			return null;
+		}else{
+			Iterator<String> names = cases.keySet().iterator();
+			String name = (String) names.next();
+			ComputationCase cc = cases.get(name);
+			return cc;	
+		}
 	}
 
 	@Override
