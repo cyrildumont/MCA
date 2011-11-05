@@ -8,6 +8,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 import net.jini.admin.Administrable;
@@ -162,7 +167,14 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		logger.fine("ComputationCaseImpl -- [" + this.name + "]" +
 				"Task [" + task.name + "] added : " + task.toString());
 	}
-	
+
+	@Override
+	public void addTasks(List<? extends Task<?>> tasks) throws MCASpaceException {
+		writeEntries(tasks, null);	
+		logger.fine("ComputationCaseImpl -- [" + this.name + "]" +
+				tasks.size() + " tasks added.");
+	}
+
 	@Override
 	public void updateTask(Task task) throws MCASpaceException {
 		getTask(task.name);
@@ -305,7 +317,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		return (Collection<Task<?>>)takeEntries(
 				Collections.singletonList(template), currentTransaction.getTransaction(), maxTasks);
 	}
-	
+
 	/**
 	 * 
 	 * @param state
@@ -357,7 +369,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 
 	@Override
-	public Collection<? extends Task<?>> getTaskToCompute(String hostname, int maxTasks)
+	public Collection<? extends Task<?>> getTaskToCompute()
 			throws MCASpaceException {
 		if(!isRunning())
 			throw new MCASpaceException("Case isn't started");
@@ -375,9 +387,10 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 				leaseManager.cancel(created.lease);
 				return null;
 			}
+			String localIP = MCAUtils.getIP();
 			for (Task<?> task : taskToCompute) {
 				task.setState(TaskState.ON_COMPUTING);
-				task.worker = hostname;
+				task.worker = localIP;
 			}
 			List<Task<?>> list = new ArrayList<Task<?>>(taskToCompute);
 			writeEntries(list,created.transaction);
@@ -400,20 +413,17 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		}
 		try {
 			String localIP = MCAUtils.getIP();
-			List<Task> templates = new ArrayList<Task>();
-			for (Task task : tasksToUpdate) {
-				Task template = new Task();
-				template.name = task.name;
-				template.worker = localIP;
-				template.state = TaskState.ON_COMPUTING;
-				templates.add(template);
-			}
+			Task template = new Task();
+			template.worker = localIP;
+			template.state = TaskState.ON_COMPUTING;
+			Collection templates = Collections.singletonList(template);
 			Collection tasksFinded = 
-				takeEntries(templates, currentTransaction.getTransaction(), templates.size());
+				takeEntries(templates, currentTransaction.getTransaction(), tasksToUpdate.size());
 			if (tasksFinded.size() != tasksToUpdate.size()) {
 				logger.warning("local number of tasks to update [" + tasksToUpdate.size() + "]" +
 						" is different of number of remote tasks to update [" + tasksFinded.size() + "]");
 				currentTransaction.abort();
+				leaseManager.remove(currentTransaction.getLease());
 				logger.warning("current transaction aborted");
 			}else{
 				writeEntries(tasksToUpdate, currentTransaction.getTransaction());
@@ -424,6 +434,10 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			logger.warning("ComputationCaseImpl -- transaction can't be committed : " + e.getMessage());
 			logger.throwing("ComputationCaseImpl", "updateTaskComputed", e);
 			throw new MCASpaceException(e.getMessage());
+		} catch (UnknownLeaseException e) {
+			logger.warning("ComputationCaseImpl -- transaction can't be remove of the LeaseRenewalManager : " + e.getMessage());
+			logger.throwing("ComputationCaseImpl", "updateTaskComputed", e);
+			throw new MCASpaceException(e.getMessage());
 		}finally{
 			try {
 				leaseManager.remove(currentTransaction.getLease());
@@ -432,18 +446,68 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 				logger.throwing("ComputationCaseImpl", "updateTaskComputed", e);
 			}
 		}
-		
+
 	}
 
 	@Override
-	public void barrier(String name, int nbWorker) throws MCASpaceException {
-		Barrier barrier = new Barrier(name, null);
+	public void barrier(String name, int rank, int[] neighbors) throws MCASpaceException{
+		Barrier barrier = new Barrier(name, rank);
+		writeEntry(barrier, null);
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "] created");	
+		int nbBarrier = neighbors.length;
+		ExecutorService eservice = Executors.newFixedThreadPool(nbBarrier);
+		List<Future<Void>> futuresList = new ArrayList<Future<Void>>();
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "] waiting ...");
+		for (int neighbor : neighbors) {	
+			futuresList.add(eservice.submit(new BarrierTask(name, neighbor)));
+		};	
+		for (Future<Void> future : futuresList) {
+			try {
+				future.get();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		//takeEntry(barrier, null);
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "] OK");
+		
+	}
+	
+	/**
+	 * 
+	 * @author cyril
+	 *
+	 */
+	private class BarrierTask implements Callable<Void>{
+		
+		private String name;
+		private int rank;
+		
+		public BarrierTask(String name, int rank) {
+			this.name = name;
+			this.rank = rank;
+		}
+		
+		@Override
+		public Void call() throws Exception {
+			Barrier barrier = new Barrier(name, rank);
+			logger.fine("ComputationCaseImpl -- [" + this.name + "] read Barrier [" + name + "][" + rank +"] ...");
+			readEntry(barrier, null, Lease.FOREVER);
+			logger.fine("ComputationCaseImpl -- [" + this.name + "] read Barrier [" + name + "][" + rank +"] OK");
+			return null;
+		}
+	}
+
+	@Override
+	public void barrier(String name) throws MCASpaceException {
+		Barrier barrier = new Barrier(name, null, null);
 		barrier = (Barrier)takeEntry(barrier, null, Long.MAX_VALUE);	
 		barrier.increment();
 		writeEntry(barrier, null);
+		int size = barrier.getSize();
 		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "] waiting ...");
 		try {
-			barrier.counter = nbWorker;
+			barrier.counter = size;
 			readEntry(barrier, null, Lease.FOREVER);
 		} catch (EntryNotFoundException e) {
 			e.printStackTrace();
@@ -452,15 +516,15 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	}
 
 	@Override
-	public void createBarrier(String name) throws MCASpaceException {
-		Barrier barrier = new Barrier(name, 0);
+	public void createBarrier(String name, int size) throws MCASpaceException {
+		Barrier barrier = new Barrier(name, 0, size);
 		writeEntry(barrier, null);
-		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "] created");	
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "][size=" + size + "] created");	
 	}
 
 	@Override
 	public void removeBarrier(String name) throws MCASpaceException {
-		Barrier barrier = new Barrier(name, null);
+		Barrier barrier = new Barrier(name, null,null);
 		takeEntry(barrier, null);
 		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "] removed	");	
 	}
@@ -524,16 +588,16 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			throw new MCASpaceException();	
 		}
 	}
-	
+
 	@Override
 	public <R> Collection<R> recoverResults(int maxResults)
-			throws MCASpaceException {
+	throws MCASpaceException {
 		logger.fine("ComputationCaseImpl -- [" + this.name + "] waiting for at most " + maxResults + " result ...");	
 		try{
 			Task<R> template = new Task<R>();
 			template.state = TaskState.COMPUTED;
 			Collection<Task<R>> tasks = 
-				(Collection<Task<R>>)takeEntries(Collections.singletonList(template), null, maxResults);
+				(Collection<Task<R>>)takeEntries(Collections.singletonList(template), null, maxResults, Long.MAX_VALUE);
 			logger.fine("ComputationCaseImpl -- [" + this.name + "] " + tasks.size() + " results recovered");	
 			Collection<R> results = new ArrayList<R>();
 			for (Task<R> task : tasks) {
@@ -558,7 +622,10 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	class TaskLeaseListener implements LeaseListener{
 		@Override
 		public void notify(LeaseRenewalEvent event) {
-			System.out.println(event);
+			Throwable e = event.getException();
+			logger.warning("TaskLeaseListener - lease event [" + event.getLease() + "]");
+			e.printStackTrace();
+			logger.throwing("TaskLeaseListener", "notify", e);
 		}
 	}
 
