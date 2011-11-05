@@ -23,9 +23,21 @@ public class Barrier extends Storable {
 	
 	public Integer counter;
 	
+	public Integer size;
 	
-	public Barrier() {
+	public Integer rank;
+	
+	public Barrier() {}
+	
+	
+	public Barrier(String name) {
+		this(name, null, null);
+	}
 
+	
+	public Barrier(String name, int rank) {
+		this(name);
+		this.rank = rank;
 	}
 	
 	/**
@@ -33,11 +45,13 @@ public class Barrier extends Storable {
 	 * @param name
 	 * 
 	 */
-	public Barrier(String name, Integer counter) {
+	public Barrier(String name, Integer counter, Integer size) {
 		this.name = name;
 		this.counter = counter;
+		this.size = size;
 	}
-	
+
+
 	public String getName() {
 		return name;
 	}
@@ -46,7 +60,9 @@ public class Barrier extends Storable {
 		this.name = name;
 	}
 	
-	
+	public Integer getSize() {
+		return size;
+	}
 	
 	public Integer getCounter() {
 		return counter;
@@ -69,7 +85,8 @@ public class Barrier extends Storable {
 		NamedNodeMap attributes = node.getAttributes();
 		name = attributes.getNamedItem("name").getNodeValue();
 		counter = Integer.valueOf(attributes.getNamedItem("counter").getNodeValue());
-
+		size = Integer.valueOf(attributes.getNamedItem("size").getNodeValue());
+		rank = Integer.valueOf(attributes.getNamedItem("rank").getNodeValue());
 	}
 
 	/**
@@ -81,6 +98,8 @@ public class Barrier extends Storable {
 		Element node = doc.createElement(this.getClass().getName());
 		node.setAttribute("name", this.name);
 		node.setAttribute("counter", counter.toString());
+		node.setAttribute("size", size.toString());
+		node.setAttribute("rank", rank.toString());
 		parent.appendChild(node);
 	}
 

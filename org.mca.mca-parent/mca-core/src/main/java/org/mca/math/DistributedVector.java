@@ -3,7 +3,6 @@ package org.mca.math;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.mca.entry.DataHandler;
@@ -90,6 +89,10 @@ public class DistributedVector<E> extends DistributedData<E> {
 						? size / partSize : size / partSize + 1;
 	}
 
+	@Override
+	protected DataPart<E> generatePart(Object values) {
+		return new SubVectorImpl<E>((E[])values);
+	}
 	/**
 	 * 
 	 * @param i

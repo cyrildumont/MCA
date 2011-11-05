@@ -44,8 +44,6 @@ public class DistributedData<E> extends Storable{
 	
 	protected int localPart;
 	
-	protected File inputlocalFile;
-
 	protected File outputlocalFile;
 
 	public String name;
@@ -88,10 +86,25 @@ public class DistributedData<E> extends Storable{
 		logger.fine("[" + name + "] - loading part [" + part + "] ...");
 		localPart = part;
 		String localPartName = name + "-" + part;
-		inputlocalFile = download(localPartName);
+		File inputlocalFile = download(localPartName);
 		outputlocalFile = 
 			new File(System.getProperty("temp.worker.result") + "/" + localPartName + ".dat");
 		DataPart<E> data = format.parse(inputlocalFile);
+		publishPart(localPartName, data);
+		DataHandler handler = computationCase.removeDataHandler(localPartName);
+		handler.worker = MCAUtils.getIP();
+		computationCase.addDataHandler(handler);
+		addPart(part, data);
+		return data;
+	}
+	
+	public DataPart<E> load(int part, Object values) throws Exception{
+		logger.fine("[" + name + "] - loading part [" + part + "] ...");
+		localPart = part;
+		String localPartName = name + "-" + part;
+		outputlocalFile = 
+			new File(System.getProperty("temp.worker.result") + "/" + localPartName + ".dat");
+		DataPart<E> data = generatePart(values);
 		publishPart(localPartName, data);
 		DataHandler handler = computationCase.removeDataHandler(localPartName);
 		handler.worker = MCAUtils.getIP();
@@ -276,8 +289,11 @@ public class DistributedData<E> extends Storable{
 	}
 
 	protected void deployPart(int i, ComputationCase cc,
-			DataHandlerFactory factory) throws MCASpaceException{throw new NotImplementedException();};
+			DataHandlerFactory factory) throws MCASpaceException{throw new NotImplementedException();}
 
+	
+	protected DataPart<E> generatePart(Object values){throw new NotImplementedException();}
+			
 	@Override
 	public String toString() {
 		return "DistributedData [name:" + name + "]";

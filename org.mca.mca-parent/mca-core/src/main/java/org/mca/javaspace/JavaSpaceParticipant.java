@@ -174,8 +174,13 @@ public abstract class JavaSpaceParticipant implements Serializable{
 	 * @throws MCASpaceException
 	 */
 	protected Collection<? extends Entry> takeEntries(Collection<?> templates, Transaction txn, int maxEntries) throws MCASpaceException{
+			return takeEntries(templates, txn, maxEntries, JavaSpace05.NO_WAIT);
+	}
+	
+	protected Collection<? extends Entry> 
+		takeEntries(Collection<?> templates, Transaction txn, int maxEntries, Long timeout) throws MCASpaceException{
 		try {
-			return space.take(templates, txn, JavaSpace05.NO_WAIT, maxEntries);
+			return space.take(templates, txn, timeout, maxEntries);
 		} catch (RemoteException e) {
 			logger.warning("[" + host + "]" + e.getMessage());
 			throw new MCASpaceException();

@@ -19,6 +19,8 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 
 	private static DecimalFormat format;
 	
+	private static final Double DEFAULT_VALUE = new Double(0);
+	
 	private final static int MAX_INTEGER_DIGIT = 10;
 	private final static int MAX_FRACTION_DIGIT = 10;
 	
@@ -43,7 +45,10 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 		    int width = matrix[0].length;
 			for (i = 0; i < height; i++) {
 				for (j = 0; j < width; j++) {
-					Double d = (Double)matrix[i][j];
+					Object value = matrix[i][j];
+					Double d = null;
+					if (value == null) d = DEFAULT_VALUE;
+					else d = (Double)value;
 					String s = format.format(d);
 					int padding = maxFormatSize - s.length();
 					for (int k = 0; k < padding; k++)

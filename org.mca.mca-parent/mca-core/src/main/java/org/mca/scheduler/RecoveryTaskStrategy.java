@@ -1,11 +1,12 @@
 package org.mca.scheduler;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.exceptions.MCASpaceException;
 
-public interface RecoveryTaskStrategy {
+public interface RecoveryTaskStrategy extends Serializable{
 
 	/**
 	 * 

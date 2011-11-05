@@ -1,18 +1,22 @@
 package org.mca.ext.spmd;
 
+import javax.validation.constraints.NotNull;
+
 import org.mca.agent.AgentDescriptor;
 import org.mca.deployer.ComputationCaseDeployer;
 import org.mca.entry.DataHandlerFactory;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.math.DistributedData;
-import org.mca.scheduler.Task;
 
 public abstract class SPMDCaseDeployer extends ComputationCaseDeployer {
 	
+	@NotNull
 	private AgentDescriptor program;
 	
+	@NotNull
 	private DataHandlerFactory dataHandlerFactory;
 	
+	@NotNull
 	private DistributedData<?> input;
 	
 	public void setProgram(AgentDescriptor program) {
@@ -31,20 +35,21 @@ public abstract class SPMDCaseDeployer extends ComputationCaseDeployer {
 	@Override
 	protected void deployTasks() throws MCASpaceException {
 		String computeAgentURL = program.getURL();
-		for (int i = 1; i <= input.getNbParts(); i++) {
-			String name =  projectName + "-" + i;
-			Task t = new Task(name, computeAgentURL);
-			t.parameters = new Object[]{i};
+		int size = input.getNbParts();
+		for (int rank = 1; rank <= size; rank++) {
+			String name =  projectName + "-" + rank;
+			SPMDTask t = new SPMDTask(name, computeAgentURL,rank, size);
 			addTask(t);
 		}
 	}
 
 	@Override
 	protected void deployData() throws MCASpaceException {
-		input = getInput();
 		if (input != null)
-		computationCase.addData(input, SPMD.INPUT_NAME, dataHandlerFactory);
+			computationCase.addData(input, SPMDConstants.INPUT_NAME, dataHandlerFactory);
 	}
 	
-	protected abstract DistributedData<?> getInput();
+	public void setInput(DistributedData<?> input) {
+		this.input = input;
+	}
 }

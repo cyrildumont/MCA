@@ -1,8 +1,14 @@
 package org.mca.ext.masterworker;
 
-import static org.mca.ext.masterworker.MWConstants.WORKER_TASK_NAME;
+import static org.mca.ext.masterworker.MWConstants.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 import org.mca.agent.AbstractComputeAgent;
 import org.mca.javaspace.exceptions.MCASpaceException;
@@ -15,6 +21,10 @@ import org.mca.javaspace.exceptions.MCASpaceException;
  */
 public abstract class MasterAgent<R> extends AbstractComputeAgent<Object> {
 
+	private static final String COMPONENT_NAME = "org.mca.agent.MasterAgent";
+
+	protected static final Logger logger = Logger.getLogger(COMPONENT_NAME);
+	
 	private static final long serialVersionUID = 1L;
 	
 	/**
@@ -23,30 +33,60 @@ public abstract class MasterAgent<R> extends AbstractComputeAgent<Object> {
 	 * @author Cyril
 	 *
 	 */
-	private class ResultCollector extends Thread{
+	private class ResultCollector implements Callable<Void>{
 
 		public ResultCollector() {
-			super("result collector thread");
+			//super("result collector thread");
 		}
 
 		@Override
-		public void run() {
+		public Void call() {
+			String computationCaseName = computationCase.getName();
 			while(!caseFinish){
 				try {
 					Collection<R> results = computationCase.recoverResults(maxMasterResultsRecovered);
+					logger.fine("[" + computationCaseName + "] " + results.size() +  " results recovered.");
 					nbRecoveredResult = nbRecoveredResult + results.size();
-					if(performResults(results)) finalizeCase();
+					if(performResults(results)){
+						finalizeCase();
+					}
 				} catch (Exception e) {
 					logger.warning("MasterAgent - ResultCollector on error");
 					logger.throwing("ResultCollector", "run", e);
+					return null;
 				}
 			}
+			return null;
 		}
 
+//		@Override
+//		public void interrupt() {
+//			logger.info("MasterAgent - ResultCollector interrupt");
+//			super.interrupt();
+//		}
+	}
+	
+	/**
+	 * 
+	 * @author cyril
+	 *
+	 */
+	private class TaskDeployer implements Callable<Void>{
+		
+		public TaskDeployer() {
+			//super("task deployer thread");
+		}
+		
+		
+		
 		@Override
-		public void interrupt() {
-			logger.info("MasterAgent - ResultCollector interrupt");
-			super.interrupt();
+		public Void call() {
+			try {
+				startMasterProcess();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			return null;
 		}
 	}
 
@@ -60,6 +100,10 @@ public abstract class MasterAgent<R> extends AbstractComputeAgent<Object> {
 
 	private String workerAgentUrl;
 
+	private boolean caseFinish;
+	
+	private List<WorkerTask<?>> tasksToAdd = new ArrayList<WorkerTask<?>>();
+	
 	public MasterAgent(String workerAgentUrl, int maxMasterResultsRecovered) {
 		this.workerAgentUrl = workerAgentUrl;
 		this.maxMasterResultsRecovered = maxMasterResultsRecovered;
@@ -71,25 +115,33 @@ public abstract class MasterAgent<R> extends AbstractComputeAgent<Object> {
 	 * @throws MCASpaceException
 	 */
 	public void addWorkerTask(Object[] parameters) throws MCASpaceException{
-		WorkerTask<Boolean> task = new WorkerTask<Boolean>(WORKER_TASK_NAME + ++nbAddedTasks);
+		WorkerTask<Boolean> task = new WorkerTask<Boolean>(WORKER_TASK_NAME + "-" +  ++nbAddedTasks);
 		task.parameters = parameters;
 		task.compute_agent_url = workerAgentUrl;
-		computationCase.addTask(task);
+		tasksToAdd.add(task);
+		if(tasksToAdd.size() == maxMasterResultsRecovered){
+			computationCase.addTasks(tasksToAdd);
+			logger.fine("MasterAgent -- [" + computationCase.getName() + "] " +
+					"" + tasksToAdd.size() + " tasks added.");
+			tasksToAdd.clear();
+		}
 	}
-
-	private boolean caseFinish;
 
 	@Override
 	final protected Object execute() throws Exception {
 		resultCollector = new ResultCollector();
-		resultCollector.start();
-		startMasterProcess();
+//		resultCollector.start();
+		TaskDeployer taskDeployer = new TaskDeployer();
+		
+		ExecutorService es = Executors.newFixedThreadPool(2);
+		es.submit(resultCollector);
+		es.submit(taskDeployer);
+		
 		while(!caseFinish){
 			Thread.sleep(1000);
 		}
 		return null;
 	}
-
 
 	private void finalizeCase() throws Exception {
 		computationCase.finish();

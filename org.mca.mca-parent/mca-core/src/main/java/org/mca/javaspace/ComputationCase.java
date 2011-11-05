@@ -28,6 +28,14 @@ public interface ComputationCase extends Serializable {
 
 	public void addTask(Task task) throws MCASpaceException;
 
+	/**
+	 * Add a list of tasks
+	 * 
+	 * @param task
+	 * @throws MCASpaceException
+	 */
+	public void addTasks(List<? extends Task<?>> task) throws MCASpaceException;
+	
 	public void addData(DistributedData<?> data,String name, DataHandlerFactory factory) throws MCASpaceException;
 
 	public void addDataHandler(DataHandler entry) throws MCASpaceException;
@@ -56,17 +64,15 @@ public interface ComputationCase extends Serializable {
 	
 	public Task getTask(String name) throws MCASpaceException;
 
-	void join(ComputationCaseListener listener) throws MCASpaceException;
+	public void join(ComputationCaseListener listener) throws MCASpaceException;
 
 	/**
-	 * take WAIT_FOR_COMPUTE state tasks (maximum maxTasks) 
+	 * take WAIT_FOR_COMPUTE state tasks
 	 * 
-	 * @param hostname
-	 * @param maxTasks
 	 * @return
 	 * @throws MCASpaceException
 	 */
-	public Collection<? extends Task<?>> getTaskToCompute(String hostname, int maxTasks) throws MCASpaceException;
+	public Collection<? extends Task<?>> getTaskToCompute() throws MCASpaceException;
 	
 	/**
 	 * update a collection of task
@@ -78,9 +84,18 @@ public interface ComputationCase extends Serializable {
 	
 	public <T extends DistributedData<?>> T getData(String name) throws MCASpaceException;
 
-	public void barrier(String name, int nbWorker) throws MCASpaceException;
+	public void barrier(String name) throws MCASpaceException;
 	
-	public void createBarrier(String name) throws MCASpaceException;
+	/**
+	 * 
+	 * @param name
+	 * @param rank
+	 * @param neighbors
+	 * @throws MCASpaceException
+	 */
+	public void barrier(String name, int rank, int[] neighbors) throws MCASpaceException;
+	
+	public void createBarrier(String name, int size) throws MCASpaceException;
 	
 	public void removeBarrier(String name) throws MCASpaceException;
 	

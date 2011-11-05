@@ -35,7 +35,8 @@ public class MWRecoveryTaskStrategy implements RecoveryTaskStrategy,Serializable
 			template.state = TaskState.WAIT_FOR_COMPUTE;
 			tasksToCompute = 
 					computationCase.getTasks(template, maxWorkerTasksRecovered);
-		}	
+		}
+		
 		return tasksToCompute;
 	}
 

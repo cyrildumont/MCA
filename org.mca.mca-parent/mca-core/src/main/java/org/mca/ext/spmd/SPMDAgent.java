@@ -1,28 +1,34 @@
 package org.mca.ext.spmd;
 
 import org.mca.agent.AbstractComputeAgent;
+import org.mca.ext.spmd.topology.Topology;
 import org.mca.javaspace.exceptions.MCASpaceException;
-import org.mca.math.DataPart;
-import org.mca.math.DistributedData;
 
-public abstract class SPMDAgent<T extends DistributedData<?>, P extends DataPart<?>> extends AbstractComputeAgent {
+/**
+ * This class represents a SPMD ComputeAgent. 
+ * This agent needs a rank and a size.
+ * 
+ * @author Cyril Dumont
+ * 
+ *
+ */
+public abstract class SPMDAgent extends AbstractComputeAgent<Object> {
 
 	private static final long serialVersionUID = 1L;
 	
 	protected int rank;
 	protected int size;
 	
-	protected T input;
-	protected P part;
+	protected Topology<?> topology;
 	
 	@Override
 	final protected Object execute() throws Exception {
-		rank = (Integer)parameters[0];
-		input = computationCase.<T>getData(SPMD.INPUT_NAME);
-		size = input.getNbParts();
-		part = (P)input.load(rank);
+		if(task instanceof SPMDTask){
+			rank = ((SPMDTask)task).rank;
+			size = ((SPMDTask)task).size;
+		}else
+			throw new MCASpaceException("the task is not a SPMDTask");
 		Object result = program();
-		input.unload();
 		return result;
 	}
 	
@@ -38,12 +44,19 @@ public abstract class SPMDAgent<T extends DistributedData<?>, P extends DataPart
 	 * @param name
 	 * @throws MCASpaceException
 	 */
+	protected void barrierNeighbor(String name) throws MCASpaceException{
+		computationCase.barrier(name, rank, topology.getNeighbors());
+	}
+	
+	/**
+	 * 
+	 * @param name
+	 * @throws MCASpaceException
+	 */
 	protected void barrier(String name) throws MCASpaceException{
 		if (rank == 1)
-			computationCase.createBarrier(name);
-		computationCase.barrier(name, size);
-		if (rank == 1)
-			computationCase.removeBarrier(name);
+			computationCase.createBarrier(name, size);
+		computationCase.barrier(name);
 	}
 	
 }
