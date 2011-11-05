@@ -47,8 +47,32 @@
 			<version>2.1.1</version>
 		</dependency>
 	</dependencies>
-	
+
 	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.3.2</version>
+				<executions>
+					<execution>
+						<id>dl</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<finalName>${artifactId}</finalName>
+							<classifier>-dl</classifier>
+							<includes>
+								<include>org/mca/server/ComputationCaseImpl.class</include>
+							</includes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+
 		<resources>
 			<resource>
 				<directory>src/main/archive-files</directory>
@@ -56,5 +80,9 @@
 			</resource>
 		</resources>
 	</build>
-	
+	<modules>
+	</modules>
+
+
+
 </project>
