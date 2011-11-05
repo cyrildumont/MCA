@@ -43,9 +43,6 @@ parser = optparse.OptionParser(usage="%prog [OPTIONS]")
 parser.add_option("-c", "--nodes-core-file", dest="core",
                   action="store", type="string", default="%s/conf/core"%(mca_home),
                   help="loads nodes from NODES (default '%s/conf/core')"%(mca_home))
-parser.add_option("-m", "--nodes-master-file", dest="master",
-                  action="store", type="string", default="%s/conf/master"%(mca_home),
-                  help="loads nodes from NODES (default '%s/conf/master')"%(mca_home))
 parser.add_option("-w", "--nodes-workers-file", dest="workers",
                   action="store", type="string", default="%s/conf/workers"%(mca_home),
                   help="loads nodes from NODES (default '%s/conf/workers')"%(mca_home))
@@ -57,15 +54,11 @@ if len(args) < 1 :
     
 action = args[0]
 
-print "Core %s..."%(action)
+print "Server %s..."%(action)
 core = Nodes(options.core)  
-command = "%s/bin/mcacore.sh %s"%(mca_home, action)
+command = "%s/bin/mcaserver.sh %s"%(mca_home, action)
 ssh(core, command)
 sleep(5)
-print "Masters %s..."%(action)
-masters = Nodes(options.master)
-command = "%s/bin/mcamaster.sh %s"%(mca_home, action)
-ssh(masters, command)
 print "Workers %s..."%(action)
 workers = Nodes(options.workers)
 command = "%s/bin/mcaworker.sh %s"%(mca_home, action)
