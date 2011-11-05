@@ -8,6 +8,7 @@
 	</bean>
 	
   	<bean id="component" class="org.mca.worker.ComputingWorker">
+  		<property name="secure" value="false" />
   	</bean>	
 	
 	<!-- JMX -->
