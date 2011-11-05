@@ -34,7 +34,6 @@ import net.jini.jeri.ssl.SslServerEndpoint;
 import net.jini.lookup.LookupCache;
 
 import org.apache.commons.io.FileUtils;
-import org.aspectj.weaver.ArrayAnnotationValue;
 import org.mca.agent.ComputeAgent;
 import org.mca.agent.ComputeAgentException;
 import org.mca.core.MCAComponent;
@@ -104,7 +103,13 @@ public class ComputingWorker extends MCAComponent {
 
 	public boolean signalStop = false;
 	public boolean signalFinish = false;
+	
+	private boolean secure;
 
+	public void setSecure(boolean secure) {
+		this.secure = secure;
+	}
+	
 	public ComputingWorker() throws Exception {
 		LoginContext loginContext = new LoginContext("org.mca.Worker");
 		loginContext.login();
@@ -162,7 +167,7 @@ public class ComputingWorker extends MCAComponent {
 	 */
 	private void start(){
 		setState(ComputeWorkerState.STARTED);
-		agentListener = new AgentListener();	
+		agentListener = new AgentListener(secure);	
 		spaceListener = new MCASpaceListener();
 		spaceListener.start();
 	}
@@ -459,7 +464,7 @@ public class ComputingWorker extends MCAComponent {
 		private Collection<Task<?>> getTasksToCompute() {
 			logger.finest("Worker -- check tasks to compute: [" + computationCase.getName() + "]");	
 			try {
-				return (Collection<Task<?>>)computationCase.getTaskToCompute(hostname,1);
+				return (Collection<Task<?>>)computationCase.getTaskToCompute();
 			} catch (MCASpaceException e2) {
 				logger.fine("Worker -- Impossible to get new tasks to compute [" + computationCase.getName() + "]");	
 				logger.throwing("TaskExecutor", "getTasksToCompute", e2);
@@ -579,7 +584,7 @@ public class ComputingWorker extends MCAComponent {
 		@Override
 		public void caseFinish() {
 			if(state == ComputeWorkerState.RUNNING){
-				logger.fine("Worker -- Worker agent is running --> send STOP signal");
+				logger.info("Worker -- Worker agent is running --> send FINISH signal");
 				signalFinish = true;
 			}
 			else{
@@ -591,7 +596,4 @@ public class ComputingWorker extends MCAComponent {
 			}
 		}
 	}
-
-
-
 }

@@ -36,8 +36,11 @@ public class AgentListener  {
 
 	private Hashtable<String, ComputeAgent> agents;
 
-	public AgentListener() {
-		logger.finest("Worker -- AgentListener started");
+	private boolean secure;
+	
+	public AgentListener(boolean secure) {
+		logger.finest("Worker -- AgentListener started ");
+		this.secure = secure;
 		agents = new Hashtable<String, ComputeAgent>();
 	}
 
@@ -66,7 +69,7 @@ public class AgentListener  {
 			ServiceRegistrar registrar = ll.getRegistrar();
 			ComputeAgent agent = (ComputeAgent)registrar.lookup(template);
 			if(agent == null) throw new AgentNotFoundException("Agent not found");
-			verifyComputeAgent(agent);
+			if(secure) verifyComputeAgent(agent);
 			if (agent instanceof NativeComputeAgent){
 				String dir = System.getProperty(ComputingWorker.TEMP_WORKER);
 				((NativeComputeAgent) agent).downloadByteCode(dir);
