@@ -61,7 +61,7 @@
 	<bean id="MCASpace" class="org.mca.service.ServiceConfigurator">
 		<property name="codebase">
 			<list>
-				<value>${mca.codebase.url}/mca-server.jar</value>
+				<value>${mca.codebase.url}/mca-server-dl.jar</value>
 				<value>${mca.codebase.url}/outrigger-dl.jar</value>
 			</list>
 		</property>
