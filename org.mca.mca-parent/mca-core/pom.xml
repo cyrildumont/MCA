@@ -161,6 +161,13 @@
 			<type>jar</type>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjrt</artifactId>
+			<version>1.6.11</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -185,31 +192,29 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>aspectj-maven-plugin</artifactId>
 				<version>1.4</version>
+				<configuration>
+					<sources>
+						<source>
+							<basedir>src/main/java</basedir>
+							<includes>
+								<include>org/mca/aop/ExecutionTimeAspect.aj</include>
+							</includes>
+						</source>
+					</sources>
+					<outxml>true</outxml>
+				</configuration>
 				<executions>
 					<execution>
-						<id>compile</id>
-					</execution>
-				</executions>
-			</plugin><!--
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jarsigner-plugin</artifactId>
-				<version>1.2</version>
-				<executions>
-					<execution>
-						<id>sign</id>
 						<goals>
-							<goal>sign</goal>
+							<goal>compile</goal>
 						</goals>
 					</execution>
 				</executions>
-				<configuration>
-					<keystore>${mca.home}/conf/security/keystore.server</keystore>
-					<alias>server</alias>
-					<storepass>server</storepass>
-				</configuration>
-			</plugin>
-		--></plugins>
+			</plugin><!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-jarsigner-plugin</artifactId> 
+				<version>1.2</version> <executions> <execution> <id>sign</id> <goals> <goal>sign</goal> 
+				</goals> </execution> </executions> <configuration> <keystore>${mca.home}/conf/security/keystore.server</keystore> 
+				<alias>server</alias> <storepass>server</storepass> </configuration> </plugin> -->
+		</plugins>
 	</build>
 	<modules>
 	</modules>
