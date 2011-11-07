@@ -584,7 +584,7 @@ public class ComputingWorker extends MCAComponent {
 		@Override
 		public void caseFinish() {
 			if(state == ComputeWorkerState.RUNNING){
-				logger.info("Worker -- Worker agent is running --> send FINISH signal");
+				logger.fine("Worker -- Worker agent is running --> send FINISH signal");
 				signalFinish = true;
 			}
 			else{
