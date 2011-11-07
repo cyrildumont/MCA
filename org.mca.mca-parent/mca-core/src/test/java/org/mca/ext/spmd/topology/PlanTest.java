@@ -13,26 +13,25 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class PlanTest {
 
+	private int rank;
 	private Plan plan;
 	
 	@Parameters
-	public static Collection<Plan[]> data(){
-		return Arrays.asList(new Plan[][]{
-				{new Plan(3,4,3)},
-				{new Plan(1,4,3)},
-				{new Plan(10,4,3)},
-				{new Plan(12,4,3)}
+	public static Collection<Integer[]> data(){
+		return Arrays.asList(new Integer[][]{
+				{1},{3}
 		});
 	}
 	
-	public PlanTest(Plan plan){
-		this.plan = plan;
+	public PlanTest(int rank){
+		this.rank = rank;
+		this.plan = new Plan(4, 3);
 	}
 	
 	@Test
 	public void testGetRight() {
 		int[] result = new int[1];
-		result[0] = plan.getRight();
+		result[0] = plan.getRight(rank);
 		int[] expecteds = new int[]{Topology.NULL_VALUE};
 		assertArrayEquals(expecteds, result);
 	}
@@ -40,7 +39,7 @@ public class PlanTest {
 	@Test
 	public void testGetLeft() {
 		int[] result = new int[1];
-		result[0] = plan.getLeft();
+		result[0] = plan.getLeft(rank);
 		int[] expecteds = new int[]{2};
 		assertArrayEquals(expecteds, result);
 	}
@@ -48,7 +47,7 @@ public class PlanTest {
 	@Test
 	public void testGetDown() {
 		int[] result = new int[1];
-		result[0] = plan.getDown();
+		result[0] = plan.getDown(rank);
 		int[] expecteds = new int[]{6};
 		assertArrayEquals(expecteds, result);
 	}
@@ -56,7 +55,7 @@ public class PlanTest {
 	@Test
 	public void testGetUp() {
 		int[] result = new int[1];
-		result[0] = plan.getUp();
+		result[0] = plan.getUp(rank);
 		int[] expecteds = new int[]{Topology.NULL_VALUE};
 		assertArrayEquals(expecteds, result);
 	}
