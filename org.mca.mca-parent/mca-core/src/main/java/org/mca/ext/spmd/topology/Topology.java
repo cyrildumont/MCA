@@ -16,13 +16,10 @@ public abstract class Topology<E> implements Serializable {
 
 	protected int size;
 	
-	protected int rank;
-	
-	public Topology(int rank, int size) {
+	public Topology(int size) {
 		this.size = size;
-		this.rank = rank;
 	}
 	
-	public abstract int[] getNeighbors();
+	public abstract Integer[] getNeighbors(int rank);
 	
 }

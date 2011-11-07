@@ -14,23 +14,23 @@ public class Line<E> extends Topology<E> {
 
 	protected int width;
 	
-	public Line(int rank, int width) {
-		super(rank, width);
+	public Line(int width) {
+		super(width);
 		this.width = width;
 	}
 
-	public int getWidth(){
+	public int getWidth(int rank){
 		return width;
 	}
 	
-	public int getRight(){
+	public int getRight(int rank){
 		if(rank != width)
 			return rank + 1;
 		else 
 			return NULL_VALUE;
 	}
 	
-	public int getLeft(){
+	public int getLeft(int rank){
 		if(rank != 1)
 			return rank - 1;
 		else 
@@ -38,9 +38,9 @@ public class Line<E> extends Topology<E> {
 	}
 	
 	@Override
-	public int[] getNeighbors() {
-		int right = getRight();
-		int left = getLeft();
-		return new int[]{right, left};
+	public Integer[] getNeighbors(int rank) {
+		int right = getRight(rank);
+		int left = getLeft(rank);
+		return new Integer[]{right, left};
 	}
 }

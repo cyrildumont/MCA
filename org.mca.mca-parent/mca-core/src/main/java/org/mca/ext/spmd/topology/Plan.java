@@ -1,5 +1,8 @@
 package org.mca.ext.spmd.topology;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * This class represents a two-dimensional topology.
  * 
@@ -14,8 +17,8 @@ public class Plan<E> extends Line<E> {
 
 	protected int height;
 
-	public Plan(int rank,  int height, int width) {
-		super(rank, width);
+	public Plan(int height, int width) {
+		super(width);
 		this.height = height;
 	}
 
@@ -24,7 +27,7 @@ public class Plan<E> extends Line<E> {
 	}
 
 	@Override
-	public int getLeft(){
+	public int getLeft(int rank){
 	       if ((rank % width) == 1)
 	            return NULL_VALUE;
 	       else
@@ -32,14 +35,14 @@ public class Plan<E> extends Line<E> {
 	}
 
 	@Override
-	public int getRight() {
+	public int getRight(int rank) {
 		if ((rank % width) == 0) 
 			return NULL_VALUE;
 		else
 			return rank + 1;
 	}
 
-	public int getDown() {
+	public int getDown(int rank) {
 		if (rank > ((height - 1) * width))
 			return NULL_VALUE;
 		else
@@ -47,7 +50,7 @@ public class Plan<E> extends Line<E> {
 
 	}
 
-	public int getUp() {
+	public int getUp(int rank) {
 		if (rank <= width)
 			return NULL_VALUE;
 		else
@@ -56,18 +59,22 @@ public class Plan<E> extends Line<E> {
 	}
 
 	@Override
-	public int[] getNeighbors() {
-		int right = getRight();
-		int left = getLeft();
-		int down = getDown();
-		int up = getUp();
-		return new int[]{up, down, right, left};
+	public Integer[] getNeighbors(int rank) {
+		List<Integer> neighbors = new ArrayList<Integer>();
+		if(getRight(rank) != Topology.NULL_VALUE)
+			neighbors.add(getRight(rank));
+		if(getLeft(rank) != Topology.NULL_VALUE)
+			neighbors.add(getLeft(rank));
+		if(getUp(rank) != Topology.NULL_VALUE)
+			neighbors.add(getUp(rank));
+		if(getDown(rank) != Topology.NULL_VALUE)
+			neighbors.add(getDown(rank));
+		return neighbors.toArray(new Integer[neighbors.size()]);
 	}
 
 	@Override
 	public String toString() {
-		return "Plan [height=" + height + ", width=" + width + ", size=" + size
-				+ ", rank=" + rank + "]";
+		return "Plan [height=" + height + ", width=" + width + ", size=" + size + "]";
 	}
 	
 }

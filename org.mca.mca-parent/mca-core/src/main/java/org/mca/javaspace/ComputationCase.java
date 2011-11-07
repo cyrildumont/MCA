@@ -93,7 +93,7 @@ public interface ComputationCase extends Serializable {
 	 * @param neighbors
 	 * @throws MCASpaceException
 	 */
-	public void barrier(String name, int rank, int[] neighbors) throws MCASpaceException;
+	public void barrier(String name, Integer rank, Integer[] neighbors) throws MCASpaceException;
 	
 	public void createBarrier(String name, int size) throws MCASpaceException;
 	
