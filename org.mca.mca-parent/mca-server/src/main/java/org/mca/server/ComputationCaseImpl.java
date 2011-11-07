@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -450,14 +449,12 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	}
 
 	@Override
-	public void barrier(String name, int rank, int[] neighbors) throws MCASpaceException{
+	public void barrier(String name, Integer rank, Integer[] neighbors) throws MCASpaceException{
 		Barrier barrier = new Barrier(name, rank);
 		writeEntry(barrier, null);
-		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "] created");	
-		int nbBarrier = neighbors.length;
-		ExecutorService eservice = Executors.newFixedThreadPool(nbBarrier);
+		int nbNeighbors = neighbors.length;
+		ExecutorService eservice = Executors.newFixedThreadPool(nbNeighbors);
 		List<Future<Void>> futuresList = new ArrayList<Future<Void>>();
-		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "] waiting ...");
 		for (int neighbor : neighbors) {	
 			futuresList.add(eservice.submit(new BarrierTask(name, neighbor)));
 		};	
@@ -469,8 +466,6 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			}
 		}
 		//takeEntry(barrier, null);
-		logger.fine("ComputationCaseImpl -- [" + this.name + "] Barrier [" + name + "] OK");
-		
 	}
 	
 	/**
@@ -491,9 +486,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		@Override
 		public Void call() throws Exception {
 			Barrier barrier = new Barrier(name, rank);
-			logger.fine("ComputationCaseImpl -- [" + this.name + "] read Barrier [" + name + "][" + rank +"] ...");
 			readEntry(barrier, null, Lease.FOREVER);
-			logger.fine("ComputationCaseImpl -- [" + this.name + "] read Barrier [" + name + "][" + rank +"] OK");
 			return null;
 		}
 	}
