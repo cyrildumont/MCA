@@ -1,6 +1,5 @@
 package org.mca.ext.masterworker;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -10,7 +9,7 @@ import org.mca.scheduler.RecoveryTaskStrategy;
 import org.mca.scheduler.Task;
 import org.mca.scheduler.TaskState;
 
-public class MWRecoveryTaskStrategy implements RecoveryTaskStrategy,Serializable {
+public class MWRecoveryTaskStrategy extends RecoveryTaskStrategy{
 
 	private static final long serialVersionUID = 1L;
 	
