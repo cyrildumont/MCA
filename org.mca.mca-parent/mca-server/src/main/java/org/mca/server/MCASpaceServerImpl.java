@@ -66,15 +66,10 @@ import com.sun.jini.start.LifeCycle;
 
 public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -3354819183243663600L;
-
+	private static final long serialVersionUID = 1L;
 
 	private static final String SERVICE_JAVASPACE = "javaspace";
 	private static final String FILE_JAVASPACE = System.getProperty("mca.home") + "/conf/services.xml";
-
 
 	public final static String COMPONENT_NAME = "org.mca.server.MCASpaceServer";
 
@@ -221,13 +216,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		ComputationCaseInfo info = new ComputationCaseInfo(name,description);
 		jadmin.addLookupAttributes(new Entry[]{info});
 		JavaSpace05 space = (JavaSpace05)o;
-		State state = new State();
-		state.state = ComputationCaseState.STARTED;
-		try {
-			space.write(state, null, Long.MAX_VALUE);
-		} catch (TransactionException e) {
-			e.printStackTrace();
-		}
+		
 		logger.fine("MCASpaceServerImpl -- JavaSpace [" + name + "] started.");
 		return space;
 	}
@@ -237,7 +226,15 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 			RecoveryTaskStrategy strategy) throws RemoteException,
 			MCASpaceException {
 		JavaSpace05 space = createJavaSpace(name, description);
-		ComputationCase computationCase = new ComputationCaseImpl(strategy, space, transactionManager);
+		State state = new State();
+		state.state = ComputationCaseState.STARTED;
+		try {
+			space.write(state, null, Long.MAX_VALUE);
+			space.write(strategy, null, Long.MAX_VALUE);
+		} catch (TransactionException e) {
+			e.printStackTrace();
+		}
+		ComputationCase computationCase = new ComputationCaseImpl(space, transactionManager);
 		cases.put(name, computationCase);
 		logger.fine("MCASpaceServerImpl -- Case [" + name + "] added.");
 		fireNotify(MCASpace.ADD_CASE, computationCase);

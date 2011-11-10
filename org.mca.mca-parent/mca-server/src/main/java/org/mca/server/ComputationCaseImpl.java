@@ -73,7 +73,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	private RecoveryTaskStrategy recoveryTaskStrategy;
 
-	private static final int LEASE_DURATION = 8000;
+	private static final long LEASE_RENEW_DURATION = 15000;
 
 	private String name;
 	private String description;
@@ -83,16 +83,17 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	private List<ComputationCaseListener> listeners = new ArrayList<ComputationCaseListener>();
 
-	ComputationCaseImpl(RecoveryTaskStrategy strategy,
-			JavaSpace05 space, TransactionManager transactionManager) throws RemoteException {	
-		recoveryTaskStrategy = strategy;
+	ComputationCaseImpl(JavaSpace05 space, TransactionManager transactionManager) throws RemoteException {	
+		
 		setSpace(space);
 		init(space);
 		this.transactionManager = transactionManager;
 		State s = new State();
+		RecoveryTaskStrategy st = new  RecoveryTaskStrategy();
 		try {
 			s = (State)readEntry(s, null);
 			state = s.state;
+			recoveryTaskStrategy = (RecoveryTaskStrategy)readEntry(st, null);;
 		} catch (EntryNotFoundException e) {
 			throw new RemoteException();
 		}
@@ -258,7 +259,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	private void updateState(ComputationCaseState state) throws MCASpaceException{
 		State template = new State();
 		try {
-			Created created = TransactionFactory.create(transactionManager, LEASE_DURATION);
+			Created created = TransactionFactory.create(transactionManager, LEASE_RENEW_DURATION);
 			net.jini.core.transaction.Transaction t = created.transaction;
 			template = (State)takeEntry(template, t,Long.MAX_VALUE);
 			template.state = state;
@@ -373,12 +374,12 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		if(!isRunning())
 			throw new MCASpaceException("Case isn't started");
 		try {
-			Created created = TransactionFactory.create(transactionManager, LEASE_DURATION);
+			Created created = TransactionFactory.create(transactionManager, LEASE_RENEW_DURATION);
 			currentTransaction = new Transaction(created);
 
 			if(leaseManager == null) leaseManager = new LeaseRenewalManager();
 			leaseManager.renewFor(created.lease,
-					Long.MAX_VALUE, LEASE_DURATION, new TaskLeaseListener());
+					Lease.FOREVER, LEASE_RENEW_DURATION, new TaskLeaseListener());
 			Collection<? extends Task<?>> taskToCompute = 
 				recoveryTaskStrategy.recoverTasksToCompute(this);
 
