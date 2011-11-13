@@ -112,7 +112,7 @@ public class DData<E> extends Storable{
 		outputlocalFile = 
 			new File(System.getProperty("temp.worker.result") + "/" + localPartName + ".dat");
 		DataPart data = generatePart(values);
-		//publishPart(localPartName, data);
+		publishPart(localPartName, data);
 		DataHandler handler = computationCase.removeDataHandler(localPartName);
 		handler.worker = MCAUtils.getIP();
 		computationCase.addDataHandler(handler);
