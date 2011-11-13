@@ -205,9 +205,7 @@
 				</configuration>
 				<executions>
 					<execution>
-						<goals>
-							<goal>compile</goal>
-						</goals>
+						<phase>compile</phase>
 					</execution>
 				</executions>
 			</plugin><!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-jarsigner-plugin</artifactId> 
