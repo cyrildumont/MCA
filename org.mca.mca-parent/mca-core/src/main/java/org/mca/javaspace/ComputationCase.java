@@ -12,7 +12,7 @@ import org.mca.entry.DataHandlerFactory;
 import org.mca.entry.Property;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.listener.TaskListener;
-import org.mca.math.DistributedData;
+import org.mca.math.DData;
 import org.mca.scheduler.Task;
 import org.mca.scheduler.TaskState;
 
@@ -36,7 +36,7 @@ public interface ComputationCase extends Serializable {
 	 */
 	public void addTasks(List<? extends Task<?>> task) throws MCASpaceException;
 	
-	public void addData(DistributedData<?> data,String name, DataHandlerFactory factory) throws MCASpaceException;
+	public void addData(DData<?> data,String name, DataHandlerFactory factory) throws MCASpaceException;
 
 	public void addDataHandler(DataHandler entry) throws MCASpaceException;
 
@@ -82,7 +82,7 @@ public interface ComputationCase extends Serializable {
 	 */
 	public void updateTaskComputed(List<Task<?>> task) throws MCASpaceException;
 	
-	public <T extends DistributedData<?>> T getData(String name) throws MCASpaceException;
+	public <T extends DData<?>> T getData(String name) throws MCASpaceException;
 
 	public void barrier(String name) throws MCASpaceException;
 	

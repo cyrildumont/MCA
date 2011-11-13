@@ -1,33 +1,33 @@
 package org.mca.math;
 
-public class Neighborhood<E>{
-	private SubMatrix<E> north;
-	private SubMatrix<E> south;
-	private SubMatrix<E> east;
-	private SubMatrix<E> west;
+public class Neighborhood{
+	private SubMatrix north;
+	private SubMatrix south;
+	private SubMatrix east;
+	private SubMatrix west;
 
-	public SubMatrix<E> getNorth() {
+	public SubMatrix getNorth() {
 		return north;
 	}
-	public SubMatrix<E> getSouth() {
+	public SubMatrix getSouth() {
 		return south;
 	}
-	public SubMatrix<E> getEast() {
+	public SubMatrix getEast() {
 		return east;
 	}
-	public SubMatrix<E> getWest() {
+	public SubMatrix getWest() {
 		return west;
 	}
-	public void setNorth(SubMatrix<E> north) {
+	public void setNorth(SubMatrix north) {
 		this.north = north;
 	}
-	public void setSouth(SubMatrix<E> south) {
+	public void setSouth(SubMatrix south) {
 		this.south = south;
 	}
-	public void setEast(SubMatrix<E> east) {
+	public void setEast(SubMatrix east) {
 		this.east = east;
 	}
-	public void setWest(SubMatrix<E> west) {
+	public void setWest(SubMatrix west) {
 		this.west = west;
 	}
 }

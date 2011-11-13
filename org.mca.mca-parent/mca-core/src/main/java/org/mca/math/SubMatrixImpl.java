@@ -1,9 +1,8 @@
 package org.mca.math;
 
-import java.lang.reflect.Array;
 import java.rmi.RemoteException;
 
-public class SubMatrixImpl<E> implements SubMatrix<E> {
+public class SubMatrixImpl implements SubMatrix {
 
 	/** Width of the submatrix */
 	public int width;
@@ -11,13 +10,13 @@ public class SubMatrixImpl<E> implements SubMatrix<E> {
 	/** Height of the submatrix */
 	public int height;
 
-	public E[][] values;
+	public double[][] values;
 
 	/**
 	 * 
 	 * @param values
 	 */
-	public SubMatrixImpl (E[][] values) {
+	public SubMatrixImpl (double[][] values) {
 		height = values.length;
 		width = values[0].length;
 		this.values = values;
@@ -34,39 +33,38 @@ public class SubMatrixImpl<E> implements SubMatrix<E> {
 	}
 	
 	@Override
-	public E get(int row, int column) throws RemoteException {
+	public double get(int row, int column) throws RemoteException {
 		return values[row][column];
 	}
 
 	@Override
-	public void set(int row, int column, E value) throws RemoteException {
+	public void set(int row, int column, double value) throws RemoteException {
 		values[row][column] = value;
 	}
 
 	@Override
-	public E[] getNorthBorder() throws RemoteException {
+	public double[] getNorthBorder() throws RemoteException {
 		return values[0];
 	}
 
 	@Override
-	public E[] getSouthBorder() throws RemoteException {
+	public double[] getSouthBorder() throws RemoteException {
 		return values[height - 1];
 	}
 
 	@Override
-	public E[] getWestBorder() throws RemoteException {
+	public double[] getWestBorder() throws RemoteException {
 		return getColumn(width-1);
 	}
 
 	@Override
-	public E[] getEastBorder() throws RemoteException {
+	public double[] getEastBorder() throws RemoteException {
 		return getColumn(0);
 	}
 
 	@Override
-	public E[] getColumn(int numColumn) throws RemoteException {
-		Class<?> clazz = values[0][0].getClass();
-		E[] column = (E[])Array.newInstance(clazz, height);
+	public double[] getColumn(int numColumn) throws RemoteException {
+		double[] column = new double[height];
 		for (int i = 0; i < height; i++) {
 			column[i] = values[i][numColumn];
 		}
@@ -74,12 +72,12 @@ public class SubMatrixImpl<E> implements SubMatrix<E> {
 	}
 
 	@Override
-	public E[] getRow(int numRow) throws RemoteException {
+	public double[] getRow(int numRow) throws RemoteException {
 		return values[numRow];
 	}
 	
 	@Override
-	public E[][] getValues() throws RemoteException {
+	public double[][] getValues() throws RemoteException {
 		return values;
 	}
 

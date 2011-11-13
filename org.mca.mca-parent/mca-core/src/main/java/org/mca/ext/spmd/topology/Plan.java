@@ -28,7 +28,7 @@ public class Plan<E> extends Line<E> {
 
 	@Override
 	public int getLeft(int rank){
-	       if ((rank % width) == 1)
+	       if ((width == 1) || ((rank % width) == 1))
 	            return NULL_VALUE;
 	       else
 	            return rank - 1;

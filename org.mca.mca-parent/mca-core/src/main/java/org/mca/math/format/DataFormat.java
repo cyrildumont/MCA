@@ -11,6 +11,6 @@ public abstract class DataFormat<E> implements Serializable{
 
 	public abstract File format(Object data, File out) throws FormatException;
 	
-	public abstract DataPart<E> parse(File in) throws FormatException;
+	public abstract DataPart parse(File in) throws FormatException;
 	
 }

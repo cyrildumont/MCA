@@ -9,6 +9,8 @@ import javax.management.NotificationBroadcasterSupport;
 import javax.management.remote.JMXConnector;
 
 import org.mca.mbeans.MBeanUtil;
+import org.mca.service.ServiceConfigurator;
+import org.mca.service.ServiceStarter;
 import org.mca.util.MCAUtils;
 
 /**
@@ -47,6 +49,17 @@ public abstract class MCAComponent extends NotificationBroadcasterSupport implem
 		infos.setHostname(hostname);
 		infos.setType(type);
 		return infos;
+	}
+	
+	/**
+	 * 
+	 * @param service
+	 * @return
+	 */
+	protected Object startService(ServiceConfigurator config) {
+		ServiceStarter starter = new ServiceStarter(config);
+		Object service = starter.startWithoutAdvertise();
+		return service;
 	}
 	
 }

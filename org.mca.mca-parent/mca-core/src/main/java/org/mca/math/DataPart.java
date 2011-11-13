@@ -9,7 +9,7 @@ import java.rmi.RemoteException;
  *
  * @param <E>
  */
-public interface DataPart<E> extends Remote {
+public interface DataPart extends Remote {
 
 	public Object getValues() throws RemoteException;
 		

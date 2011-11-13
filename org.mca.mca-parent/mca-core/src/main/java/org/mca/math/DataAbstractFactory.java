@@ -5,10 +5,10 @@ import java.io.File;
 
 public abstract class DataAbstractFactory<E> {
 
-	public final DistributedData<E> create(File file){
+	public final DData<E> create(File file){
 		return createData(file);
 	}
 	
-	protected abstract DistributedData<E> createData(File file);
+	protected abstract DData<E> createData(File file);
 	
 }

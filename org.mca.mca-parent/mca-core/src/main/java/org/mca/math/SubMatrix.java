@@ -2,28 +2,28 @@ package org.mca.math;
 
 import java.rmi.RemoteException;
 
-public interface SubMatrix<E> extends DataPart<E>{
+public interface SubMatrix extends DataPart{
 
 	public int getRowDimension() throws RemoteException;
 
 	public int getColumnDimension() throws RemoteException;
 	
-	public E[] getColumn(int numColumn) throws RemoteException;
+	public double[] getColumn(int numColumn) throws RemoteException;
 	
-	public E[] getRow(int numRow) throws RemoteException;
+	public double[] getRow(int numRow) throws RemoteException;
 	
-	public E get(int row, int column) throws RemoteException;
+	public double get(int row, int column) throws RemoteException;
 	
-	public void set(int row, int column, E value) throws RemoteException;
+	public void set(int row, int column, double value) throws RemoteException;
 	
-	public E[] getNorthBorder() throws RemoteException;
+	public double[] getNorthBorder() throws RemoteException;
 	
-	public E[] getSouthBorder() throws RemoteException;
+	public double[] getSouthBorder() throws RemoteException;
 	
-	public E[] getWestBorder() throws RemoteException;
+	public double[] getWestBorder() throws RemoteException;
 
-	public E[] getEastBorder() throws RemoteException;
+	public double[] getEastBorder() throws RemoteException;
 
 	@Override
-	public E[][] getValues() throws RemoteException;
+	public double[][] getValues() throws RemoteException;
 }

@@ -34,11 +34,11 @@ import org.w3c.dom.Node;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 
-public class DistributedData<E> extends Storable{
+public class DData<E> extends Storable{
 
 	private static final long serialVersionUID = 1L;
 
-	private static final String COMPONENT_NAME = "org.mca.data.DistributedData";
+	private static final String COMPONENT_NAME = "org.mca.data.DData";
 
 	protected static final Logger logger = Logger.getLogger(COMPONENT_NAME);
 	
@@ -52,15 +52,15 @@ public class DistributedData<E> extends Storable{
 	
 	protected ComputationCase computationCase;
 	
-	protected Map<Integer, DataPart<E>> dataParts;
+	protected Map<Integer, DataPart> dataParts;
 
-	public DistributedData() {}
+	public DData() {}
 	
-	public DistributedData(String name){
+	public DData(String name){
 		this.name = name;
 	}
 	
-	public DistributedData(DataFormat<E> format) {
+	public DData(DataFormat<E> format) {
 		this.format = format;
 	}
 	
@@ -82,15 +82,15 @@ public class DistributedData<E> extends Storable{
 	 * @return
 	 * @throws Exception
 	 */
-	public DataPart<E> load(int part) throws Exception{
+	public DataPart load(int part) throws Exception{
 		logger.fine("[" + name + "] - loading part [" + part + "] ...");
 		localPart = part;
 		String localPartName = name + "-" + part;
 		File inputlocalFile = download(localPartName);
 		outputlocalFile = 
 			new File(System.getProperty("temp.worker.result") + "/" + localPartName + ".dat");
-		DataPart<E> data = format.parse(inputlocalFile);
-		publishPart(localPartName, data);
+		DataPart data = format.parse(inputlocalFile);
+		//publishPart(localPartName, data);
 		DataHandler handler = computationCase.removeDataHandler(localPartName);
 		handler.worker = MCAUtils.getIP();
 		computationCase.addDataHandler(handler);
@@ -98,14 +98,21 @@ public class DistributedData<E> extends Storable{
 		return data;
 	}
 	
-	public DataPart<E> load(int part, Object values) throws Exception{
+	/**
+	 * 
+	 * @param part
+	 * @param values
+	 * @return
+	 * @throws Exception
+	 */
+	public DataPart load(int part, Object values) throws Exception{
 		logger.fine("[" + name + "] - loading part [" + part + "] ...");
 		localPart = part;
 		String localPartName = name + "-" + part;
 		outputlocalFile = 
 			new File(System.getProperty("temp.worker.result") + "/" + localPartName + ".dat");
-		DataPart<E> data = generatePart(values);
-		publishPart(localPartName, data);
+		DataPart data = generatePart(values);
+		//publishPart(localPartName, data);
 		DataHandler handler = computationCase.removeDataHandler(localPartName);
 		handler.worker = MCAUtils.getIP();
 		computationCase.addDataHandler(handler);
@@ -128,8 +135,8 @@ public class DistributedData<E> extends Storable{
 	}
 	
 
-	public DataPart<E> getDataPart(int part){
-		DataPart<E> result = dataParts.get(part);
+	public DataPart getDataPart(int part){
+		DataPart result = dataParts.get(part);
 		if (result != null) return result;
 		String partName = this.name + "-" + part;
 		try {
@@ -139,7 +146,7 @@ public class DistributedData<E> extends Storable{
 			ServiceRegistrar registrar = ll.getRegistrar();
 			Entry[] entries = new Entry[]{new Name(partName)};
 			ServiceTemplate template = new ServiceTemplate(null, null,entries);
-			DataPart<E> dataPart = (DataPart<E>)registrar.lookup(template);
+			DataPart dataPart = (DataPart)registrar.lookup(template);
 			dataParts.put(part, dataPart);
 			return dataPart;
 		} catch (Exception e) {
@@ -155,7 +162,7 @@ public class DistributedData<E> extends Storable{
 	 * @param data
 	 * @throws Exception
 	 */
-	private void publishPart(String name, DataPart<E> data)
+	private void publishPart(String name, DataPart data)
 			throws Exception {
 		LookupLocator lookup = new LookupLocator(MCAUtils.getIP(),4161);
 		ServiceRegistrar registrar = lookup.getRegistrar();
@@ -180,15 +187,15 @@ public class DistributedData<E> extends Storable{
 				ServiceRegistrar registrar = ll.getRegistrar();
 				Entry[] entries = new Entry[]{new Name(partName)};
 				ServiceTemplate template = new ServiceTemplate(null, null,entries);
-				DataPart<E> dataPart = (DataPart<E>)registrar.lookup(template);
+				DataPart dataPart = (DataPart)registrar.lookup(template);
 				dataParts.put(part, dataPart);
 				logger.fine("[" + name + "] - part [" + part + "] updated --> " + dataPart);
 			}
 		}
 	}
 	
-	private void addPart(int part, DataPart<E> data) {
-		if (dataParts == null ) dataParts = new HashMap<Integer, DataPart<E>>(); 
+	private void addPart(int part, DataPart data) {
+		if (dataParts == null ) dataParts = new HashMap<Integer, DataPart>(); 
 		dataParts.put(part, data);
 	}
 	
@@ -241,7 +248,7 @@ public class DistributedData<E> extends Storable{
 	 */
 	public void save(DataFormat<E> format) throws Exception{
 		String dataHandlerName = name + "-" + localPart;
-		DataPart<E> part = dataParts.get(localPart);
+		DataPart part = dataParts.get(localPart);
 		File out = new File(System.getProperty("temp.worker.result") + dataHandlerName);
 		format.format(part, out);
 		FileInputStream fis = new FileInputStream(out);
@@ -253,7 +260,7 @@ public class DistributedData<E> extends Storable{
 	 * @throws Exception
 	 */
 	public void localSave() throws Exception{
-		DataPart<E> part = dataParts.get(localPart);
+		DataPart part = dataParts.get(localPart);
 		format.format(part.getValues(), outputlocalFile);
 	}
 
@@ -292,7 +299,7 @@ public class DistributedData<E> extends Storable{
 			DataHandlerFactory factory) throws MCASpaceException{throw new NotImplementedException();}
 
 	
-	protected DataPart<E> generatePart(Object values){throw new NotImplementedException();}
+	protected DataPart generatePart(Object values){throw new NotImplementedException();}
 			
 	@Override
 	public String toString() {

@@ -19,7 +19,7 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 
 	private static DecimalFormat format;
 	
-	private static final Double DEFAULT_VALUE = new Double(0);
+	private static final double DEFAULT_VALUE = 0.0;
 	
 	private final static int MAX_INTEGER_DIGIT = 10;
 	private final static int MAX_FRACTION_DIGIT = 10;
@@ -35,7 +35,7 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 	
 	@Override
 	public File format(Object data, File out) throws FormatException {
-		Object[][] matrix = (Object[][])data;
+		double[][] matrix = (double[][])data;
 		int maxFormatSize = MAX_INTEGER_DIGIT + MAX_FRACTION_DIGIT + 1;
 		PrintWriter pw = null;
 		int i = 0 ,j = 0;
@@ -46,7 +46,7 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 			for (i = 0; i < height; i++) {
 				for (j = 0; j < width; j++) {
 					Object value = matrix[i][j];
-					Double d = null;
+					double d;
 					if (value == null) d = DEFAULT_VALUE;
 					else d = (Double)value;
 					String s = format.format(d);
@@ -68,8 +68,8 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 	}
 
 	@Override
-	public DataPart<Double> parse(File in) throws FormatException {
-		Double[][] values = null;
+	public DataPart parse(File in) throws FormatException {
+		double[][] values = null;
 		FileReader fr = null;
 		try {
 			fr = new FileReader(in);
@@ -88,15 +88,15 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 			do {
 				list.add(Double.valueOf(tokenizer.sval)); 
 			} while (tokenizer.nextToken() == StreamTokenizer.TT_WORD);
-			List<Double[]> matrix = new ArrayList<Double[]>();
+			List<double[]> matrix = new ArrayList<double[]>();
 			int width = list.size();  
-			Double row[] = new Double[width];
+			double row[] = new double[width];
 			for (int j=0; j<width; j++) 
 				row[j]= list.get(j);
 			list.clear();
 			matrix.add(row);
 			while (tokenizer.nextToken() == StreamTokenizer.TT_WORD) {
-				row = new Double[width];
+				row = new double[width];
 				int j = 0;
 				do {
 					row[j++] = Double.valueOf(tokenizer.sval).doubleValue();
@@ -107,7 +107,7 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 			}
 			int height = matrix.size();  			
 			
-			values = new Double[height][width];
+			values = new double[height][width];
 			for (int i = 0; i < height; i++) {
 				values[i] = matrix.get(i);
 			}
@@ -122,7 +122,7 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 				e.printStackTrace();
 			}
 		}
-		SubMatrixImpl<Double> result = new SubMatrixImpl<Double>(values);
+		SubMatrixImpl result = new SubMatrixImpl(values);
 		return result;
 	}
 

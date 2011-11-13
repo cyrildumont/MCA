@@ -32,6 +32,7 @@ public abstract class SPMDAgent extends AbstractComputeAgent<Object> {
 		size = ((SPMDTask)task).size;
 		loadData();
 		topology = getTopology();
+		System.out.println(topology);
 		neighbors = topology.getNeighbors(rank);
 		logger.fine("SPMDAgent -- [rank=" + rank + "]");
 		Object result = program();

@@ -6,7 +6,7 @@ import org.mca.agent.AgentDescriptor;
 import org.mca.deployer.ComputationCaseDeployer;
 import org.mca.entry.DataHandlerFactory;
 import org.mca.javaspace.exceptions.MCASpaceException;
-import org.mca.math.DistributedData;
+import org.mca.math.DData;
 
 public abstract class SPMDCaseDeployer extends ComputationCaseDeployer {
 	
@@ -17,7 +17,7 @@ public abstract class SPMDCaseDeployer extends ComputationCaseDeployer {
 	private DataHandlerFactory dataHandlerFactory;
 	
 	@NotNull
-	private DistributedData<?> input;
+	private DData<?> input;
 	
 	public void setProgram(AgentDescriptor program) {
 		this.program = program;
@@ -49,7 +49,7 @@ public abstract class SPMDCaseDeployer extends ComputationCaseDeployer {
 			computationCase.addData(input, SPMDConstants.INPUT_NAME, dataHandlerFactory);
 	}
 	
-	public void setInput(DistributedData<?> input) {
+	public void setInput(DData<?> input) {
 		this.input = input;
 	}
 }

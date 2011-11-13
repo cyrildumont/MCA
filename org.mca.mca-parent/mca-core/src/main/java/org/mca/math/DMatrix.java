@@ -19,7 +19,7 @@ import org.mca.math.format.FormatException;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 
-public class DistributedMatrix<E> extends DistributedData<E> {
+public class DMatrix extends DData {
 
 	private static final long serialVersionUID = 1L;
 
@@ -44,7 +44,7 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 
 	}
 
-	private E[][] values;
+	private double[][] values;
 
 	public Integer rowSize;
 
@@ -55,11 +55,11 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 	public Integer columnPartSize;
 
 	/** Constructor for JavaSpaces specification */
-	public DistributedMatrix() {
+	public DMatrix() {
 		format = DEFAULT_MATRIX_FORMAT;
 	}
 
-	public DistributedMatrix(DataFormat<E> format,
+	public DMatrix(DataFormat format,
 			Dimension dimension, Dimension partDimension) {
 		super(format);
 		this.rowSize = dimension.getHeight();
@@ -68,12 +68,12 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 		this.columnPartSize = partDimension.getWidth();
 	}
 
-	public DistributedMatrix(Dimension dimension, 
+	public DMatrix(Dimension dimension, 
 			Dimension partDimension) {
 		this(DEFAULT_MATRIX_FORMAT,dimension, partDimension);
 	}
 
-	public DistributedMatrix(E[][] values, 
+	public DMatrix(double[][] values, 
 			Dimension partDimension) {
 		super(DEFAULT_MATRIX_FORMAT);
 		rowSize = values.length;
@@ -117,15 +117,15 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 		return new Dimension(rowSize,columnSize);
 	}
 
-	public E get(int row, int column) throws Exception{
+	public double get(int row, int column) throws Exception{
 		LocalPartInfo infosLocal = getlocalPartInfo(row, column);
-		SubMatrix<E> vector = (SubMatrix<E>)dataParts.get(infosLocal.partNumber);
+		SubMatrix vector = (SubMatrix)dataParts.get(infosLocal.partNumber);
 		return vector.get(infosLocal.row, infosLocal.column);
 	}
 
-	public void set(int row, int column, E value) throws Exception{
+	public void set(int row, int column, double value) throws Exception{
 		LocalPartInfo infosLocal = getlocalPartInfo(row, column);
-		SubMatrix<E> subMatrix = (SubMatrix<E>)dataParts.get(infosLocal.partNumber);
+		SubMatrix subMatrix = (SubMatrix)dataParts.get(infosLocal.partNumber);
 		subMatrix.set(infosLocal.row, infosLocal.column, value);
 	}
 
@@ -144,14 +144,14 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 	}
 
 
-	public Neighborhood<E> getNeighborhood(int part){
+	public Neighborhood getNeighborhood(int part){
 		LogUtil.debug("Part [" + part + "] neighborhood :", getClass());
 		int nbColumnParts = columnSize%columnPartSize == 0 ?
 				columnSize / columnPartSize : columnSize / columnPartSize  + 1;
 		int nbRowParts = rowSize%rowPartSize == 0 ?
 				rowSize / rowPartSize : rowSize / rowPartSize  + 1;
 		int nbParts = nbColumnParts * nbRowParts;
-		Neighborhood<E> neighborhood = new Neighborhood<E>();
+		Neighborhood neighborhood = new Neighborhood();
 
 		int numPartNorth = (part - nbColumnParts) < 1 ? -1 : part - nbColumnParts ;
 		int numPartSouth = (part + nbColumnParts) > nbParts  ? -1 : part + nbColumnParts ;
@@ -160,10 +160,10 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 		int numEndRow = row * nbColumnParts;
 		int numPartWest = (part - 1) < numStartRow  ? -1 : part - 1 ;
 		int numPartEast = (part + 1) > numEndRow  ? -1 : part + 1 ;
-		neighborhood.setNorth(numPartNorth == -1 ? null : (SubMatrix<E>)getDataPart(numPartNorth));
-		neighborhood.setSouth(numPartSouth == -1 ? null : (SubMatrix<E>)getDataPart(numPartSouth));
-		neighborhood.setEast(numPartEast == -1 ? null : (SubMatrix<E>)getDataPart(numPartEast));
-		neighborhood.setWest(numPartWest == -1 ? null : (SubMatrix<E>)getDataPart(numPartWest));
+		neighborhood.setNorth(numPartNorth == -1 ? null : (SubMatrix)getDataPart(numPartNorth));
+		neighborhood.setSouth(numPartSouth == -1 ? null : (SubMatrix)getDataPart(numPartSouth));
+		neighborhood.setEast(numPartEast == -1 ? null : (SubMatrix)getDataPart(numPartEast));
+		neighborhood.setWest(numPartWest == -1 ? null : (SubMatrix)getDataPart(numPartWest));
 		LogUtil.debug("\t North neighbor : Part [" + numPartNorth + "]" , getClass());
 		LogUtil.debug("\t South neighbor : Part [" + numPartSouth + "]" , getClass());
 		LogUtil.debug("\t West neighbor : Part [" + numPartWest + "]" , getClass());
@@ -195,8 +195,8 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 	}
 	
 	@Override
-	protected DataPart<E> generatePart(Object values) {
-		return new SubMatrixImpl<E>((E[][])values);
+	protected DataPart generatePart(Object values) {
+		return new SubMatrixImpl((double[][])values);
 	}
 	
 	@Override
@@ -208,8 +208,8 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 		return nbColumnParts * nbRowParts;
 	}
 
-	private E[][] getPart(int i0, int i1, int j0, int j1){
-		E[][] part = Arrays.copyOfRange(values, i0, i1);
+	private double[][] getPart(int i0, int i1, int j0, int j1){
+		double[][] part = Arrays.copyOfRange(values, i0, i1);
 		for (int i = 0; i < part.length; i++) {
 			part[i] = Arrays.copyOfRange(part[i], j0, j1);
 		}
@@ -234,7 +234,7 @@ public class DistributedMatrix<E> extends DistributedData<E> {
 			DataHandler dh = factory.getDataHandler(file);
 			file.createNewFile();
 			if(values != null){
-				E[][] partValues = 
+				double[][] partValues = 
 					getPart(row, row + rowPartSize, column, column + columnPartSize);
 				format.format(partValues, file);
 			}
