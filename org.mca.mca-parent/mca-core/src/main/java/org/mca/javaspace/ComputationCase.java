@@ -6,13 +6,15 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
+import net.jini.core.event.RemoteEventListener;
+
+import org.mca.data.DDataStructure;
 import org.mca.entry.ComputationCaseState;
 import org.mca.entry.DataHandler;
 import org.mca.entry.DataHandlerFactory;
 import org.mca.entry.Property;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.listener.TaskListener;
-import org.mca.math.DData;
 import org.mca.scheduler.Task;
 import org.mca.scheduler.TaskState;
 
@@ -20,14 +22,16 @@ public interface ComputationCase extends Serializable {
 
 	public void addProperty(Property property) throws MCASpaceException;
 
-	public File download(String name, String dir) throws MCASpaceException;
-
 	public String getName();
 
 	public Collection<Property> getProperties() throws MCASpaceException;
 
 	public void addTask(Task task) throws MCASpaceException;
 
+	public Integer getLastCheckpoint();
+	
+	public void checkpoint(int id);
+	
 	/**
 	 * Add a list of tasks
 	 * 
@@ -36,16 +40,26 @@ public interface ComputationCase extends Serializable {
 	 */
 	public void addTasks(List<? extends Task<?>> task) throws MCASpaceException;
 	
-	public void addData(DData<?> data,String name, DataHandlerFactory factory) throws MCASpaceException;
+	public void addData(DDataStructure<?> data,String name, DataHandlerFactory factory) throws MCASpaceException;
 
 	public void addDataHandler(DataHandler entry) throws MCASpaceException;
 
 	public DataHandler removeDataHandler(String name) throws MCASpaceException;
+	
+	public DataHandler removeDataHandler(String name, int part) throws MCASpaceException;
 
-	public DataHandler getDataHandler(String value) throws MCASpaceException;
+	public DataHandler getDataHandler(String name) throws MCASpaceException;
+	
+	public DataHandler getDataHandler(String name, int part) throws MCASpaceException;
 
 	public void upload(String name, InputStream input) throws MCASpaceException;
 
+	public void upload(String name, int part, InputStream input) throws MCASpaceException;
+
+	public File download(String name, String dir) throws MCASpaceException;
+
+	public File download(String name, int part, String dir) throws MCASpaceException;
+	
 	public void start() throws MCASpaceException;
 	
 	public void stop() throws MCASpaceException;
@@ -66,6 +80,8 @@ public interface ComputationCase extends Serializable {
 
 	public void join(ComputationCaseListener listener) throws MCASpaceException;
 
+	public void unjoin() throws MCASpaceException;
+	
 	/**
 	 * take WAIT_FOR_COMPUTE state tasks
 	 * 
@@ -82,7 +98,7 @@ public interface ComputationCase extends Serializable {
 	 */
 	public void updateTaskComputed(List<Task<?>> task) throws MCASpaceException;
 	
-	public <T extends DData<?>> T getData(String name) throws MCASpaceException;
+	public <T extends DDataStructure<?>> T getData(String name) throws MCASpaceException;
 
 	public void barrier(String name) throws MCASpaceException;
 	
@@ -132,5 +148,14 @@ public interface ComputationCase extends Serializable {
 	 * @throws MCASpaceException
 	 */
 	public Collection<Task<?>> getTasks(Task<?> template, int maxTasks) throws MCASpaceException;
-	 
+	
+	/**
+	 * 
+	 * @param name
+	 * @param listener
+	 * @return
+	 * @throws MCASpaceException
+	 */
+	public Collection<DataHandler> listenDataPart(String name, RemoteEventListener listener) throws MCASpaceException;
+	
 }

@@ -24,7 +24,7 @@ public class LocalDataHandler extends DataHandler {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -8945857260139996512L;
+	private static final long serialVersionUID = 1L;
 
 	public String filename;
 

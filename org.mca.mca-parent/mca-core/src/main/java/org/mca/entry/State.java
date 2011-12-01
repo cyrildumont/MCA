@@ -31,4 +31,11 @@ public class State extends Storable{
 		parent.appendChild(node);
 	}
 
+	@Override
+	public String toString() {
+		return "State [state=" + state + "]";
+	}
+	
+	
+
 }

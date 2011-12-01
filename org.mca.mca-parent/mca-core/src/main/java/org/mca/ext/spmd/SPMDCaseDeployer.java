@@ -3,10 +3,10 @@ package org.mca.ext.spmd;
 import javax.validation.constraints.NotNull;
 
 import org.mca.agent.AgentDescriptor;
+import org.mca.data.DDataStructure;
 import org.mca.deployer.ComputationCaseDeployer;
 import org.mca.entry.DataHandlerFactory;
 import org.mca.javaspace.exceptions.MCASpaceException;
-import org.mca.math.DData;
 
 public abstract class SPMDCaseDeployer extends ComputationCaseDeployer {
 	
@@ -17,7 +17,7 @@ public abstract class SPMDCaseDeployer extends ComputationCaseDeployer {
 	private DataHandlerFactory dataHandlerFactory;
 	
 	@NotNull
-	private DData<?> input;
+	private DDataStructure<?> input;
 	
 	public void setProgram(AgentDescriptor program) {
 		this.program = program;
@@ -49,7 +49,7 @@ public abstract class SPMDCaseDeployer extends ComputationCaseDeployer {
 			computationCase.addData(input, SPMDConstants.INPUT_NAME, dataHandlerFactory);
 	}
 	
-	public void setInput(DData<?> input) {
+	public void setInput(DDataStructure<?> input) {
 		this.input = input;
 	}
 }

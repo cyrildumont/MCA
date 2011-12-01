@@ -33,7 +33,7 @@ public class EntryFactory {
 				LOG.trace("creation of a new Entry ..");
 				LOG.trace("		className ---> " + className);
 			}
-			Class entryClass = Class.forName(className);
+			Class<?> entryClass = Class.forName(className);
 			Entry entry = (Entry)entryClass.newInstance();
 			setPropertiesToEntry(entry, propertiesTable);
 			return entry;
@@ -62,7 +62,7 @@ public class EntryFactory {
 			if (LOG.isTraceEnabled()) {
 				LOG.trace("		" + name + " ---> " + value);
 			}
-			Class classEntry = entry.getClass();
+			Class<?> classEntry = entry.getClass();
 			try {
 				Field field = classEntry.getDeclaredField(name);
 				field.set(entry, value);

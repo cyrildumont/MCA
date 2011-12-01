@@ -1,10 +1,7 @@
 package org.mca.entry;
 
-import java.io.File;
 
-import org.apache.commons.io.FilenameUtils;
-
-public class FTPDataHandlerFactory implements DataHandlerFactory{
+public class FTPDataHandlerFactory extends DataHandlerFactory{
 
 	private String login;
 	private String host;
@@ -21,29 +18,18 @@ public class FTPDataHandlerFactory implements DataHandlerFactory{
 		this.password = password;
 		this.path = path;
 	}
-
-	public FTPDataHandler getDataHandler(File file){
+	
+	@Override
+	public DataHandler generate(String filename, String name) {
 		FTPDataHandler entry = new FTPDataHandler();
-		entry.filename = path + "/" + file.getName();
-		entry.name = FilenameUtils.getBaseName(entry.filename);
+		entry.filename = path + "/" + filename;
+		entry.name = name;
 		entry.login = this.login;
 		entry.server = this.host;
 		entry.password = this.password;
 		return entry;
 	}
 	
-	@Override
-	public DataHandler getDataHandler(String filename) {
-		FTPDataHandler entry = new FTPDataHandler();
-		entry.filename = path + "/" + filename;
-		entry.name = FilenameUtils.getBaseName(entry.filename);
-		entry.login = this.login;
-		entry.server = this.host;
-		entry.password = this.password;
-		return entry;
-	}
-
-
 	public void setLogin(String login) {
 		this.login = login;
 	}
@@ -61,4 +47,5 @@ public class FTPDataHandlerFactory implements DataHandlerFactory{
 	public void setPath(String path) {
 		this.path = path;
 	}
+
 }

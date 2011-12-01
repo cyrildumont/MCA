@@ -3,7 +3,6 @@ package org.mca.ext.spmd;
 import org.mca.agent.AbstractComputeAgent;
 import org.mca.ext.spmd.topology.Topology;
 import org.mca.javaspace.exceptions.MCASpaceException;
-import org.mca.math.Neighborhood;
 
 /**
  * This class represents a SPMD ComputeAgent. 
@@ -32,7 +31,6 @@ public abstract class SPMDAgent extends AbstractComputeAgent<Object> {
 		size = ((SPMDTask)task).size;
 		loadData();
 		topology = getTopology();
-		System.out.println(topology);
 		neighbors = topology.getNeighbors(rank);
 		logger.fine("SPMDAgent -- [rank=" + rank + "]");
 		Object result = program();

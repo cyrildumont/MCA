@@ -1,29 +1,21 @@
 package org.mca.entry;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.apache.commons.io.FilenameUtils;
 import org.mca.log.LogUtil;
 
-public class URLDataHandlerFactory implements DataHandlerFactory{
+public class URLDataHandlerFactory extends DataHandlerFactory{
 
 	private String url;
 
-	public DataHandler getDataHandler(File file){
-		URLDataHandler entry = new URLDataHandler();
-		String filename = file.getName();
-		entry.url = url + "/" + filename;
-		entry.name = FilenameUtils.getBaseName(filename);
-		LogUtil.debug("URLDataHandler created : " + entry.name, getClass());
-		return entry;
-	}
 	
+	public URLDataHandlerFactory(String url) {
+		this.url = url;
+	}
+
 	@Override
-	public DataHandler getDataHandler(String filename) {
+	public DataHandler generate(String filename, String name) {
 		URLDataHandler entry = new URLDataHandler();
 		entry.url = url + "/" + filename;
-		entry.name = FilenameUtils.getBaseName(filename);
+		entry.name = name;
 		LogUtil.debug("URLDataHandler created : " + entry.name, getClass());
 		return entry;
 	}
@@ -31,7 +23,6 @@ public class URLDataHandlerFactory implements DataHandlerFactory{
 	public void setUrl(String url) {
 		this.url = url;
 	}
-
 
 
 }

@@ -23,7 +23,7 @@ public class FTPDataHandler extends DataHandler {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -551412548569786714L;
+	private static final long serialVersionUID = 1L;
 
 	public String login;
 	public String password;

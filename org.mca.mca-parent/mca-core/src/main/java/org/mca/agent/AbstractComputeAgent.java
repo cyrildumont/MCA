@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import net.jini.core.lookup.ServiceID;
 
 import org.mca.entry.Property;
+import org.mca.ft.FTManager;
 import org.mca.javaspace.ComputationCase;
 import org.mca.scheduler.Task;
 
@@ -38,11 +39,14 @@ public abstract class AbstractComputeAgent<R> implements ComputeAgent<R>{
 
 	protected Object[] parameters;
 	
+	private FTManager ftManager;
+	
 	public AbstractComputeAgent() {
 	}
 	
 	final public R compute(Task<R> task) 	throws ComputeAgentException{
 		try{
+			ftManager = FTManager.getInstance();
 			this.task = task;
 			this.parameters = task.parameters;
 			Collection<Property> props = computationCase.getProperties(); 
@@ -64,7 +68,6 @@ public abstract class AbstractComputeAgent<R> implements ComputeAgent<R>{
 		}
 	}
 
-
 	final public void serviceIDNotify(ServiceID serviceID) {
 		logger.fine("Agent [ID=" + serviceID.toString() + "] is deployed");
 		System.exit(1);
@@ -83,9 +86,9 @@ public abstract class AbstractComputeAgent<R> implements ComputeAgent<R>{
 		logger.fine("AbstractComputeAgent -- no precompute defined");
 	}
 
-	protected File getTempFile(String name){
+	protected final File getTempFile(String name){
 		File file = new File(System.getProperty("temp.worker.result") + "/" + name);
 		return file;
 	}
-
+	
 }

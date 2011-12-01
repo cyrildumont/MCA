@@ -43,7 +43,6 @@ public abstract class JavaSpaceParticipant implements Serializable{
 
 	private static final Logger logger = Logger.getLogger(COMPONENT_NAME);
 
-	/**  */
 	protected JavaSpace05 space;
 
 	protected String host;
@@ -58,15 +57,15 @@ public abstract class JavaSpaceParticipant implements Serializable{
 	 * @return
 	 * @throws MCASpaceException
 	 */
-	protected Collection<Entry> readEntry(Collection<Entry> templates, Transaction txn) throws MCASpaceException{
+	protected <T extends Entry> Collection<T> readEntry(Collection<T> templates, Transaction txn) throws MCASpaceException{
 		try {
-			Collection<Entry> entries = new ArrayList<Entry>();
+			Collection<T> entries = new ArrayList<T>();
 			MatchSet set = space.contents(templates, txn, Lease.ANY, Integer.MAX_VALUE);
 			while (true) {
 				Entry e = set.next();
 				if (e == null)
 					break;
-				entries.add(e);
+				entries.add((T)e);
 			}
 			return entries;
 		} catch (RemoteException e) {
@@ -109,17 +108,17 @@ public abstract class JavaSpaceParticipant implements Serializable{
 	 * @throws EntryNotFoundException
 	 * @throws MCASpaceException
 	 */
-	protected Entry readEntry(Entry template, Transaction txn, long timeToWait) 
+	protected <T extends Entry> T readEntry(T template, Transaction txn, long timeToWait) 
 	throws EntryNotFoundException, MCASpaceException {
+		T entry = null;
 		try {
-			Entry entry = space.read(template, txn, timeToWait);
-			if (entry == null) throw new EntryNotFoundException(template, host);
-			return entry;
+			entry = (T)space.read(template, txn, timeToWait);
 		} catch (Exception e) {
 			logger.warning("[" + host + "]" + e.getMessage());
-			e.printStackTrace();
 			throw new MCASpaceException();
 		}
+		if (entry == null) throw new EntryNotFoundException(template, host);
+		return entry;
 	}
 
 	/**
@@ -127,7 +126,7 @@ public abstract class JavaSpaceParticipant implements Serializable{
 	 * @param template
 	 * @return
 	 */
-	protected Entry readEntry(Entry template, Transaction txn) 
+	protected <T extends Entry> T readEntry(T template, Transaction txn) 
 	throws EntryNotFoundException, MCASpaceException {
 		return readEntry(template, txn, JavaSpace05.NO_WAIT);
 	}
@@ -143,11 +142,11 @@ public abstract class JavaSpaceParticipant implements Serializable{
 	 * @throws MCASpaceException
 	 * @throws EntryNotFoundException
 	 */
-	protected Entry takeEntry(Entry template, Transaction txn, Long timeout) 		
+	protected <T extends Entry> T takeEntry(T template, Transaction txn, Long timeout) 		
 	throws MCASpaceException  {
 		try {
 
-			Entry entry = space.take(template, txn, timeout);
+			T entry = (T)space.take(template, txn, timeout);
 			return entry;
 		} catch (Exception e) {
 			logger.warning("JavaSpaceParticipant - take entry error :" + e.getMessage());

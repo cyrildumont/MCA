@@ -19,6 +19,7 @@ aspect ExecutionTimeAspect {
 									execution(* org.mca.example.jacobi.agent.JacobiAgent.unloadData(..)) ||
 									execution(* org.mca.example.jacobi.agent.JacobiAgent.internalCompute(..)) ||
 									execution(* org.mca.example.jacobi.agent.JacobiAgent.borderCompute(..)) ||
+									execution(* org.mca.example.jacobi.agent.JacobiAgent.sendBorders(..)) ||
 									execution(* org.mca.ext.spmd.SPMDAgent.barrierNeighbor(..)) ||
 									execution(* org.mca.ext.masterworker.MasterAgent.execute(..)) ||
 									execution(* org.mca.example.jacobi.agent.JacobiAgent.program(..)) ||

@@ -1,27 +1,22 @@
 package org.mca.entry;
 
-import java.io.File;
-
-import org.apache.commons.io.FilenameUtils;
 import org.mca.log.LogUtil;
 
-public class LocalDataHandlerFactory implements DataHandlerFactory{
+public class LocalDataHandlerFactory extends DataHandlerFactory{
 
 	private String path;
 	
-	public DataHandler getDataHandler(File file){
-		LocalDataHandler entry = new LocalDataHandler();
-		entry.filename = path + "/" + file.getName();
-		entry.name = FilenameUtils.getBaseName(entry.filename);
-		LogUtil.debug("LocalDataHandler created : " + entry.name, getClass());
-		return entry;
-	}
+	public LocalDataHandlerFactory() {}
 	
+	public LocalDataHandlerFactory(String path) {
+		this.path = path;
+	}
+
 	@Override
-	public DataHandler getDataHandler(String filename) {
+	public DataHandler generate(String filename, String name) {
 		LocalDataHandler entry = new LocalDataHandler();
 		entry.filename =path + "/" + filename;
-		entry.name = FilenameUtils.getBaseName(entry.filename);
+		entry.name = name;
 		LogUtil.debug("LocalDataHandler created : " + entry.name, getClass());
 		return entry;
 	}
