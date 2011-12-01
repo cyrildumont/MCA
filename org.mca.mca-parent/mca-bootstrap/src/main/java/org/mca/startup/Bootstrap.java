@@ -46,8 +46,6 @@ public class Bootstrap implements Daemon{
 	public void init(DaemonContext context) throws Exception{
 		
 		logger.finest("Bootstrap -- init");
-		
-		//ClassLoaderFactory.updateCurrentClassloader(System.getProperty("mca.home") + DIR_LIB);
 		loader = createClassLoader();	
 		Thread.currentThread().setContextClassLoader(loader);
 		String[] args = context.getArguments();
