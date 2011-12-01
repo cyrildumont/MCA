@@ -25,7 +25,7 @@ public class PlanTest {
 	
 	public PlanTest(int rank){
 		this.rank = rank;
-		this.plan = new Plan(4, 3);
+		this.plan = new Plan(1, 1);
 	}
 	
 	@Test
