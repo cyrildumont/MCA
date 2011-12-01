@@ -62,8 +62,8 @@ public class MCASpaceProxy implements MCASpace, Serializable {
 	}
 	
 	@Override
-	public EventRegistration register(MCASpaceEventListener listener)
+	public EventRegistration register(MCASpaceEventListener listener, long leaseTime)
 			throws RemoteException {
-		return remoteRef.register(listener);
+		return remoteRef.register(listener, leaseTime);
 	}
 }

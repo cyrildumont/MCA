@@ -18,6 +18,7 @@ import net.jini.admin.Administrable;
 import net.jini.admin.JoinAdmin;
 import net.jini.core.entry.Entry;
 import net.jini.core.entry.UnusableEntryException;
+import net.jini.core.event.EventRegistration;
 import net.jini.core.event.RemoteEvent;
 import net.jini.core.event.RemoteEventListener;
 import net.jini.core.event.UnknownEventException;
@@ -37,6 +38,7 @@ import net.jini.lease.LeaseRenewalManager;
 import net.jini.space.AvailabilityEvent;
 import net.jini.space.JavaSpace05;
 
+import org.mca.data.DDataStructure;
 import org.mca.entry.Barrier;
 import org.mca.entry.ComputationCaseState;
 import org.mca.entry.DataHandler;
@@ -50,7 +52,6 @@ import org.mca.javaspace.JavaSpaceParticipant;
 import org.mca.javaspace.exceptions.EntryNotFoundException;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.listener.TaskListener;
-import org.mca.math.DistributedData;
 import org.mca.scheduler.RecoveryTaskStrategy;
 import org.mca.scheduler.Task;
 import org.mca.scheduler.TaskState;
@@ -69,30 +70,31 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	private Transaction currentTransaction;
 
-	private transient LeaseRenewalManager leaseManager;
-
 	private RecoveryTaskStrategy recoveryTaskStrategy;
 
 	private static final long LEASE_RENEW_DURATION = 15000;
+	
+	private static final int DEFAULT_PART = 0;
 
 	private String name;
 	private String description;
 	private TransactionManager transactionManager;
 
-	private ComputationCaseState state;
-
 	private List<ComputationCaseListener> listeners = new ArrayList<ComputationCaseListener>();
 
+	private transient LeaseRenewalManager leaseManager;
+	private transient CaseLeaseListener leaseListener;
+	private transient Lease registrationlease;
+
+	private Integer lastCheckpoint;
+
 	ComputationCaseImpl(JavaSpace05 space, TransactionManager transactionManager) throws RemoteException {	
-		
+
 		setSpace(space);
 		init(space);
 		this.transactionManager = transactionManager;
-		State s = new State();
 		RecoveryTaskStrategy st = new  RecoveryTaskStrategy();
 		try {
-			s = (State)readEntry(s, null);
-			state = s.state;
 			recoveryTaskStrategy = (RecoveryTaskStrategy)readEntry(st, null);;
 		} catch (EntryNotFoundException e) {
 			throw new RemoteException();
@@ -116,6 +118,29 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 				return;
 			}
 		}
+
+	}
+
+	/**
+	 * 
+	 * @param host
+	 */
+	private void listenState(){
+		State state = new State();
+		Collection<Entry> entries = new ArrayList<Entry>();
+		entries.add(state);
+		try {		
+			Exporter exporter = 
+				new BasicJeriExporter(SslServerEndpoint.getInstance(MCAUtils.getIP(),0), new BasicILFactory());
+			RemoteEventListener proxy = (RemoteEventListener)exporter.export(this);
+			EventRegistration registration = space.registerForAvailabilityEvent(entries, null, true, proxy, LEASE_RENEW_DURATION, null);
+			registrationlease = registration.getLease();
+			addManagedLease(registrationlease);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (TransactionException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -127,7 +152,13 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	@Override
 	public File download(String name, String dir)
 	throws MCASpaceException {
-		DataHandler dh = getDataHandler(name);
+		return download(name, DEFAULT_PART, dir);
+	}
+	
+	@Override
+	public File download(String name, int part, String dir)
+			throws MCASpaceException {
+		DataHandler dh = getDataHandler(name, part);
 		if(dh == null)
 			throw new MCASpaceException("DataHandler [" + name + "] not found");
 		DownloadTask task = new DownloadTask(dh, dir);
@@ -141,7 +172,6 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		if (file == null)
 			throw new MCASpaceException("Error during download of data [" + name + "]");
 		return file;
-
 	}
 
 	@Override
@@ -183,7 +213,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 
 	@Override
-	public void addData(DistributedData<?> data, String name, DataHandlerFactory factory) throws MCASpaceException {
+	public void addData(DDataStructure<?> data, String name, DataHandlerFactory factory) throws MCASpaceException {
 		data.setName(name);
 		data.deploy(this, factory);
 		writeEntry(data, null);
@@ -199,17 +229,31 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	@Override
 	public DataHandler removeDataHandler(String name) throws MCASpaceException {
+		return removeDataHandler(name, DEFAULT_PART);
+	}
+	
+	@Override
+	public DataHandler removeDataHandler(String name, int part)
+			throws MCASpaceException {
 		DataHandler template = new DataHandler();
 		template.name = name;
+		template.part = part;
 		DataHandler handlerReturned = (DataHandler)takeEntry(template,null);
-		logger.fine("ComputationCaseImpl -- [" + this.name + "] DataHandler [ name = " + name +" ] removed.");
+		logger.fine("ComputationCaseImpl -- [" + this.name + "] DataHandler [name=" + name +", part=" + part + "] removed.");
 		return handlerReturned;
 	}
 
 	@Override
 	public DataHandler getDataHandler(String name) throws MCASpaceException {
+		return getDataHandler(name, DEFAULT_PART);
+	}
+	
+	@Override
+	public DataHandler getDataHandler(String name, int part)
+			throws MCASpaceException {
 		DataHandler dataTemplate = new DataHandler();
 		dataTemplate.name = name;
+		dataTemplate.part = part;
 		try {
 			return (DataHandler)readEntry(dataTemplate, null);
 		} catch (EntryNotFoundException e) {
@@ -221,7 +265,13 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	@Override
 	public void upload(String name, InputStream input)
 	throws MCASpaceException {
-		DataHandler dh = getDataHandler(name);
+		upload(name, DEFAULT_PART, input);
+	}
+	
+	@Override
+	public void upload(String name, int part, InputStream input)
+			throws MCASpaceException {
+		DataHandler dh = getDataHandler(name, part);
 		if(dh == null)
 			throw new MCASpaceException("DataHandler [" + name + "] not found");
 		try {
@@ -234,7 +284,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	@Override
 	public void start() throws MCASpaceException {
-		if (state == ComputationCaseState.STARTED)
+		if (getState() == ComputationCaseState.STARTED)
 			logger.warning("ComputationCaseImpl -- Computation Case is already started");
 		else
 			updateState(ComputationCaseState.STARTED);
@@ -242,6 +292,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	@Override
 	public void stop() throws MCASpaceException {
+		ComputationCaseState state = getState();
 		if (state == ComputationCaseState.PAUSED || state == ComputationCaseState.FINISHED)
 			logger.warning("ComputationCaseImpl -- Computation Case isn't started");
 		else
@@ -250,7 +301,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	@Override
 	public void finish() throws MCASpaceException {
-		if (state == ComputationCaseState.FINISHED)
+		if (getState() == ComputationCaseState.FINISHED)
 			logger.warning("ComputationCaseImpl -- Computation Case is already finished");
 		else
 			updateState(ComputationCaseState.FINISHED);
@@ -273,8 +324,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	private void setState(ComputationCaseState state) {
 		logger.fine(
-				"ComputationCaseImpl -- State updated : [" + this.state + "] --> [" + state + "]");
-		this.state = state;
+				"ComputationCaseImpl -- State updated to [" + state + "]");
 		for (ComputationCaseListener listener : listeners) {
 			switch (state) {
 			case STARTED:
@@ -288,8 +338,14 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	}
 
 	@Override
-	public ComputationCaseState getState() throws MCASpaceException {
-		return state;
+	public ComputationCaseState getState(){
+		State state = null;
+		try {
+			state = (State)readEntry(new State(), null, Long.MAX_VALUE);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} 
+		return state.state;
 	}
 
 	@Override
@@ -339,18 +395,15 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	@Override
 	public void join(ComputationCaseListener listener) throws MCASpaceException {
-		State state = new State();
-		Collection<Entry> entries = new ArrayList<Entry>();
-		entries.add(state);
-		try {		
-			Exporter exporter = 
-				new BasicJeriExporter(SslServerEndpoint.getInstance(MCAUtils.getIP(),0), new BasicILFactory());
-			RemoteEventListener proxy = (RemoteEventListener)exporter.export(this);
-			space.registerForAvailabilityEvent(entries, null, true, proxy, Long.MAX_VALUE, null);
-			listeners.add(listener);
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		} catch (TransactionException e) {
+		listenState();
+		listeners.add(listener);
+	}
+	
+	@Override
+	public void unjoin() throws MCASpaceException {
+		try {
+			leaseManager.cancel(registrationlease);
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -377,9 +430,7 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 			Created created = TransactionFactory.create(transactionManager, LEASE_RENEW_DURATION);
 			currentTransaction = new Transaction(created);
 
-			if(leaseManager == null) leaseManager = new LeaseRenewalManager();
-			leaseManager.renewFor(created.lease,
-					Lease.FOREVER, LEASE_RENEW_DURATION, new TaskLeaseListener());
+			addManagedLease(created.lease);
 			Collection<? extends Task<?>> taskToCompute = 
 				recoveryTaskStrategy.recoverTasksToCompute(this);
 
@@ -401,8 +452,22 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		}
 	}
 
+
+	/**
+	 * 
+	 * @param lease
+	 */
+	private void addManagedLease(Lease lease){
+		if(leaseManager == null){
+			leaseManager = new LeaseRenewalManager();
+			leaseListener = new CaseLeaseListener();
+		}
+		leaseManager.renewFor(lease,
+				Lease.FOREVER, LEASE_RENEW_DURATION, leaseListener);
+	}
+	
 	private boolean isRunning() {
-		return state == ComputationCaseState.STARTED;
+		return getState() == ComputationCaseState.STARTED;
 	}
 
 	@Override
@@ -454,36 +519,38 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		Barrier barrier = new Barrier(name, rank);
 		writeEntry(barrier, null);
 		int nbNeighbors = neighbors.length;
-		ExecutorService eservice = Executors.newFixedThreadPool(nbNeighbors);
-		List<Future<Void>> futuresList = new ArrayList<Future<Void>>();
-		for (int neighbor : neighbors) {	
-			futuresList.add(eservice.submit(new BarrierTask(name, neighbor)));
-		};	
-		for (Future<Void> future : futuresList) {
-			try {
-				future.get();
-			} catch (Exception e) {
-				e.printStackTrace();
+		if(nbNeighbors != 0){
+			ExecutorService eservice = Executors.newFixedThreadPool(nbNeighbors);
+			List<Future<Void>> futuresList = new ArrayList<Future<Void>>();
+			for (int neighbor : neighbors) {	
+				futuresList.add(eservice.submit(new BarrierTask(name, neighbor)));
+			};	
+			for (Future<Void> future : futuresList) {
+				try {
+					future.get();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		//takeEntry(barrier, null);
 	}
-	
+
 	/**
 	 * 
 	 * @author cyril
 	 *
 	 */
 	private class BarrierTask implements Callable<Void>{
-		
+
 		private String name;
 		private int rank;
-		
+
 		public BarrierTask(String name, int rank) {
 			this.name = name;
 			this.rank = rank;
 		}
-		
+
 		@Override
 		public Void call() throws Exception {
 			Barrier barrier = new Barrier(name, rank);
@@ -524,8 +591,8 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	}
 
 	@Override
-	public <T extends DistributedData<?>> T getData(String name) throws MCASpaceException {
-		DistributedData<?> template = new DistributedData(name);
+	public <T extends DDataStructure<?>> T getData(String name) throws MCASpaceException {
+		DDataStructure<?> template = new DDataStructure(name);
 		try {
 			template = (T)readEntry(template, null);
 			template.setComputationCase(this);
@@ -607,18 +674,49 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 		}
 	}
 
+	@Override
+	public Collection<DataHandler> listenDataPart(String name,
+			RemoteEventListener listener) throws MCASpaceException {
+		DataHandler template = new DataHandler();
+		template.name = name;
+		Collection templates =  Collections.singletonList(template);
+		Exporter exporter = 
+			new BasicJeriExporter(SslServerEndpoint.getInstance(MCAUtils.getIP(),0), new BasicILFactory());
+		try {
+			RemoteEventListener proxy = (RemoteEventListener)exporter.export(listener);
+			EventRegistration registration = 
+				space.registerForAvailabilityEvent(templates, null, false, proxy, LEASE_RENEW_DURATION,null);
+			addManagedLease(registration.getLease());
+			logger.fine("ComputationCaseImpl -- Registered to listen data part activity [" + name + "]");	
+		} catch (Exception e) {
+			logger.warning("ComputationCaseImpl -- " + e.getMessage());	
+			throw new MCASpaceException();	
+		}
+		
+		return readEntry(templates, null);
+	}
 
+	
+	@Override
+	public Integer getLastCheckpoint(){
+		return lastCheckpoint;
+	}
+	
+	@Override
+	public void checkpoint(int id){
+		lastCheckpoint = id;	
+	}
+	
 	/**
 	 * 
 	 * @author cyril
 	 *
 	 */
-	class TaskLeaseListener implements LeaseListener{
+	class CaseLeaseListener implements LeaseListener{
 		@Override
 		public void notify(LeaseRenewalEvent event) {
 			Throwable e = event.getException();
-			logger.warning("TaskLeaseListener - lease event [" + event.getLease() + "]");
-			e.printStackTrace();
+			logger.warning("TaskLeaseListener - lease event [" + event.getLease() + "] : " + e.getMessage());
 			logger.throwing("TaskLeaseListener", "notify", e);
 		}
 	}

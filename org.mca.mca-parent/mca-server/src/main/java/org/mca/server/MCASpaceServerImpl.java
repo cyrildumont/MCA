@@ -5,10 +5,10 @@ import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -27,6 +27,9 @@ import net.jini.core.entry.Entry;
 import net.jini.core.event.EventRegistration;
 import net.jini.core.event.RemoteEventListener;
 import net.jini.core.event.UnknownEventException;
+import net.jini.core.lease.Lease;
+import net.jini.core.lease.LeaseDeniedException;
+import net.jini.core.lease.UnknownLeaseException;
 import net.jini.core.lookup.ServiceID;
 import net.jini.core.lookup.ServiceRegistrar;
 import net.jini.core.lookup.ServiceTemplate;
@@ -35,6 +38,8 @@ import net.jini.core.transaction.server.TransactionManager;
 import net.jini.discovery.DiscoveryManagement;
 import net.jini.discovery.LookupLocatorDiscovery;
 import net.jini.export.Exporter;
+import net.jini.id.Uuid;
+import net.jini.id.UuidFactory;
 import net.jini.jeri.BasicILFactory;
 import net.jini.jeri.BasicJeriExporter;
 import net.jini.jeri.tcp.TcpServerEndpoint;
@@ -61,14 +66,24 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 import com.sun.jini.admin.DestroyAdmin;
 import com.sun.jini.config.Config;
+import com.sun.jini.landlord.FixedLeasePeriodPolicy;
+import com.sun.jini.landlord.LandlordUtil;
+import com.sun.jini.landlord.LeaseFactory;
+import com.sun.jini.landlord.LeasePeriodPolicy;
+import com.sun.jini.landlord.LeasePeriodPolicy.Result;
+import com.sun.jini.landlord.LeasedResource;
+import com.sun.jini.landlord.LocalLandlord;
 import com.sun.jini.lookup.entry.BasicServiceType;
 import com.sun.jini.start.LifeCycle;
 
-public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
+public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener, LocalLandlord {
 
 	private static final long serialVersionUID = 1L;
 
+	private static final long DEFAULT_LEASE = 5*1000*60;
+	
 	private static final String SERVICE_JAVASPACE = "javaspace";
+	
 	private static final String FILE_JAVASPACE = System.getProperty("mca.home") + "/conf/services.xml";
 
 	public final static String COMPONENT_NAME = "org.mca.server.MCASpaceServer";
@@ -89,12 +104,23 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 
 	private EventListenerList listeners;
 
+    private Uuid topUuid = null;
+    
 	private long seqNum;
 
 	private TransactionManager transactionManager;
 
-	private Map<String, ComputationCase> cases;
+	private static final SecureRandom idGen = new SecureRandom();
+	
+	private LeasePeriodPolicy policy = new FixedLeasePeriodPolicy(Lease.FOREVER, DEFAULT_LEASE);
+	
+	private Map leasesMap = new HashMap();
 
+    /**
+     * Factory we use to create leases
+     */
+    private LeaseFactory leaseFactory;
+    
 	public MCASpaceServerImpl(String[] configArgs, LifeCycle lifeCycle) 
 	throws IOException,ConfigurationException, LoginException
 	{
@@ -126,6 +152,14 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 				}
 			}
 			logger.info("MCASpace started: " + this);
+			while (true) {
+				try {
+					Thread.sleep(2000l);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}catch (ConfigurationException e) {
 			System.out.println(e.getMessage());
 			throw e;
@@ -139,8 +173,8 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	 * @throws IOException
 	 */
 	public void init(Configuration config) throws ConfigurationException, IOException {
-		cases = new HashMap<String, ComputationCase>();
 		listeners = new EventListenerList();
+		topUuid = UuidFactory.generate();
 		final Exporter basicExporter = 
 			new BasicJeriExporter(TcpServerEndpoint.getInstance(0),
 					new BasicILFactory(), false, true);
@@ -151,7 +185,9 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		proxy = new MCASpaceProxy(remoteRef);
 		locators = new LookupLocator[]{new LookupLocator(MCAUtils.getIP(),4160)};
 		DiscoveryManagement dm = new LookupLocatorDiscovery(locators);
-		mgr = new JoinManager(proxy, getAttributes(), this,dm,null, config);
+		mgr = new JoinManager(proxy, getAttributes(), new ServiceID(topUuid.getMostSignificantBits(),
+				  topUuid.getLeastSignificantBits()),dm,null, config);
+		leaseFactory = new LeaseFactory(remoteRef, topUuid);
 		Lookup finder = new Lookup(net.jini.core.transaction.server.TransactionManager.class);
 		do{
 			transactionManager =
@@ -216,7 +252,7 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		ComputationCaseInfo info = new ComputationCaseInfo(name,description);
 		jadmin.addLookupAttributes(new Entry[]{info});
 		JavaSpace05 space = (JavaSpace05)o;
-		
+
 		logger.fine("MCASpaceServerImpl -- JavaSpace [" + name + "] started.");
 		return space;
 	}
@@ -235,7 +271,6 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 			e.printStackTrace();
 		}
 		ComputationCase computationCase = new ComputationCaseImpl(space, transactionManager);
-		cases.put(name, computationCase);
 		logger.fine("MCASpaceServerImpl -- Case [" + name + "] added.");
 		fireNotify(MCASpace.ADD_CASE, computationCase);
 		return computationCase;
@@ -260,8 +295,6 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 		Administrable admin = (Administrable)space;
 		DestroyAdmin dadmin = (DestroyAdmin)admin.getAdmin();
 		dadmin.destroy();
-		ComputationCase cc = cases.get(name);
-		cases.remove(cc);
 		logger.fine("MCASpaceServerImpl -- Case [" + name + "] removed.");
 		fireNotify(MCASpace.REMOVE_CASE,null);
 	}
@@ -287,9 +320,16 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	 */
 	@Override
 	public ComputationCase getCase(String name) throws RemoteException,MCASpaceException{
-		ComputationCase cc = cases.get(name);
-		if(cc == null)
+		JavaSpace05 space = null;
+		try {
+			space = findSpace(name);
+		} catch (Exception e) {
+			logger.throwing("ComputationCaseImpl", "removeCase", e);
+			throw new MCASpaceException();
+		}
+		if(space == null)
 			throw new MCASpaceException("[" + name + "] computation Case not exists.");
+		ComputationCase cc = new ComputationCaseImpl(space, transactionManager);
 		return cc;
 	}
 
@@ -326,12 +366,18 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 
 	@Override
 	public ComputationCase getCase() throws RemoteException,MCASpaceException{
-		if (cases.isEmpty()) {
+		JavaSpace05 space = null;
+		try {
+			space = findSpace();
+		} catch (Exception e) {
+			logger.warning("MCASpaceServerImpl -- Error during case recover");
+			logger.throwing(getClass().getName(), "getCase", e);
+		}
+		if (space == null) {
+			logger.fine("MCASpaceServerImpl -- no case found");
 			return null;
 		}else{
-			Iterator<String> names = cases.keySet().iterator();
-			String name = (String) names.next();
-			ComputationCase cc = cases.get(name);
+			ComputationCase cc = new ComputationCaseImpl(space, transactionManager);
 			return cc;	
 		}
 	}
@@ -347,11 +393,21 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 	}
 
 	@Override
-	public EventRegistration register(MCASpaceEventListener listener)
+	public EventRegistration register(MCASpaceEventListener listener, long leaseTime)
 	throws RemoteException {
+		final Uuid cookie = UuidFactory.generate();
+		final long eventID = nextID();
 		listeners.add(MCASpaceEventListener.class, listener);
 		logger.fine("MCASpaceServerImpl -- new listener registered : " + listener);
-		return new EventRegistration(0, proxy, null, 0);
+		EventRegistrationRecord record = new  EventRegistrationRecord(cookie);
+		leasesMap.put(cookie, record);
+		try {
+			Result result = grant(record, leaseTime);
+			record.setExpiration(result.expiration);
+		} catch (LeaseDeniedException e) {
+			throw new RemoteException();
+		}
+		return new EventRegistration(eventID, proxy, leaseFactory.newLease(cookie, record.getExpiration()), 0);
 	}
 
 	/**
@@ -372,5 +428,48 @@ public class MCASpaceServerImpl implements MCASpaceServer, ServiceIDListener {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	static long nextID() {
+		return idGen.nextLong();
+	}
+
+	@Override
+	public void cancel(Uuid cookie) throws UnknownLeaseException {
+		logger.fine("cancel lease ["+ cookie + "]");
+		if(leasesMap.remove(cookie) == null)
+			throw new UnknownLeaseException();
+	}
+
+	@Override
+	public long renew(Uuid cookie, long extension) throws LeaseDeniedException,
+			UnknownLeaseException {
+		logger.fine("renew lease ["+ cookie + "]");
+		LeasedResource resource = (LeasedResource)leasesMap.get(cookie);
+		Result result = null;
+		if (resource != null) {
+			result = policy.renew(resource, extension);
+		}else{
+			throw new UnknownLeaseException();
+		}
+		return result.duration;
+	}
+
+	@Override
+	public Map cancelAll(Uuid[] cookies) throws RemoteException {
+		logger.fine("cancelAll");
+		return LandlordUtil.cancelAll(this, cookies);
+	}
+
+	@Override
+	public RenewResults renewAll(Uuid[] cookies, long[] extensions)
+			throws RemoteException {
+		logger.fine("renewAll");
+		return LandlordUtil.renewAll(this, cookies, extensions);
+	}
+	
+	private LeasePeriodPolicy.Result grant(LeasedResource resource, long requestedDuration) 
+	throws LeaseDeniedException{
+		return policy.grant(resource, requestedDuration);
 	}
 }

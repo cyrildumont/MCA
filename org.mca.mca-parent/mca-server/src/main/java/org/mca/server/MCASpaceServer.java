@@ -12,9 +12,10 @@ import org.mca.javaspace.MCASpaceEventListener;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.scheduler.RecoveryTaskStrategy;
 
+import com.sun.jini.landlord.Landlord;
 import com.sun.jini.start.ServiceProxyAccessor;
 
-public interface MCASpaceServer extends ServiceProxyAccessor, Serializable, Remote {
+public interface MCASpaceServer extends ServiceProxyAccessor, Serializable, Remote, Landlord{
 
 	/**
 	 * 
@@ -74,6 +75,6 @@ public interface MCASpaceServer extends ServiceProxyAccessor, Serializable, Remo
 	 * @return
 	 * @throws RemoteException
 	 */
-	public EventRegistration register(MCASpaceEventListener listener) throws RemoteException;
+	public EventRegistration register(MCASpaceEventListener listener, long leaseTime) throws RemoteException;
 
 }
