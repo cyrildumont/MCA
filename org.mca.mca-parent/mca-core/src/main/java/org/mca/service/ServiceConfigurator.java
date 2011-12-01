@@ -17,6 +17,7 @@ import net.jini.core.discovery.LookupLocator;
 import net.jini.core.entry.Entry;
 
 import org.mca.entry.EntryFactory;
+import org.mca.util.MCAUtils;
 
 /**
  * 
@@ -94,8 +95,10 @@ public class ServiceConfigurator extends AbstractConfiguration{
 	 */
 	public String getCodebaseFormate() {
 		String codebase= "";
+		String ip = MCAUtils.getIP();
 		for (String jar : this.codebase) {
-			codebase += jar + " ";
+			String jarFormate = jar.replace("<LOCAL_IP>", ip);
+			codebase += jarFormate + " ";
 		}
 		return codebase;
 	}
