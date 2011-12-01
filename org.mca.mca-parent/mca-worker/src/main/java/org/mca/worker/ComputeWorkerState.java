@@ -5,5 +5,5 @@ public enum ComputeWorkerState {
 	STARTED,
 	RUNNING,
 	IDLE,
-	CONNECTED;
+	COMPUTING;
 }
