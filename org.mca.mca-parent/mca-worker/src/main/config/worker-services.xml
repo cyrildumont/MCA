@@ -7,21 +7,28 @@
 
 	<context:property-placeholder location="file:${mca.home}/conf/worker.properties" />
 
-	<bean id="reggie" class="org.mca.service.ServiceConfigurator">
+	<bean id="javaspace" class="org.mca.service.ServiceConfigurator">
 		<property name="codebase">
 			<list>
-				<value>${mca.codebase.url}/reggie-dl.jar
-				</value>
-				<value>${mca.codebase.url}/jsk-dl.jar
-				</value>
+				<value>${mca.codebase.url}/outrigger-dl.jar</value>
+				<value>${mca.codebase.url}/jsk-dl.jar</value>
 			</list>
 		</property>
-		<property name="implClass" value="com.sun.jini.reggie.TransientRegistrarImpl" />
+		<property name="implClass"
+			value="com.sun.jini.outrigger.PersistentOutriggerImpl" />
 		<property name="policy" value="${mca.home}/conf/security/worker.policy" />
 		<property name="serverConfigArgs" value="${mca.home}/conf/worker.config" />
 		<property name="classpath">
 			<list>
-				<value>${mca.home}/lib/reggie.jar</value>
+				<value>${mca.home}/lib/outrigger-snaplogstore.jar</value>
+				<value>${mca.home}/lib/outrigger-2.1.1.jar</value>
+				<value>${mca.home}/lib/jsk-lib-2.1.1.jar</value>
+				<value>${mca.home}/lib/commons-logging-1.1.jar</value>
+			</list>
+		</property>
+		<property name="locators">
+			<list>
+				<value>localhost</value>
 			</list>
 		</property>
 	</bean>

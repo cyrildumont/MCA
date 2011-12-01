@@ -42,7 +42,7 @@ grant {
 	permission net.jini.security.AuthenticationPermission 
 		"javax.security.auth.x500.X500Principal \"*\" javax.security.auth.x500.X500Principal \"*\" ","connect,accept";
 
-	permission net.jini.export.ExportPermission "exportRemoteInterface.com.sun.jini.reggie.Registrar";
+	permission net.jini.export.ExportPermission "*";
 
 	permission java.io.FilePermission "${mca.home}/lib","read";
 	permission java.io.FilePermission "${mca.home}/lib/*","read";
@@ -84,7 +84,12 @@ grant principal "worker"{
 	permission com.sun.jini.reggie.RegistrarPermission "notify";
 	permission com.sun.jini.reggie.RegistrarPermission "renewEventLease";
 	permission com.sun.jini.reggie.RegistrarPermission "getMemberGroups";
-	permission org.mca.security.MCASpacePermission "register";
+	permission com.sun.jini.reggie.RegistrarPermission "renewServiceLease";	
+	permission com.sun.jini.reggie.RegistrarPermission "cancelServiceLease";
+	permission com.sun.jini.outrigger.OutriggerPermission "write";
+	permission com.sun.jini.outrigger.OutriggerPermission "read";
+	permission com.sun.jini.outrigger.OutriggerPermission "take";
+	permission com.sun.jini.outrigger.OutriggerPermission "contents";
 };
 
 grant principal "server"{

@@ -1,8 +1,8 @@
 
-/* JAAS login configuration file for server */
+/* JAAS login configuration file for worker */
 
-org.mca.Worker {
-    com.sun.security.auth.module.KeyStoreLoginModule required
+org.mca.security.MCA {
+    	com.sun.security.auth.module.KeyStoreLoginModule required
 	keyStoreAlias="worker"
 	keyStoreURL="file:${mca.home}/conf/security/keystore.worker"
 	keyStorePasswordURL="file:${mca.home}/conf/security/worker.password";
