@@ -66,6 +66,9 @@
 							<classifier>-dl</classifier>
 							<includes>
 								<include>org/mca/server/ComputationCaseImpl.class</include>
+								<include>org/mca/server/ComputationCaseImpl$*.class</include>
+								<include>org/mca/server/MCASpaceProxy.class</include>
+								<include>org/mca/server/MCASpaceServer.class</include>
 							</includes>
 						</configuration>
 					</execution>
