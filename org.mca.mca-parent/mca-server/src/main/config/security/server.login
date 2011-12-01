@@ -1,8 +1,8 @@
 
-/* JAAS login configuration file for client */
+/* JAAS login configuration file for server */
 
-org.mca.Server {
-    com.sun.security.auth.module.KeyStoreLoginModule required
+org.mca.security.MCA {
+    	com.sun.security.auth.module.KeyStoreLoginModule required
 	keyStoreAlias="server"
 	keyStoreURL="file:${mca.home}/conf/security/keystore.server"
 	keyStorePasswordURL="file:${mca.home}/conf/security/server.password";

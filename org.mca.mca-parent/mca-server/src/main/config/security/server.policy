@@ -74,15 +74,16 @@ grant principal "server"{
 	permission com.sun.jini.reggie.RegistrarPermission "notify";
 	permission com.sun.jini.reggie.RegistrarPermission "addAttributes";
 	permission com.sun.jini.reggie.RegistrarPermission "renewServiceLease";	
+	permission com.sun.jini.reggie.RegistrarPermission "cancelServiceLease";
 	permission com.sun.jini.outrigger.OutriggerPermission "*";
 };
 
 grant principal "master"{
 	permission com.sun.jini.reggie.RegistrarPermission "lookup";
 	permission com.sun.jini.reggie.RegistrarPermission "register";
+
 	permission org.mca.security.MCASpacePermission "addCase";
 	permission org.mca.security.MCASpacePermission "removeCase";
-	permission com.sun.jini.reggie.RegistrarPermission "register";
 	permission com.sun.jini.outrigger.OutriggerPermission "write";
 	permission com.sun.jini.outrigger.OutriggerPermission "read";
 	permission com.sun.jini.outrigger.OutriggerPermission "take";
@@ -99,12 +100,17 @@ grant principal "worker"{
 	permission com.sun.jini.reggie.RegistrarPermission "renewEventLease";
 	permission org.mca.security.MCASpacePermission "register";
 	permission org.mca.security.MCASpacePermission "getCase";
+	permission org.mca.security.MCASpacePermission "renew";
 	permission com.sun.jini.outrigger.OutriggerPermission "write";
 	permission com.sun.jini.outrigger.OutriggerPermission "read";
 	permission com.sun.jini.outrigger.OutriggerPermission "take";
 	permission com.sun.jini.outrigger.OutriggerPermission "registerForAvailabilityEvent";	
 	permission com.sun.jini.outrigger.OutriggerPermission "getAdmin";
 	permission com.sun.jini.outrigger.OutriggerPermission "contents";
+	permission com.sun.jini.outrigger.OutriggerPermission "renew";
+	permission com.sun.jini.outrigger.OutriggerPermission "renewAll";
+	permission com.sun.jini.outrigger.OutriggerPermission "cancel";
+
 };
 
 grant principal "admin"{

@@ -7,35 +7,6 @@
 
 	<context:property-placeholder location="file:${mca.home}/conf/server.properties" />
 
-	<bean id="reggie" class="org.mca.service.ServiceConfigurator">
-		<property name="codebase">
-			<list>
-				<value>${mca.codebase.url}/reggie-dl.jar</value>
-				<value>${mca.codebase.url}/jsk-dl.jar</value>
-			</list>
-		</property>
-		<property name="implClass" value="com.sun.jini.reggie.TransientRegistrarImpl" />
-		<property name="policy" value="${mca.home}/conf/security/server.policy" />
-		<property name="serverConfigArgs" value="${mca.home}/conf/mcaspace.config" />
-		<property name="classpath">
-			<list>
-				<value>${mca.home}/lib/reggie-2.1.1.jar</value>
-			</list>
-		</property>
-	</bean>
-
-	<bean id="codebase" class="org.mca.server.CodebaseServer">
-		<property name="port" value="8080" />
-		<property name="stoppable" value="true" />
-		<property name="verbose" value="false" />
-		<property name="trees" value="true" />
-		<property name="dirs">
-			<list>
-				<value>${mca.home}/codebase</value>
-			</list>
-		</property>
-	</bean>
-
 	<bean id="transaction" class="org.mca.service.ServiceConfigurator" >
 		<property name="codebase">
 			<list>
