@@ -16,6 +16,10 @@
 
 	<name>MCA Project - Worker</name>
 
+	<properties>
+		<mca.home>c:/applis/MCA</mca.home>
+	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.mca</groupId>
@@ -24,5 +28,72 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.mca</groupId>
+			<artifactId>mca-bootstrap</artifactId>
+			<version>1.0.0-RELEASE</version>
+			<scope>runtime</scope>
+		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>1.2.1</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>java</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<classpathScope>runtime</classpathScope>
+					<mainClass>org.mca.startup.ComponentStarter</mainClass>
+					<systemProperties>
+						<systemProperty>
+							<key>mca.home</key>
+							<value>${mca.home}</value>
+						</systemProperty>
+						<systemProperty>
+							<key>java.security.policy</key>
+							<value>${mca.home}/conf/security/worker.policy</value>
+						</systemProperty>
+						<systemProperty>
+							<key>java.security.auth.login.config</key>
+							<value>${mca.home}/conf/security/worker.login</value>
+						</systemProperty>
+						<systemProperty>
+							<key>java.util.logging.config.file</key>
+							<value>${mca.home}/conf/logging.properties</value>
+						</systemProperty>
+						<systemProperty>
+							<key>javax.net.ssl.trustStore</key>
+							<value>${mca.home}/conf/security/keystore.worker</value>
+						</systemProperty>
+						<systemProperty>
+							<key>com.sun.management.jmxremote</key>
+						</systemProperty>
+						<systemProperty>
+							<key>com.sun.management.jmxremote.ssl</key>
+							<value>false</value>
+						</systemProperty>
+						<systemProperty>
+							<key>com.sun.management.jmxremote.authenticate</key>
+							<value>false</value>
+						</systemProperty>
+						<systemProperty>
+							<key>com.sun.management.jmxremote.port</key>
+							<value>9097</value>
+						</systemProperty>						
+					</systemProperties>
+					<arguments>
+						<argument>${mca.home}/conf/mca-worker.xml</argument>
+					</arguments>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
