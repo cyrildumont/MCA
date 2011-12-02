@@ -17,7 +17,7 @@
 	<name>MCA Project - Worker</name>
 
 	<properties>
-		<mca.home>c:/applis/MCA</mca.home>
+		<mca.home>/home/cyril/MCA</mca.home>
 	</properties>
 	
 	<dependencies>
@@ -45,51 +45,25 @@
 				<executions>
 					<execution>
 						<goals>
-							<goal>java</goal>
+							<goal>exec</goal>
 						</goals>
 					</execution>
 				</executions>
 				<configuration>
-					<classpathScope>runtime</classpathScope>
-					<mainClass>org.mca.startup.ComponentStarter</mainClass>
-					<systemProperties>
-						<systemProperty>
-							<key>mca.home</key>
-							<value>${mca.home}</value>
-						</systemProperty>
-						<systemProperty>
-							<key>java.security.policy</key>
-							<value>${mca.home}/conf/security/worker.policy</value>
-						</systemProperty>
-						<systemProperty>
-							<key>java.security.auth.login.config</key>
-							<value>${mca.home}/conf/security/worker.login</value>
-						</systemProperty>
-						<systemProperty>
-							<key>java.util.logging.config.file</key>
-							<value>${mca.home}/conf/logging.properties</value>
-						</systemProperty>
-						<systemProperty>
-							<key>javax.net.ssl.trustStore</key>
-							<value>${mca.home}/conf/security/keystore.worker</value>
-						</systemProperty>
-						<systemProperty>
-							<key>com.sun.management.jmxremote</key>
-						</systemProperty>
-						<systemProperty>
-							<key>com.sun.management.jmxremote.ssl</key>
-							<value>false</value>
-						</systemProperty>
-						<systemProperty>
-							<key>com.sun.management.jmxremote.authenticate</key>
-							<value>false</value>
-						</systemProperty>
-						<systemProperty>
-							<key>com.sun.management.jmxremote.port</key>
-							<value>9097</value>
-						</systemProperty>						
-					</systemProperties>
+					<executable>java</executable>
 					<arguments>
+						<argument>-classpath</argument>
+						<classpath />
+						<argument>-Dmca.home=${mca.home}</argument>
+						<argument>-Djava.security.policy=${mca.home}/conf/security/worker.policy</argument>
+						<argument>-Djava.security.auth.login.config=${mca.home}/conf/security/worker.login</argument>
+						<argument>-Djava.util.logging.config.file=${mca.home}/conf/logging.properties</argument>
+						<argument>-Djavax.net.ssl.trustStore=${mca.home}/conf/security/keystore.worker</argument>
+						<argument>-Dcom.sun.management.jmxremote</argument> 
+						<argument>-Dcom.sun.management.jmxremote.ssl=false</argument> 
+						<argument>-Dcom.sun.management.jmxremote.authenticate=false</argument>
+						<argument>-Dcom.sun.management.jmxremote.port=9097</argument>
+						<argument>org.mca.startup.ComponentStarter</argument>
 						<argument>${mca.home}/conf/mca-worker.xml</argument>
 					</arguments>
 				</configuration>
