@@ -188,40 +188,12 @@
 					</filesets>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>aspectj-maven-plugin</artifactId>
-				<version>1.4</version>
-				<configuration>
-					<sources>
-						<source>
-							<basedir>src/main/java</basedir>
-							<includes>
-								<include>org/mca/aop/ExecutionTimeAspect.aj</include>
-							</includes>
-						</source>
-					</sources>
-					<outxml>true</outxml>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>compile</phase>
-					</execution>
-				</executions>
-			</plugin><!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-jarsigner-plugin</artifactId> 
+			<!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-jarsigner-plugin</artifactId> 
 				<version>1.2</version> <executions> <execution> <id>sign</id> <goals> <goal>sign</goal> 
 				</goals> </execution> </executions> <configuration> <keystore>${mca.home}/conf/security/keystore.server</keystore> 
 				<alias>server</alias> <storepass>server</storepass> </configuration> </plugin> -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<compilerVersion>1.6</compilerVersion>
-				</configuration>
-			</plugin>
 		</plugins>
+
 	</build>
-	<modules>
-	</modules>
+
 </project>
