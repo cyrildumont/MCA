@@ -13,13 +13,14 @@ import org.mca.entry.ComputationCaseState;
 import org.mca.entry.DataHandler;
 import org.mca.entry.DataHandlerFactory;
 import org.mca.entry.Property;
+import org.mca.ft.Checkpoint;
 import org.mca.javaspace.exceptions.MCASpaceException;
 import org.mca.listener.TaskListener;
 import org.mca.scheduler.Task;
 import org.mca.scheduler.TaskState;
 
 public interface ComputationCase extends Serializable {
-
+	
 	public void addProperty(Property property) throws MCASpaceException;
 
 	public String getName();
@@ -28,9 +29,10 @@ public interface ComputationCase extends Serializable {
 
 	public void addTask(Task task) throws MCASpaceException;
 
-	public Integer getLastCheckpoint();
 	
-	public void checkpoint(int id);
+	public Checkpoint getLastCheckpoint();
+	
+	public void checkpoint(Checkpoint checkpoint) throws MCASpaceException;
 	
 	/**
 	 * Add a list of tasks

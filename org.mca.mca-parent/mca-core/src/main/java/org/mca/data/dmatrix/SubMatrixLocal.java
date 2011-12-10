@@ -1,4 +1,4 @@
-package org.mca.data.struct;
+package org.mca.data.dmatrix;
 
 import org.mca.data.DataPartInfo;
 import org.mca.data.DataPartLocal;
@@ -7,12 +7,12 @@ import org.mca.data.DataPartLocal;
 public class SubMatrixLocal extends DataPartLocal implements SubMatrix {
 
 	/** Width of the submatrix */
-	public int width;
+	private int width;
 
 	/** Height of the submatrix */
-	public int height;
+	private int height;
 
-	public double[][] values;
+	private double[][] values;
 	
 	/**
 	 * 

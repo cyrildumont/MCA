@@ -87,6 +87,12 @@ public class FTManager extends JavaSpaceParticipant {
 
 	}
 	
+	
+	public void saveCheckPoint(Checkpoint checkpoint) throws MCASpaceException{
+		writeEntry(checkpoint, null);
+		logger.fine("FTManager -- checkpoint saved : " + checkpoint);
+	}
+	
 	public void saveDataPartInfo(DataPartInfo infos) throws MCASpaceException{
 		DataPartInfo template = new DataPartInfo(infos.name, infos.part);
 		takeEntry(template, null);

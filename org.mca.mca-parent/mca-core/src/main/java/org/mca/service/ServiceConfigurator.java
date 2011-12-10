@@ -30,6 +30,8 @@ import org.mca.util.MCAUtils;
 public class ServiceConfigurator extends AbstractConfiguration{
 
 
+	private static final String LOCAL_IP = "<LOCAL_IP>";
+
 	private static final String JINI_LOCATOR_PREFIX = "jini://";
 
 	private String name;
@@ -97,7 +99,7 @@ public class ServiceConfigurator extends AbstractConfiguration{
 		String codebase= "";
 		String ip = MCAUtils.getIP();
 		for (String jar : this.codebase) {
-			String jarFormate = jar.replace("<LOCAL_IP>", ip);
+			String jarFormate = jar.replace(LOCAL_IP, ip);
 			codebase += jarFormate + " ";
 		}
 		return codebase;

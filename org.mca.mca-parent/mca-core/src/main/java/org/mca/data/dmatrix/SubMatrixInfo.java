@@ -1,4 +1,4 @@
-package org.mca.data.struct;
+package org.mca.data.dmatrix;
 
 import org.mca.data.DataPartInfo;
 

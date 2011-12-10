@@ -1,4 +1,4 @@
-package org.mca.data.struct;
+package org.mca.data.dmatrix;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -59,7 +59,7 @@ public class DMatrix<E> extends DDataStructure<E> {
 
 	public Integer columnPartSize;
 
-	/** Constructor for JavaSpaces specification */
+	/** default constructor for JavaSpaces specification */
 	public DMatrix() {
 		format = DEFAULT_MATRIX_FORMAT;
 	}

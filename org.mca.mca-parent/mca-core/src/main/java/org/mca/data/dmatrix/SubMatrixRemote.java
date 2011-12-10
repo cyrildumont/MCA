@@ -1,18 +1,24 @@
-package org.mca.data.struct;
+package org.mca.data.dmatrix;
 
 import net.jini.space.JavaSpace05;
 
 import org.mca.data.DataPartRemote;
 
+/**
+ * Link with a remote sub-matrix
+ * 
+ * @author Cyril Dumont
+ *
+ */
 public class SubMatrixRemote extends DataPartRemote implements SubMatrix{
 
 	private static final long serialVersionUID = 1L;
 
 	/** Width of the submatrix */
-	public int width;
+	private int width;
 
 	/** Height of the submatrix */
-	public int height;
+	private int height;
 	
 	public SubMatrixRemote(int part, JavaSpace05 javaspace) throws Exception {
 		super(part, javaspace);

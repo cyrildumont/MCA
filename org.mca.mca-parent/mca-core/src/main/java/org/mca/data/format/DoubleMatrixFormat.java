@@ -11,11 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import org.mca.data.DataPart;
-import org.mca.data.struct.SubMatrixLocal;
+import org.mca.data.DataPartLocal;
+import org.mca.data.dmatrix.SubMatrixLocal;
 
-@SuppressWarnings("serial")
 public class DoubleMatrixFormat extends DataFormat<Double>{
+
+	private static final long serialVersionUID = 1L;
 
 	private static DecimalFormat format;
 	
@@ -68,7 +69,7 @@ public class DoubleMatrixFormat extends DataFormat<Double>{
 	}
 
 	@Override
-	public DataPart parse(File in) throws FormatException {
+	public DataPartLocal parse(File in) throws FormatException {
 		double[][] values = null;
 		SubMatrixLocal result = null;
 		FileReader fr = null;

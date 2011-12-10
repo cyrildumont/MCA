@@ -1,4 +1,5 @@
-package org.mca.data.struct;
+package org.mca.data.dmatrix;
+
 
 
 public class Neighborhood{

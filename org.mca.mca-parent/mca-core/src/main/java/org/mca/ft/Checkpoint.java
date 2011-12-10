@@ -2,23 +2,38 @@ package org.mca.ft;
 
 import net.jini.core.entry.Entry;
 
-import org.mca.data.DData;
-
 public class Checkpoint implements Entry{
 
-	public DData data;
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * Different types of checkpoint
+	 * 
+	 * @author Cyril Dumont
+	 *
+	 */
+	public enum Type{
+		LOCAL,
+		GLOBAL
+	}
+	
+	public Type type;
 	
 	public Integer id;
 
 	public Checkpoint() {}
 	
-	public Checkpoint(Integer id, DData data){
+	public Checkpoint(Integer id, Type type){
 		this.id = id;
-		this.data = data;
+		this.type = type;
+	}
+
+	public Integer getId() {
+		return id;
 	}
 	
-	public Object getValue(){
-		return data.value;
+	public Type getType() {
+		return type;
 	}
 	
 }
