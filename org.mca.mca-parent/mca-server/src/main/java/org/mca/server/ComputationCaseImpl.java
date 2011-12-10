@@ -45,6 +45,8 @@ import org.mca.entry.DataHandler;
 import org.mca.entry.DataHandlerFactory;
 import org.mca.entry.Property;
 import org.mca.entry.State;
+import org.mca.ft.Checkpoint;
+import org.mca.ft.FTManager;
 import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.ComputationCaseInfo;
 import org.mca.javaspace.ComputationCaseListener;
@@ -86,10 +88,9 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 	private transient CaseLeaseListener leaseListener;
 	private transient Lease registrationlease;
 
-	private Integer lastCheckpoint;
+	private Checkpoint lastCheckpoint;
 
 	ComputationCaseImpl(JavaSpace05 space, TransactionManager transactionManager) throws RemoteException {	
-
 		setSpace(space);
 		init(space);
 		this.transactionManager = transactionManager;
@@ -698,15 +699,41 @@ class ComputationCaseImpl extends JavaSpaceParticipant implements ComputationCas
 
 	
 	@Override
-	public Integer getLastCheckpoint(){
+	public Checkpoint getLastCheckpoint(){
 		return lastCheckpoint;
 	}
 	
 	@Override
-	public void checkpoint(int id){
-		lastCheckpoint = id;	
+	public void checkpoint(Checkpoint checkpoint) throws MCASpaceException{
+		switch(checkpoint.getType()){
+			case LOCAL:
+				localCheckpoint(checkpoint);
+				break;
+			case GLOBAL:
+				globalCheckpoint(checkpoint);
+				break;
+			default:
+				break;
+		}
+		try {
+			FTManager manager = FTManager.getInstance();
+			manager.saveCheckPoint(checkpoint);
+			lastCheckpoint = checkpoint;
+		} catch (Exception e) {
+			logger.warning("Erreur during checkpoint saving");
+			logger.throwing("ComputationCaseImpl", "checkpoint", e);
+		}	
 	}
 	
+	private void globalCheckpoint(Checkpoint checkpoint) {
+		
+		logger.fine("ComputationCaseImpl -- global checkpoint [" + checkpoint.getId() + "] saved");
+	}
+
+	private void localCheckpoint(Checkpoint checkpoint) {
+		logger.fine("ComputationCaseImpl -- local checkpoint [" + checkpoint.getId() + "] saved");
+	}
+
 	/**
 	 * 
 	 * @author cyril
