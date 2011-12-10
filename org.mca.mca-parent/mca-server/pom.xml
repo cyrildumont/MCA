@@ -15,14 +15,11 @@
 
 	<name>MCA Project - Server</name>
 
-	<properties>
-	</properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.mca</groupId>
 			<artifactId>mca-core</artifactId>
-			<version>1.0.0-RELEASE</version>
+			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
@@ -30,21 +27,31 @@
 			<groupId>org.apache.river</groupId>
 			<artifactId>mahalo-dl</artifactId>
 			<version>2.1.1</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.river</groupId>
 			<artifactId>reggie-dl</artifactId>
 			<version>2.1.1</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.river</groupId>
 			<artifactId>jsk-dl</artifactId>
 			<version>2.1.1</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.river</groupId>
 			<artifactId>outrigger-dl</artifactId>
 			<version>2.1.1</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.river</groupId>
+			<artifactId>outrigger-snaplogstore</artifactId>
+			<version>2.1.1</version>
+			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
 
@@ -62,14 +69,39 @@
 							<goal>jar</goal>
 						</goals>
 						<configuration>
-							<finalName>${artifactId}</finalName>
-							<classifier>-dl</classifier>
+							<finalName>${project.artifactId}-dl</finalName>
 							<includes>
 								<include>org/mca/server/ComputationCaseImpl.class</include>
 								<include>org/mca/server/ComputationCaseImpl$*.class</include>
 								<include>org/mca/server/MCASpaceProxy.class</include>
 								<include>org/mca/server/MCASpaceServer.class</include>
 							</includes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.5</version>
+
+				<executions>
+					<execution>
+						<id>copy-mca-server-codebase</id>
+						<phase>install</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<resources>
+								<resource>
+									<directory>${project.build.directory}</directory>
+									<includes>
+										<include>${project.artifactId}-dl.jar</include>
+									</includes>
+								</resource>
+							</resources>
+							<outputDirectory>${mca.home}/codebase</outputDirectory>
+							<overwrite>true</overwrite>
 						</configuration>
 					</execution>
 				</executions>
@@ -83,9 +115,5 @@
 			</resource>
 		</resources>
 	</build>
-	<modules>
-	</modules>
-
-
 
 </project>
