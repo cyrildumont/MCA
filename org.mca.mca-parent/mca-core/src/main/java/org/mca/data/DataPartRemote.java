@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 
 import net.jini.space.JavaSpace05;
 
+import org.mca.ft.Checkpoint;
 import org.mca.javaspace.JavaSpaceParticipant;
 
 /**
@@ -41,16 +42,17 @@ public abstract class DataPartRemote extends JavaSpaceParticipant implements Dat
 				e.printStackTrace();
 			}
 		}
-		Integer checkpoint = parent.getLastCheckpoint();
-		DData template = new DData(name,checkpoint);
+		Checkpoint checkpoint = parent.getLastCheckpoint(); 
+		Integer checkpointId = checkpoint != null ? checkpoint.getId() : null;
+		DData template = new DData(name,checkpointId);
 		DData data = null;
-		try {
-			
+		try {		
 			data = readEntry(template, null, Long.MAX_VALUE);
+			return data.value;
 		} catch (Exception e) {
 			logger.throwing(getClass().getName(), "recv", e);
+			return null;
 		}
-		return data.value;
 	}
 	
 	@Override

@@ -6,6 +6,8 @@ public class DData implements Entry {
 
 	private static final long serialVersionUID = 1L;
 
+	public Integer globalCheckpoint;
+	
 	public Integer checkpoint;
 	
 	public String name;
@@ -31,6 +33,6 @@ public class DData implements Entry {
 	
 	@Override
 	public String toString() {
-		return "FTData [name=" + name + ", value=" + value + ", checkpoint=" + checkpoint + "]";
+		return "DData [name=" + name + ", value=" + value + ", checkpoint=" + checkpoint + "]";
 	}
 }

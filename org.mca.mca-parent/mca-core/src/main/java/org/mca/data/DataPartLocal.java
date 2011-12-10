@@ -2,6 +2,7 @@ package org.mca.data;
 
 import java.util.logging.Logger;
 
+import org.mca.ft.Checkpoint;
 import org.mca.ft.FTManager;
 
 public abstract class DataPartLocal implements DataPart {
@@ -19,8 +20,9 @@ public abstract class DataPartLocal implements DataPart {
 	}
 	
 	protected void sendData(String name, Object value) throws Exception{
-		Integer checkpoint = parent.getLastCheckpoint();
-		ftManager.saveData(name, value, checkpoint);
+		Checkpoint checkpoint = parent.getLastCheckpoint(); 
+		Integer checkpointId = checkpoint != null ? checkpoint.getId() : null;
+		ftManager.saveData(name, value, checkpointId);
 		logger.fine("DataPartLocal - [" + name + "] saved");
 	}
 	

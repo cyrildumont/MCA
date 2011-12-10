@@ -22,6 +22,7 @@ import org.mca.data.format.DataFormat;
 import org.mca.entry.DataHandler;
 import org.mca.entry.DataHandlerFactory;
 import org.mca.entry.Storable;
+import org.mca.ft.Checkpoint;
 import org.mca.ft.FTManager;
 import org.mca.javaspace.ComputationCase;
 import org.mca.javaspace.exceptions.MCASpaceException;
@@ -87,26 +88,37 @@ public class DDataStructure<E> extends Storable implements RemoteEventListener{
 		return name;
 	}
 	
-//	/**
-//	 * 
-//	 * @param part
-//	 * @return
-//	 * @throws Exception
-//	 */
-//	public DataPart load(int part) throws Exception{
-//		logger.fine("[" + name + "] - loading part [" + part + "] ...");
-//		numLocalPart = part;
-//		String localPartName = name + "-" + part;
-//		File inputlocalFile = download(name,part);
-//		outputlocalFile = 
-//			new File(System.getProperty("temp.worker.result") + "/" + localPartName + ".dat");
-//		DataPart data = format.parse(inputlocalFile);
-//		DataHandler handler = computationCase.removeDataHandler(name, part);
-//		handler.worker = MCAUtils.getIP();
-//		computationCase.addDataHandler(handler);
-//		addPart(part, data);
-//		return data;
-//	}
+	/**
+	 * 
+	 * @param part
+	 * @return
+	 * @throws Exception
+	 */
+	public DataPart load(int part) throws Exception{
+		logger.fine("[" + name + "] - loading part [" + part + "] ...");
+		numLocalPart = part;
+		String localPartName = name + "-" + part;
+		outputlocalFile = 
+			new File(System.getProperty("temp.worker.result") + "/" + localPartName + ".dat");
+		File inputlocalFile = download(part);
+
+		localPart = format.parse(inputlocalFile);
+		DataPartInfo infos = localPart.getInfos();
+		infos.name = name;
+		infos.part = part;
+		ftManager = FTManager.getInstance();
+		ftManager.saveDataPartInfo(infos);
+		DataHandler handler = computationCase.removeDataHandler(name, part);
+		handler.worker = MCAUtils.getIP();
+		computationCase.addDataHandler(handler);
+		Collection<DataHandler> parts = computationCase.listenDataPart(name, this);
+		remoteParts = new HashMap<Integer, DataPartRemote>();
+		for (DataHandler dh : parts) {
+			addPart(dh.part, dh.worker);
+		}
+		localPart.setParent(this);
+		return localPart;
+	}
 	
 	/**
 	 * 
@@ -312,7 +324,7 @@ public class DDataStructure<E> extends Storable implements RemoteEventListener{
 		
 	}
 	
-	public Integer getLastCheckpoint(){
+	public Checkpoint getLastCheckpoint(){
 		return computationCase.getLastCheckpoint();
 	}
 
