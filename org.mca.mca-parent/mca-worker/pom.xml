@@ -10,28 +10,23 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-
 	<artifactId>mca-worker</artifactId>
 	<packaging>jar</packaging>
 
 	<name>MCA Project - Worker</name>
 
-	<properties>
-		<mca.home>/home/cyril/MCA</mca.home>
-	</properties>
-	
 	<dependencies>
 		<dependency>
 			<groupId>org.mca</groupId>
 			<artifactId>mca-core</artifactId>
-			<version>1.0.0-RELEASE</version>
+			<version>${project.version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mca</groupId>
 			<artifactId>mca-bootstrap</artifactId>
-			<version>1.0.0-RELEASE</version>
+			<version>${project.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
