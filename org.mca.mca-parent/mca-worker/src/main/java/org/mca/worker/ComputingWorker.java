@@ -4,15 +4,10 @@ import java.io.File;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.ExportException;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
-
-import javax.security.auth.Subject;
-import javax.security.auth.login.LoginContext;
 
 import net.jini.config.Configuration;
 import net.jini.config.ConfigurationProvider;
@@ -58,6 +53,12 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
 
+/**
+ * 
+ * 
+ * @author Cyril Dumont
+ *
+ */
 @ManagedResource(objectName = "MCA:type=ComputingWorker")
 public class ComputingWorker extends MCAComponent {
 
@@ -155,6 +156,7 @@ public class ComputingWorker extends MCAComponent {
 	}
 
 	/**
+	 * 
 	 * Start a local lookup to shared data with another worker
 	 * 
 	 */
@@ -328,7 +330,7 @@ public class ComputingWorker extends MCAComponent {
 
 	/**
 	 * 
-	 * @author Cyril
+	 * @author Cyril Dumont
 	 *
 	 */
 	private class WorkerMCASpaceEventListener extends Thread implements MCASpaceEventListener{
@@ -405,7 +407,7 @@ public class ComputingWorker extends MCAComponent {
 
 	/**
 	 * 
-	 * @author Cyril
+	 * @author Cyril Dumont
 	 *
 	 */
 	private class TaskExecutor extends Thread{
@@ -461,6 +463,7 @@ public class ComputingWorker extends MCAComponent {
 
 		/**
 		 * 
+		 * 
 		 * @param tasksToCompute
 		 * @throws Exception
 		 */
@@ -512,7 +515,7 @@ public class ComputingWorker extends MCAComponent {
 
 	/**
 	 * 
-	 * @author cyril
+	 * @author Cyril Dumont
 	 *
 	 */
 	private class CaseStateListener implements ComputationCaseListener{
