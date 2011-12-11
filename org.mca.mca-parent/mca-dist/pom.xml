@@ -20,12 +20,12 @@
 				<version>2.2.1</version>
 				<executions>
 					<execution>
-						<id>distrib-assembly</id>
+						<id>distrib-assembly</id><!--
 						<phase>package</phase>
 						<goals>
 							<goal>single</goal>
 						</goals>
-						<configuration>
+						--><configuration>
 							<filters>
 								<filter>${project.basedir}/src/assembly/mca.properties</filter>
 							</filters>
