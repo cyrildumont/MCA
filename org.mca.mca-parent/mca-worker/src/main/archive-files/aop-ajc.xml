@@ -1,0 +1,14 @@
+<!DOCTYPE aspectj PUBLIC
+    "-//AspectJ//DTD//EN" "http://www.eclipse.org/aspectj/dtd/aspectj.dtd">
+<aspectj>
+	<weaver options="-verbose -showWeaveInfo">
+		<include within="org.mca.worker..*"/>
+	</weaver>
+	<aspects>
+		<concrete-aspect name="org.mca.worker.aspect.WorkerExecutionTimeAspect"
+			extends="org.mca.aspect.ExecutionTimeAspect">
+			<pointcut name="startMonitor"
+				expression="execution(* org.mca.worker.ComputingWorker.TaskExecutor.run(..))" />
+		</concrete-aspect>
+	</aspects>
+</aspectj>
