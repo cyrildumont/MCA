@@ -11,8 +11,6 @@ import java.util.ArrayList;
 
 import org.mca.loader.StandardClassLoader;
 
-import sun.misc.Launcher;
-
 
 /**
  * @author Cyril

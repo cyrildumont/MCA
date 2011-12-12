@@ -9,8 +9,6 @@ import java.net.URLClassLoader;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
 
-import sun.misc.Launcher;
-
 /**
  * 
  * @author Cyril
