@@ -3,7 +3,7 @@ package org.mca.data.dmatrix;
 import org.mca.data.DataPartInfo;
 
 
-public class SubMatrixInfo extends DataPartInfo {
+public class DMatrixPartInfos extends DataPartInfo {
 
 	private static final long serialVersionUID = 1L;
 
@@ -14,16 +14,16 @@ public class SubMatrixInfo extends DataPartInfo {
 	/** Height of the submatrix */
 	public Integer height;
 	
-	public SubMatrixInfo() {}
+	public DMatrixPartInfos() {}
 
-	public SubMatrixInfo(Integer width, Integer height, String name,
+	public DMatrixPartInfos(Integer width, Integer height, String name,
 			Integer part) {
 		super(name, part);
 		this.width = width;
 		this.height = height;
 	}
 	
-	public SubMatrixInfo(Integer height, Integer width) {
+	public DMatrixPartInfos(Integer height, Integer width) {
 		this.width = width;
 		this.height = height;
 	}

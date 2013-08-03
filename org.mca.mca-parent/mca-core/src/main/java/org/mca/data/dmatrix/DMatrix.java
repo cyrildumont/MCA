@@ -164,10 +164,10 @@ public class DMatrix<E> extends DDataStructure<E> {
 		int numEndRow = row * nbColumnParts;
 		int numPartWest = (part - 1) < numStartRow  ? -1 : part - 1 ;
 		int numPartEast = (part + 1) > numEndRow  ? -1 : part + 1 ;
-		neighborhood.setNorth(numPartNorth == -1 ? null : (SubMatrix)getDataPart(numPartNorth));
-		neighborhood.setSouth(numPartSouth == -1 ? null : (SubMatrix)getDataPart(numPartSouth));
-		neighborhood.setEast(numPartEast == -1 ? null : (SubMatrix)getDataPart(numPartEast));
-		neighborhood.setWest(numPartWest == -1 ? null : (SubMatrix)getDataPart(numPartWest));
+		neighborhood.setNorth(numPartNorth == -1 ? null : (DMatrixPart)getDataPart(numPartNorth));
+		neighborhood.setSouth(numPartSouth == -1 ? null : (DMatrixPart)getDataPart(numPartSouth));
+		neighborhood.setEast(numPartEast == -1 ? null : (DMatrixPart)getDataPart(numPartEast));
+		neighborhood.setWest(numPartWest == -1 ? null : (DMatrixPart)getDataPart(numPartWest));
 		logger.fine("\t North neighbor : Part [" + numPartNorth + "]");
 		logger.fine("\t South neighbor : Part [" + numPartSouth + "]");
 		logger.fine("\t West neighbor : Part [" + numPartWest + "]");

@@ -10,7 +10,7 @@ import org.mca.data.DataPartRemote;
  * @author Cyril Dumont
  *
  */
-public class SubMatrixRemote extends DataPartRemote implements SubMatrix{
+public class SubMatrixRemote extends DataPartRemote implements DMatrixPart{
 
 	private static final long serialVersionUID = 1L;
 
@@ -23,7 +23,7 @@ public class SubMatrixRemote extends DataPartRemote implements SubMatrix{
 	public SubMatrixRemote(int part, JavaSpace05 javaspace) throws Exception {
 		super(part, javaspace);
 		if(javaspace != null){
-			SubMatrixInfo info = new SubMatrixInfo();
+			DMatrixPartInfos info = new DMatrixPartInfos();
 			info = readEntry(info, null);
 			width = info.width;
 			height = info.height;

@@ -4,7 +4,7 @@ import org.mca.data.DataPartInfo;
 import org.mca.data.DataPartLocal;
 
 
-public class SubMatrixLocal extends DataPartLocal implements SubMatrix {
+public class SubMatrixLocal extends DataPartLocal implements DMatrixPart {
 
 	/** Width of the submatrix */
 	private int width;
@@ -77,7 +77,7 @@ public class SubMatrixLocal extends DataPartLocal implements SubMatrix {
 	
 	@Override
 	public DataPartInfo getInfos() {
-		return new SubMatrixInfo(height,width);
+		return new DMatrixPartInfos(height,width);
 	}
 	
 	public void sendColumn(int numColumn) throws Exception{

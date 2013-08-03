@@ -3,7 +3,7 @@ package org.mca.data.dmatrix;
 import org.mca.data.DataPart;
 
 
-public interface SubMatrix extends DataPart{
+public interface DMatrixPart extends DataPart{
 	
 	static final String COLUMN_NAME_ENTRY = "COLUMN";
 	

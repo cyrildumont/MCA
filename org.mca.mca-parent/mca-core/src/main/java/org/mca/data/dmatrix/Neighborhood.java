@@ -4,33 +4,33 @@ package org.mca.data.dmatrix;
 
 public class Neighborhood{
 	
-	private SubMatrix north;
-	private SubMatrix south;
-	private SubMatrix east;
-	private SubMatrix west;
+	private DMatrixPart north;
+	private DMatrixPart south;
+	private DMatrixPart east;
+	private DMatrixPart west;
 
-	public SubMatrix getNorth() {
+	public DMatrixPart getNorth() {
 		return north;
 	}
-	public SubMatrix getSouth() {
+	public DMatrixPart getSouth() {
 		return south;
 	}
-	public SubMatrix getEast() {
+	public DMatrixPart getEast() {
 		return east;
 	}
-	public SubMatrix getWest() {
+	public DMatrixPart getWest() {
 		return west;
 	}
-	public void setNorth(SubMatrix north) {
+	public void setNorth(DMatrixPart north) {
 		this.north = north;
 	}
-	public void setSouth(SubMatrix south) {
+	public void setSouth(DMatrixPart south) {
 		this.south = south;
 	}
-	public void setEast(SubMatrix east) {
+	public void setEast(DMatrixPart east) {
 		this.east = east;
 	}
-	public void setWest(SubMatrix west) {
+	public void setWest(DMatrixPart west) {
 		this.west = west;
 	}
 	
